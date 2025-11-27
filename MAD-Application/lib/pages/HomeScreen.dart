@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
-      height: 263,
+      height: 240,
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Stack(
             children: [
               Container(
-                height: 140,
+                height: 130,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.only(
@@ -259,9 +259,9 @@ class _HomeScreenState extends State<HomeScreen> {
           
           // Product Details Section
           SizedBox(
-            height: 123,
+            height: 110,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -282,9 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 
-                // Rating and Price Row
+                // Rating and Cart Icon Row
                 Row(
                   children: [
                     const Icon(
@@ -301,17 +301,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      product['price'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      child: const Icon(
+                        Icons.add_shopping_cart,
+                        size: 16,
+                        color: AppColors.white,
+                      ),
                     ),
                   ],
+                ),
+                
+                const SizedBox(height: 6),
+                
+                // Price
+                Text(
+                  product['price'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: AppColors.primary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -625,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.57,
+                childAspectRatio: 0.62,
               ),
               itemCount: filteredProducts.length,
               itemBuilder: (context, index) {
