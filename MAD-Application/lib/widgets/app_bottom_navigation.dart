@@ -4,11 +4,13 @@ import 'package:madpractical/constants/app_colors.dart';
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final int wishlistCount;
+  final int cartCount;
 
   const AppBottomNavigation({
     Key? key, 
     required this.currentIndex,
     this.wishlistCount = 0,
+    this.cartCount = 0,
   }) : super(key: key);
 
   @override
@@ -70,7 +72,13 @@ class AppBottomNavigation extends StatelessWidget {
             label: 'Wishlist',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
+            icon: cartCount > 0
+                ? Badge(
+                    label: Text('$cartCount'),
+                    backgroundColor: AppColors.accent,
+                    child: Icon(Icons.shopping_cart),
+                  )
+                : Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
           BottomNavigationBarItem(

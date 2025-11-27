@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   Set<String> wishlistItems = {}; // Track wishlist by product name
+  Set<String> cartItems = {}; // Track cart by product name
   
   final List<Map<String, dynamic>> categories = [
     {'icon': Icons.grid_view, 'title': 'All'},
@@ -318,16 +319,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(
-                        Icons.add_shopping_cart,
-                        size: 16,
-                        color: AppColors.white,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (cartItems.contains(product['name'])) {
+                            cartItems.remove(product['name']);
+                          } else {
+                            cartItems.add(product['name']);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: cartItems.contains(product['name'])
+                              ? AppColors.accent
+                              : AppColors.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          cartItems.contains(product['name'])
+                              ? Icons.shopping_cart
+                              : Icons.add_shopping_cart,
+                          size: 16,
+                          color: AppColors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -684,6 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 0,
         wishlistCount: wishlistItems.length,
+        cartCount: cartItems.length,
       ),
     );
   }
