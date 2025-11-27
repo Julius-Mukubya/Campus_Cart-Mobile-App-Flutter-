@@ -56,7 +56,11 @@ class AppBottomNavigation extends StatelessWidget {
             label: 'Categories',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
+            icon: Badge(
+              label: Text('3'),
+              backgroundColor: AppColors.accent,
+              child: Icon(Icons.favorite_border),
+            ),
             label: 'Wishlist',
           ),
           BottomNavigationBarItem(
