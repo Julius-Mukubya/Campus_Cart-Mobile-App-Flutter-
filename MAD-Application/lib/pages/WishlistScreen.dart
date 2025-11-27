@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/pages/ProductDetails.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -822,7 +823,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                         children: _filteredItems.map((item) {
                                           return SizedBox(
                                             width: cardWidth,
-                                            child: _buildGridCard(item),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ProductDetailScreen(product: item),
+                                                  ),
+                                                );
+                                              },
+                                              child: _buildGridCard(item),
+                                            ),
                                           );
                                         }).toList(),
                                       );
@@ -833,7 +845,19 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                   physics: const BouncingScrollPhysics(),
                                   itemCount: _filteredItems.length,
                                   itemBuilder: (context, index) {
-                                    return _buildListCard(_filteredItems[index]);
+                                    final item = _filteredItems[index];
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ProductDetailScreen(product: item),
+                                          ),
+                                        );
+                                      },
+                                      child: _buildListCard(item),
+                                    );
                                   },
                                 ),
                     ),
