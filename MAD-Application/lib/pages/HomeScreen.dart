@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
-  Set<String> wishlistItems = {}; // Track wishlist by product name
+  final WishlistManager _wishlistManager = WishlistManager();
   Set<String> cartItems = {}; // Track cart by product name
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
@@ -40,6 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Auto-scroll banner every 3 seconds
     Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
+    _wishlistManager.addListener(_onWishlistChanged);
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
   }
   
   void _autoScrollBanner() {
@@ -56,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _bannerController.dispose();
+    _wishlistManager.removeListener(_onWishlistChanged);
     super.dispose();
   }
   
@@ -322,13 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 12,
                 child: GestureDetector(
                   onTap: () {
-                    setState(() {
-                      if (wishlistItems.contains(product['name'])) {
-                        wishlistItems.remove(product['name']);
-                      } else {
-                        wishlistItems.add(product['name']);
-                      }
-                    });
+                    _wishlistManager.toggleWishlist(product);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -344,11 +345,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     child: Icon(
-                      wishlistItems.contains(product['name'])
+                      _wishlistManager.isInWishlist(product['name'])
                           ? Icons.favorite
                           : Icons.favorite_border,
                       size: 16,
-                      color: wishlistItems.contains(product['name'])
+                      color: _wishlistManager.isInWishlist(product['name'])
                           ? Colors.red
                           : AppColors.grey,
                     ),
@@ -804,7 +805,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Bottom Navigation Bar
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 0,
-        wishlistCount: wishlistItems.length,
+        wishlistCount: _wishlistManager.itemCount,
         cartCount: cartItems.length,
       ),
     );

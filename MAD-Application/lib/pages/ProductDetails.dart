@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -11,8 +12,24 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  bool isFavorite = false;
+  final WishlistManager _wishlistManager = WishlistManager();
   bool isInCart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wishlistManager.addListener(_onWishlistChanged);
+  }
+
+  @override
+  void dispose() {
+    _wishlistManager.removeListener(_onWishlistChanged);
+    super.dispose();
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
+  }
 
   final List<Map<String, dynamic>> allProducts = [
     {
@@ -282,9 +299,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     right: 12,
                     child: GestureDetector(
                       onTap: () {
-                        setState(() {
-                          isFavorite = !isFavorite;
-                        });
+                        _wishlistManager.toggleWishlist(widget.product);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
@@ -300,9 +315,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ],
                         ),
                         child: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          _wishlistManager.isInWishlist(widget.product['name'])
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           size: 20,
-                          color: isFavorite ? Colors.red : AppColors.grey,
+                          color: _wishlistManager.isInWishlist(widget.product['name'])
+                              ? Colors.red
+                              : AppColors.grey,
                         ),
                       ),
                     ),

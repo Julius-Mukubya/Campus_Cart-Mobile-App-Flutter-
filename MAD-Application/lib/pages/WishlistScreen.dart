@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -11,67 +12,32 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen> {
   bool isGridView = true;
-  
-  List<Map<String, dynamic>> wishlist = [
-    {
-      'name': 'Wireless Headphones',
-      'price': 'UGX 85,000',
-      'rating': 4.8,
-      'discount': '-20%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
-      'dateAdded': '2 days ago',
-    },
-    {
-      'name': 'Designer T-Shirt',
-      'price': 'UGX 45,000',
-      'rating': 4.9,
-      'discount': '-25%',
-      'category': 'Fashion',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
-      'dateAdded': '1 week ago',
-    },
-    {
-      'name': 'Coffee Maker',
-      'price': 'UGX 95,000',
-      'rating': 4.7,
-      'discount': '-18%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
-      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
-      'dateAdded': '3 days ago',
-    },
-    {
-      'name': 'Running Shoes',
-      'price': 'UGX 75,000',
-      'rating': 4.5,
-      'discount': '-30%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-      'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
-      'dateAdded': '5 days ago',
-    },
-  ];
+  final WishlistManager _wishlistManager = WishlistManager();
 
-  void removeItem(int index) {
-    setState(() {
-      wishlist.removeAt(index);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _wishlistManager.addListener(_onWishlistChanged);
+  }
+
+  @override
+  void dispose() {
+    _wishlistManager.removeListener(_onWishlistChanged);
+    super.dispose();
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void removeItem(String productName) {
+    _wishlistManager.removeFromWishlist(productName);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Item removed from wishlist'),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'Undo',
-          textColor: AppColors.white,
-          onPressed: () {
-            // Implement undo functionality if needed
-          },
-        ),
       ),
     );
   }
@@ -87,7 +53,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  Widget _buildGridCard(Map<String, dynamic> item, int index) {
+  Widget _buildGridCard(Map<String, dynamic> item) {
     return Container(
       height: 240,
       decoration: BoxDecoration(
@@ -221,7 +187,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 top: 12,
                 right: 12,
                 child: GestureDetector(
-                  onTap: () => removeItem(index),
+                  onTap: () => removeItem(item['name']),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -330,7 +296,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  Widget _buildListCard(Map<String, dynamic> item, int index) {
+  Widget _buildListCard(Map<String, dynamic> item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -404,7 +370,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => removeItem(index),
+                        onTap: () => removeItem(item['name']),
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
@@ -625,7 +591,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
         centerTitle: false,
         actions: [
-          if (wishlist.isNotEmpty) ...[
+          if (_wishlistManager.wishlistItems.isNotEmpty) ...[
             IconButton(
               onPressed: () {
                 setState(() {
@@ -677,7 +643,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ],
       ),
       body: SafeArea(
-        child: wishlist.isEmpty
+        child: _wishlistManager.wishlistItems.isEmpty
             ? _buildEmptyState()
             : Padding(
                 padding: const EdgeInsets.all(16),
@@ -705,7 +671,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${wishlist.length} ${wishlist.length == 1 ? 'Item' : 'Items'} Saved',
+                                  '${_wishlistManager.itemCount} ${_wishlistManager.itemCount == 1 ? 'Item' : 'Items'} Saved',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -752,10 +718,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                   return Wrap(
                                     spacing: 16,
                                     runSpacing: 16,
-                                    children: wishlist.asMap().entries.map((entry) {
+                                    children: _wishlistManager.wishlistItems.map((item) {
                                       return SizedBox(
                                         width: cardWidth,
-                                        child: _buildGridCard(entry.value, entry.key),
+                                        child: _buildGridCard(item),
                                       );
                                     }).toList(),
                                   );
@@ -764,9 +730,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             )
                           : ListView.builder(
                               physics: const BouncingScrollPhysics(),
-                              itemCount: wishlist.length,
+                              itemCount: _wishlistManager.itemCount,
                               itemBuilder: (context, index) {
-                                return _buildListCard(wishlist[index], index);
+                                return _buildListCard(_wishlistManager.wishlistItems[index]);
                               },
                             ),
                     ),
