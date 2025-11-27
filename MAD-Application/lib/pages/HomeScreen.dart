@@ -13,6 +13,50 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   Set<String> wishlistItems = {}; // Track wishlist by product name
   Set<String> cartItems = {}; // Track cart by product name
+  final PageController _bannerController = PageController();
+  int _currentBannerPage = 0;
+  
+  final List<Map<String, String>> banners = [
+    {
+      'title': 'Special Offers',
+      'subtitle': 'Up to 50% Off Selected Items',
+      'image': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=300&fit=crop',
+    },
+    {
+      'title': 'New Arrivals',
+      'subtitle': 'Check Out Latest Products',
+      'image': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=300&fit=crop',
+    },
+    {
+      'title': 'Flash Sale',
+      'subtitle': 'Limited Time Deals',
+      'image': 'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800&h=300&fit=crop',
+    },
+  ];
+  
+  @override
+  void initState() {
+    super.initState();
+    // Auto-scroll banner every 3 seconds
+    Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
+  }
+  
+  void _autoScrollBanner() {
+    if (!mounted) return;
+    final nextPage = (_currentBannerPage + 1) % banners.length;
+    _bannerController.animateToPage(
+      nextPage,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+    Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
+  }
+  
+  @override
+  void dispose() {
+    _bannerController.dispose();
+    super.dispose();
+  }
   
   final List<Map<String, dynamic>> categories = [
     {'icon': Icons.grid_view, 'title': 'All'},
@@ -537,99 +581,121 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Banner Image
-            Container(
+            // Banner Slideshow
+            SizedBox(
               height: 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                      ),
-                    ),
-                    Image.network(
-                      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=300&fit=crop',
-                      width: double.infinity,
-                      height: 150,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          decoration: const BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.shopping_bag, size: 50, color: AppColors.white),
-                          ),
-                        );
-                      },
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            AppColors.primary.withOpacity(0.8),
-                            Colors.transparent,
-                          ],
+              child: PageView.builder(
+                controller: _bannerController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentBannerPage = index;
+                  });
+                },
+                itemCount: banners.length,
+                itemBuilder: (context, index) {
+                  final banner = banners[index];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
-                      ),
+                      ],
                     ),
-                    Positioned(
-                      left: 20,
-                      top: 20,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
                         children: [
-                          const Text(
-                            'Special Offers',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Up to 50% Off Selected Items',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(20),
+                            decoration: const BoxDecoration(
+                              gradient: AppColors.primaryGradient,
                             ),
-                            child: const Text(
-                              'Shop Now',
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                          ),
+                          Image.network(
+                            banner['image']!,
+                            width: double.infinity,
+                            height: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.shopping_bag, size: 50, color: AppColors.white),
+                                ),
+                              );
+                            },
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  AppColors.primary.withOpacity(0.8),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 20,
+                            top: 20,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  banner['title']!,
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  banner['subtitle']!,
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Page indicators
+                          Positioned(
+                            bottom: 10,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                banners.length,
+                                (dotIndex) => Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  width: dotIndex == _currentBannerPage ? 24 : 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: dotIndex == _currentBannerPage
+                                        ? AppColors.white
+                                        : AppColors.white.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),
