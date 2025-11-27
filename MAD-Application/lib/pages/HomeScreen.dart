@@ -271,10 +271,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 34,
                   child: Text(
                     product['name'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: AppColors.text,
+                      color: AppColors.text.withOpacity(0.9),
                       height: 1.2,
                     ),
                     maxLines: 2,
@@ -284,66 +284,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 const SizedBox(height: 8),
                 
-                // Rating and Add to Cart Row
+                // Rating and Price Row
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            color: Colors.amber,
-                            size: 13,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${product['rating']}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.amber,
-                            ),
-                          ),
-                        ],
+                    const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${product['rating']}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.text,
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.add_shopping_cart_rounded,
-                        size: 16,
+                    Text(
+                      product['price'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
                         color: AppColors.primary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Price Section
-                Text(
-                  product['price'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: AppColors.primary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
