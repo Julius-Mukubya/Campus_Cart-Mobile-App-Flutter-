@@ -69,6 +69,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
       'description': 'Lightweight running shoes with excellent cushioning.',
     },
+    {
+      'name': 'Organic Coffee Beans',
+      'price': 'UGX 32,000',
+      'rating': 4.7,
+      'discount': '-15%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
+      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
+    },
+    {
+      'name': 'Fresh Fruit Basket',
+      'price': 'UGX 45,000',
+      'rating': 4.8,
+      'discount': '-10%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
+      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
+    },
+    {
+      'name': 'The Great Gatsby',
+      'price': 'UGX 28,000',
+      'rating': 4.9,
+      'discount': '-20%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
+      'description': 'Classic American novel by F. Scott Fitzgerald.',
+    },
+    {
+      'name': 'Programming Guide',
+      'price': 'UGX 55,000',
+      'rating': 4.6,
+      'discount': '-25%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
+      'description': 'Comprehensive guide to modern programming languages and techniques.',
+    },
   ];
 
   List<Map<String, dynamic>> get relatedProducts {

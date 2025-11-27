@@ -65,6 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
     {'icon': Icons.checkroom, 'title': 'Fashion'},
     {'icon': Icons.home, 'title': 'Home'},
     {'icon': Icons.sports_soccer, 'title': 'Sports'},
+    {'icon': Icons.local_grocery_store, 'title': 'Groceries'},
+    {'icon': Icons.auto_stories, 'title': 'Books'},
   ];
 
   final List<Map<String, dynamic>> allProducts = [
@@ -139,6 +141,42 @@ class _HomeScreenState extends State<HomeScreen> {
       'category': 'Sports',
       'image': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
       'description': 'Non-slip yoga mat with extra cushioning for comfortable workouts.',
+    },
+    {
+      'name': 'Organic Coffee Beans',
+      'price': 'UGX 32,000',
+      'rating': 4.7,
+      'discount': '-15%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
+      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
+    },
+    {
+      'name': 'Fresh Fruit Basket',
+      'price': 'UGX 45,000',
+      'rating': 4.8,
+      'discount': '-10%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
+      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
+    },
+    {
+      'name': 'The Great Gatsby',
+      'price': 'UGX 28,000',
+      'rating': 4.9,
+      'discount': '-20%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
+      'description': 'Classic American novel by F. Scott Fitzgerald.',
+    },
+    {
+      'name': 'Programming Guide',
+      'price': 'UGX 55,000',
+      'rating': 4.6,
+      'discount': '-25%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
+      'description': 'Comprehensive guide to modern programming languages and techniques.',
     },
   ];
 

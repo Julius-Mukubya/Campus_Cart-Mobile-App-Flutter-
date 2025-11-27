@@ -16,7 +16,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.devices,
       'title': 'Electronics',
       'description': 'Phones, Laptops & More',
-      'productCount': 45,
       'color': const Color(0xFF4285F4),
       'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
     },
@@ -24,7 +23,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.checkroom,
       'title': 'Fashion',
       'description': 'Clothes, Shoes & Style',
-      'productCount': 32,
       'color': const Color(0xFFE91E63),
       'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
     },
@@ -32,7 +30,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.home,
       'title': 'Home',
       'description': 'Furniture & Decor',
-      'productCount': 28,
       'color': const Color(0xFF4CAF50),
       'image': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
     },
@@ -40,7 +37,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.sports_soccer,
       'title': 'Sports',
       'description': 'Fitness & Outdoor',
-      'productCount': 21,
       'color': const Color(0xFFFF9800),
       'image': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop',
     },
@@ -48,7 +44,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.local_grocery_store,
       'title': 'Groceries',
       'description': 'Food & Beverages',
-      'productCount': 67,
       'color': const Color(0xFF8BC34A),
       'image': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
     },
@@ -56,7 +51,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'icon': Icons.auto_stories,
       'title': 'Books',
       'description': 'Education & Literature',
-      'productCount': 15,
       'color': const Color(0xFF9C27B0),
       'image': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop',
     },
@@ -117,9 +111,69 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
       'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
     },
+    {
+      'name': 'Table Lamp',
+      'price': 'UGX 35,000',
+      'rating': 4.6,
+      'discount': '-12%',
+      'category': 'Home',
+      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+      'description': 'Modern LED table lamp with adjustable brightness and USB charging port.',
+    },
+    {
+      'name': 'Yoga Mat',
+      'price': 'UGX 25,000',
+      'rating': 4.4,
+      'discount': '-28%',
+      'category': 'Sports',
+      'image': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
+      'description': 'Non-slip yoga mat with extra cushioning for comfortable workouts.',
+    },
+    {
+      'name': 'Organic Coffee Beans',
+      'price': 'UGX 32,000',
+      'rating': 4.7,
+      'discount': '-15%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
+      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
+    },
+    {
+      'name': 'Fresh Fruit Basket',
+      'price': 'UGX 45,000',
+      'rating': 4.8,
+      'discount': '-10%',
+      'category': 'Groceries',
+      'image': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
+      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
+    },
+    {
+      'name': 'The Great Gatsby',
+      'price': 'UGX 28,000',
+      'rating': 4.9,
+      'discount': '-20%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
+      'description': 'Classic American novel by F. Scott Fitzgerald.',
+    },
+    {
+      'name': 'Programming Guide',
+      'price': 'UGX 55,000',
+      'rating': 4.6,
+      'discount': '-25%',
+      'category': 'Books',
+      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
+      'description': 'Comprehensive guide to modern programming languages and techniques.',
+    },
   ];
 
+  int _getProductCount(String categoryTitle) {
+    return allProducts.where((product) => product['category'] == categoryTitle).length;
+  }
+
   Widget _buildCategoryCard(Map<String, dynamic> category) {
+    final productCount = _getProductCount(category['title']);
+    
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -233,7 +287,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ],
                     ),
                     child: Text(
-                      '${category['productCount']}',
+                      '$productCount',
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontSize: 12,
@@ -304,7 +358,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   Row(
                     children: [
                       Text(
-                        '${category['productCount']} items',
+                        '$productCount items',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
