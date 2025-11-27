@@ -14,6 +14,73 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool isFavorite = false;
+  bool isInCart = false;
+
+  final List<Map<String, dynamic>> allProducts = [
+    {
+      'name': 'Wireless Headphones',
+      'price': 'UGX 85,000',
+      'rating': 4.8,
+      'discount': '-20%',
+      'category': 'Electronics',
+      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+      'description': 'Premium wireless headphones with noise cancellation.',
+    },
+    {
+      'name': 'Smart Watch',
+      'price': 'UGX 120,000',
+      'rating': 4.6,
+      'discount': '-15%',
+      'category': 'Electronics',
+      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+      'description': 'Advanced smartwatch with fitness tracking.',
+    },
+    {
+      'name': 'Bluetooth Speaker',
+      'price': 'UGX 42,000',
+      'rating': 4.8,
+      'discount': '-22%',
+      'category': 'Electronics',
+      'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
+      'description': 'Portable Bluetooth speaker with rich bass.',
+    },
+    {
+      'name': 'Designer T-Shirt',
+      'price': 'UGX 45,000',
+      'rating': 4.9,
+      'discount': '-25%',
+      'category': 'Fashion',
+      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+      'description': 'Premium cotton t-shirt with modern design.',
+    },
+    {
+      'name': 'Coffee Maker',
+      'price': 'UGX 95,000',
+      'rating': 4.7,
+      'discount': '-18%',
+      'category': 'Home',
+      'image': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
+      'description': 'Automatic coffee maker with programmable settings.',
+    },
+    {
+      'name': 'Running Shoes',
+      'price': 'UGX 75,000',
+      'rating': 4.5,
+      'discount': '-30%',
+      'category': 'Sports',
+      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+      'description': 'Lightweight running shoes with excellent cushioning.',
+    },
+  ];
+
+  List<Map<String, dynamic>> get relatedProducts {
+    return allProducts
+        .where((p) =>
+            p['category'] == widget.product['category'] &&
+            p['name'] != widget.product['name'])
+        .take(4)
+        .toList();
+  }
 
   final List<Map<String, dynamic>> reviews = [
     {
@@ -25,23 +92,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       'user': 'User 1',
       'comment': 'Lorem ipsum dolor sit amet.',
       'time': 'A day ago',
-    },
-  ];
-
-  final List<Map<String, dynamic>> relatedProducts = [
-    {
-      'name': 'Product Name',
-      'price': 'UGX 5000',
-      'rating': 4.5,
-      'discount': '-20%',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-    },
-    {
-      'name': 'Product Name',
-      'price': 'UGX 5000',
-      'rating': 4.5,
-      'discount': '-20%',
-      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
     },
   ];
 
@@ -305,29 +355,58 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 24),
 
                   // Add to Cart Button
-                  SizedBox(
+                  Container(
                     width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.85),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CartScreen(),
-                          ),
-                        );
+                        setState(() {
+                          isInCart = !isInCart;
+                        });
+                        if (isInCart) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Added to cart!'),
+                              duration: const Duration(seconds: 2),
+                              backgroundColor: AppColors.primary,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.text,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        elevation: 0,
                       ),
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          fontSize: 16,
+                      icon: Icon(
+                        isInCart
+                            ? Icons.shopping_cart
+                            : Icons.add_shopping_cart_rounded,
+                        color: AppColors.white,
+                      ),
+                      label: Text(
+                        isInCart ? 'In Cart' : 'Add to Cart',
+                        style: const TextStyle(
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: AppColors.white,
                         ),
