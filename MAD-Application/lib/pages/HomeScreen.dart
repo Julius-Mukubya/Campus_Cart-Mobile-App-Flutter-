@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/pages/ProductDetails.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -750,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ProductDetailsScreen(product: product),
+                        builder: (_) => ProductDetailScreen(product: product),
                       ),
                     );
                   },
@@ -772,133 +773,3 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ---------------- Product Details Page ----------------
-
-class ProductDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> product;
-
-  const ProductDetailsScreen({super.key, required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          product['name'],
-          style: const TextStyle(color: AppColors.black),
-        ),
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.primary,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product image
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  product['image'],
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.image, size: 80, color: Colors.grey),
-                      ),
-                    );
-                  },
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Product name and price
-            Text(
-              product['name'],
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              product['price'],
-              style: const TextStyle(
-                fontSize: 18,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Rating
-            Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 18),
-                Text('${product['rating']}'),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Description
-            Text(
-              product['description'],
-              style: const TextStyle(fontSize: 15, color: Colors.black87),
-            ),
-            const Spacer(),
-
-            // Add to cart button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to the cart screen (uses the named route registered in mainpage.dart)
-                  Navigator.pushNamed(context, '/cart');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 4,
-                ),
-                child: const Text(
-                  'Add to Cart',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

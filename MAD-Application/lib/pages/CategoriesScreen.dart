@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/pages/ProductDetails.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -365,9 +366,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               ],
             ),
             child: const Icon(
-              Icons.search,
-              color: AppColors.secondaryText,
-              size: 20,
+              Icons.notifications_outlined,
+              color: AppColors.text,
+              size: 24,
             ),
           ),
         ],
@@ -395,39 +396,40 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Explore Categories',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.text,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.lightGrey),
+                        ),
+                        child: const Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Icon(Icons.search, color: AppColors.grey),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Find products by category',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.secondaryText,
+                            Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: 'Search for Categories',
+                                  hintStyle: TextStyle(color: AppColors.grey),
+                                  border: InputBorder.none,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.lightGrey),
                       ),
-                      child: const Icon(
-                        Icons.category,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
+                      child: const Icon(Icons.tune, color: AppColors.text),
                     ),
                   ],
                 ),
@@ -849,8 +851,13 @@ class CategoryProductsScreen extends StatelessWidget {
                                 width: cardWidth,
                                 child: GestureDetector(
                                   onTap: () {
-                                    // Navigate to product details
-                                    // You can implement ProductDetailsScreen navigation here
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ProductDetailScreen(product: product),
+                                      ),
+                                    );
                                   },
                                   child: _buildProductCard(product),
                                 ),

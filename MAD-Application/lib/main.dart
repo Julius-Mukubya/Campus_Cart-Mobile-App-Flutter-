@@ -47,13 +47,21 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.light, // Use light theme for now
       // Start on a splash screen which will redirect to sign in
       initialRoute: '/splash',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/product_details') {
+          final product = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(product: product),
+          );
+        }
+        return null;
+      },
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/signin': (context) => SignInScreen(),
         '/home': (context) => HomeScreen(),
-        '/product_details': (context) => ProductDetailScreen(),
         '/cart': (context) => CartScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/wishlist': (context) => const WishlistScreen(),
