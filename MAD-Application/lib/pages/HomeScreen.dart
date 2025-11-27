@@ -362,26 +362,27 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome,',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.secondaryText,
-                fontWeight: FontWeight.normal,
+        title: const Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'Welcome, ',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.secondaryText,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
-            ),
-            Text(
-              'User',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.text,
-                fontWeight: FontWeight.bold,
+              TextSpan(
+                text: 'User',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.text,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -459,6 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final category = categories[index];
+                  final isSelected = selectedCategory == category['title'];
                   return GestureDetector(
                     onTap: () {
                       setState(() {
@@ -475,23 +477,35 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 60,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
+                              color: isSelected 
+                                  ? AppColors.primary.withOpacity(0.1)
+                                  : Colors.transparent,
                               border: Border.all(
-                                color: AppColors.lightGrey,
+                                color: isSelected 
+                                    ? AppColors.primary
+                                    : AppColors.lightGrey,
                                 width: 2,
                               ),
                             ),
                             child: Icon(
                               category['icon'],
-                              color: AppColors.text,
+                              color: isSelected 
+                                  ? AppColors.primary
+                                  : AppColors.text,
                               size: 28,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             category['title'],
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.text,
+                              color: isSelected 
+                                  ? AppColors.primary
+                                  : AppColors.text,
+                              fontWeight: isSelected 
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,
