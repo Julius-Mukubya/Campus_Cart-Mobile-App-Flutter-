@@ -72,12 +72,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   ];
 
   List<Map<String, dynamic>> get relatedProducts {
-    return allProducts
+    // First, get products from the same category
+    final sameCategoryProducts = allProducts
         .where((p) =>
             p['category'] == widget.product['category'] &&
             p['name'] != widget.product['name'])
-        .take(4)
         .toList();
+
+    // If we have enough products from the same category, return them
+    if (sameCategoryProducts.length >= 4) {
+      return sameCategoryProducts.take(4).toList();
+    }
+
+    // Otherwise, add products from other categories to fill up to 4
+    final otherProducts = allProducts
+        .where((p) => p['name'] != widget.product['name'])
+        .where((p) => !sameCategoryProducts.contains(p))
+        .toList();
+
+    return [...sameCategoryProducts, ...otherProducts].take(4).toList();
   }
 
   final List<Map<String, dynamic>> reviews = [
@@ -105,7 +118,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
+              shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   color: AppColors.black.withOpacity(0.1),
@@ -115,9 +128,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ],
             ),
             child: const Icon(
-              Icons.arrow_back_ios,
+              Icons.arrow_back_ios_new,
               color: AppColors.text,
-              size: 16,
+              size: 18,
             ),
           ),
           onPressed: () => Navigator.pop(context),
@@ -131,6 +144,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         centerTitle: false,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withOpacity(0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.text,
+              size: 20,
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
