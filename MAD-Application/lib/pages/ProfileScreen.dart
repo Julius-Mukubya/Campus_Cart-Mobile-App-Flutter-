@@ -3,9 +3,38 @@ import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/order_manager.dart';
+import 'package:madpractical/pages/MyOrdersScreen.dart';
+import 'package:madpractical/pages/AddressesScreen.dart';
+import 'package:madpractical/pages/EditProfileScreen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final UserManager _userManager = UserManager();
+  final OrderManager _orderManager = OrderManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _userManager.addListener(_onUserChanged);
+  }
+
+  @override
+  void dispose() {
+    _userManager.removeListener(_onUserChanged);
+    super.dispose();
+  }
+
+  void _onUserChanged() {
+    setState(() {});
+  }
 
   Widget _buildProfileHeader() {
     return Container(
@@ -39,9 +68,7 @@ class ProfileScreen extends StatelessWidget {
             child: CircleAvatar(
               radius: 40,
               backgroundColor: AppColors.primary.withOpacity(0.1),
-              backgroundImage: const NetworkImage(
-                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-              ),
+              backgroundImage: NetworkImage(_userManager.profileImage),
               child: const Icon(
                 Icons.person,
                 size: 40,
@@ -54,9 +81,9 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'John Doe',
-                  style: TextStyle(
+                Text(
+                  _userManager.name,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
@@ -64,36 +91,44 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'johndoe@example.com',
+                  _userManager.email,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.secondaryText,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Premium Member',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                if (_userManager.isPremium)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Premium Member',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
+            },
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -151,9 +186,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '12',
-                  style: TextStyle(
+                Text(
+                  '${_orderManager.orderCount}',
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
@@ -200,9 +235,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '4',
-                  style: TextStyle(
+                Text(
+                  '${WishlistManager().itemCount}',
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
@@ -368,13 +403,9 @@ class ProfileScreen extends StatelessWidget {
         'title': 'My Orders',
         'subtitle': 'Track your orders',
         'color': AppColors.primary,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('My Orders - Coming Soon'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
         ),
       },
       {
@@ -382,6 +413,16 @@ class ProfileScreen extends StatelessWidget {
         'title': 'Addresses',
         'subtitle': 'Manage delivery addresses',
         'color': AppColors.accent,
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddressesScreen()),
+        ),
+      },
+      {
+        'icon': Icons.payment_outlined,
+        'title': 'Payment Methods',
+        'subtitle': 'Manage payment options',
+        'color': AppColors.success,
         'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Addresses - Coming Soon'),
