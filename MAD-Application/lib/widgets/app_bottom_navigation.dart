@@ -3,9 +3,13 @@ import 'package:madpractical/constants/app_colors.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
+  final int wishlistCount;
 
-  const AppBottomNavigation({Key? key, required this.currentIndex})
-    : super(key: key);
+  const AppBottomNavigation({
+    Key? key, 
+    required this.currentIndex,
+    this.wishlistCount = 0,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -49,18 +53,20 @@ class AppBottomNavigation extends StatelessWidget {
 
           Navigator.pushNamed(context, route);
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.grid_view),
             label: 'Categories',
           ),
           BottomNavigationBarItem(
-            icon: Badge(
-              label: Text('3'),
-              backgroundColor: AppColors.accent,
-              child: Icon(Icons.favorite_border),
-            ),
+            icon: wishlistCount > 0
+                ? Badge(
+                    label: Text('$wishlistCount'),
+                    backgroundColor: AppColors.accent,
+                    child: Icon(Icons.favorite_border),
+                  )
+                : Icon(Icons.favorite_border),
             label: 'Wishlist',
           ),
           BottomNavigationBarItem(

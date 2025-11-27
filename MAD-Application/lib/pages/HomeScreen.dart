@@ -11,6 +11,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
+  Set<String> wishlistItems = {}; // Track wishlist by product name
+  
   final List<Map<String, dynamic>> categories = [
     {'icon': Icons.grid_view, 'title': 'All'},
     {'icon': Icons.devices, 'title': 'Electronics'},
@@ -234,23 +236,38 @@ class _HomeScreenState extends State<HomeScreen> {
               Positioned(
                 top: 12,
                 right: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: AppColors.grey,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (wishlistItems.contains(product['name'])) {
+                        wishlistItems.remove(product['name']);
+                      } else {
+                        wishlistItems.add(product['name']);
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      wishlistItems.contains(product['name'])
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 16,
+                      color: wishlistItems.contains(product['name'])
+                          ? Colors.red
+                          : AppColors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -664,7 +681,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // Bottom Navigation Bar
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 0),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 0,
+        wishlistCount: wishlistItems.length,
+      ),
     );
   }
 }
