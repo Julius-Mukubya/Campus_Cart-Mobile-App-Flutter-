@@ -361,6 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -398,164 +399,103 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search Bar
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.white,
-                    AppColors.background.withOpacity(0.5),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.secondary.withOpacity(0.2),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(8),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.search,
                       color: AppColors.white,
-                      size: 18,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.lightGrey),
                     ),
-                  ),
-                  const Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search products...',
-                        hintStyle: TextStyle(
-                          color: AppColors.grey,
-                          fontSize: 14,
+                    child: const Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Icon(Icons.search, color: AppColors.grey),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 16),
-                      ),
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search for Product',
+                              hintStyle: TextStyle(color: AppColors.grey),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.tune,
-                        color: AppColors.primary,
-                        size: 18,
-                      ),
-                      onPressed: () {},
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.lightGrey),
                   ),
-                ],
-              ),
+                  child: const Icon(Icons.tune, color: AppColors.text),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
-            // Categories
+            // Popular Categories
             const Text(
-              'Categories',
+              'Popular Categories',
               style: TextStyle(
-                fontSize: 18, 
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
               ),
             ),
             const SizedBox(height: 16),
+            
             SizedBox(
-              height: 50,
-              child: ListView.separated(
+              height: 90,
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final category = categories[index];
-                  final isSelected = selectedCategory == category['title'];
-                  
-                  // Use consistent blue theme for all categories
-                  final categoryColor = AppColors.primary;
-                  
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         selectedCategory = category['title'];
                       });
                     },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        gradient: isSelected 
-                            ? LinearGradient(
-                                colors: [categoryColor, categoryColor.withOpacity(0.8)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : LinearGradient(
-                                colors: [
-                                  categoryColor.withOpacity(0.1),
-                                  categoryColor.withOpacity(0.05),
-                                ],
-                              ),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: isSelected ? categoryColor : categoryColor.withOpacity(0.3),
-                          width: isSelected ? 2 : 1,
-                        ),
-                        boxShadow: isSelected ? [
-                          BoxShadow(
-                            color: categoryColor.withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ] : [
-                          BoxShadow(
-                            color: categoryColor.withOpacity(0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    child: Container(
+                      width: 70,
+                      margin: const EdgeInsets.only(right: 16),
+                      child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(6),
+                            width: 60,
+                            height: 60,
                             decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? AppColors.white.withOpacity(0.2)
-                                  : categoryColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.lightGrey,
+                                width: 2,
+                              ),
                             ),
                             child: Icon(
                               category['icon'],
-                              color: isSelected ? AppColors.white : categoryColor,
-                              size: 16,
+                              color: AppColors.text,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 8),
                           Text(
                             category['title'],
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isSelected ? AppColors.white : categoryColor,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.text,
                             ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
