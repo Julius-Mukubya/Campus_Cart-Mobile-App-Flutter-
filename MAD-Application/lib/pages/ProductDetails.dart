@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'CartScreen.dart';
-import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -133,48 +131,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.shopping_cart_outlined,
-              color: AppColors.text,
-              size: 20,
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.text,
-              size: 20,
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -551,7 +507,124 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ],
                         ),
                       )),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+
+                  // Add Review Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Write a Review',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Rating Stars
+                        Row(
+                          children: [
+                            const Text(
+                              'Your Rating:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.text,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Row(
+                              children: List.generate(
+                                5,
+                                (index) => GestureDetector(
+                                  onTap: () {
+                                    // Handle rating tap
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2),
+                                    child: Icon(
+                                      Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 28,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Review Text Field
+                        TextField(
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            hintText: 'Share your experience with this product...',
+                            hintStyle: TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 14,
+                            ),
+                            filled: true,
+                            fillColor: AppColors.background,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Submit Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Handle review submission
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Review submitted!'),
+                                  duration: const Duration(seconds: 2),
+                                  backgroundColor: AppColors.primary,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Submit Review',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -749,9 +822,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
       ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 0),
     );
   }
 
