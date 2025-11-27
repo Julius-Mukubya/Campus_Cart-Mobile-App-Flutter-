@@ -13,21 +13,48 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   bool isGridView = true;
   final WishlistManager _wishlistManager = WishlistManager();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<Map<String, dynamic>> _filteredItems = [];
 
   @override
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _filteredItems = _wishlistManager.wishlistItems;
   }
 
   @override
   void dispose() {
+    _searchController.dispose();
     _wishlistManager.removeListener(_onWishlistChanged);
     super.dispose();
   }
 
   void _onWishlistChanged() {
-    setState(() {});
+    setState(() {
+      _filterItems();
+    });
+  }
+
+  void _filterItems() {
+    if (_searchQuery.isEmpty) {
+      _filteredItems = _wishlistManager.wishlistItems;
+    } else {
+      _filteredItems = _wishlistManager.wishlistItems.where((item) {
+        final name = item['name'].toString().toLowerCase();
+        final category = item['category'].toString().toLowerCase();
+        final query = _searchQuery.toLowerCase();
+        return name.contains(query) || category.contains(query);
+      }).toList();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value;
+      _filterItems();
+    });
   }
 
   void removeItem(String productName) {
@@ -433,41 +460,50 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   // Price and Actions
                   Row(
                     children: [
-                      Text(
-                        item['price'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.primary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['price'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: AppColors.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (item['discount'] != null) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  item['discount'],
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (item['discount'] != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            item['discount'],
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () => addToCart(item),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                            horizontal: 12,
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
@@ -591,35 +627,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
         centerTitle: false,
         actions: [
-          if (_wishlistManager.wishlistItems.isNotEmpty) ...[
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  isGridView = !isGridView;
-                });
-              },
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withOpacity(0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  isGridView ? Icons.view_list : Icons.grid_view,
-                  color: AppColors.text,
-                  size: 20,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.all(8),
@@ -635,9 +642,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ],
             ),
             child: const Icon(
-              Icons.search,
-              color: AppColors.secondaryText,
-              size: 20,
+              Icons.notifications_outlined,
+              color: AppColors.text,
+              size: 24,
             ),
           ),
         ],
@@ -650,7 +657,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Info
+                    // Header Section with Search and Filter
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -664,42 +671,106 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${_wishlistManager.itemCount} ${_wishlistManager.itemCount == 1 ? 'Item' : 'Items'} Saved',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                          // Search and Filter Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.lightGrey),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: Icon(Icons.search, color: AppColors.grey),
+                                      ),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _searchController,
+                                          onChanged: _onSearchChanged,
+                                          decoration: const InputDecoration(
+                                            hintText: 'Search Wishlist',
+                                            hintStyle: TextStyle(color: AppColors.grey),
+                                            border: InputBorder.none,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isGridView = !isGridView;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.lightGrey),
+                                  ),
+                                  child: Icon(
+                                    isGridView ? Icons.view_list : Icons.grid_view,
                                     color: AppColors.text,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Items you love, ready to purchase',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.secondaryText,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.favorite,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Items Count Info
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.favorite,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${_filteredItems.length} ${_filteredItems.length == 1 ? 'Item' : 'Items'}${_searchQuery.isNotEmpty ? ' Found' : ' Saved'}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.text,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _searchQuery.isNotEmpty 
+                                          ? 'Matching your search'
+                                          : 'Items you love, ready to purchase',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.secondaryText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -709,38 +780,71 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     
                     // Products List/Grid
                     Expanded(
-                      child: isGridView
-                          ? SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final cardWidth = (constraints.maxWidth - 16) / 2;
-                                  return Wrap(
-                                    spacing: 16,
-                                    runSpacing: 16,
-                                    children: _wishlistManager.wishlistItems.map((item) {
-                                      return SizedBox(
-                                        width: cardWidth,
-                                        child: _buildGridCard(item),
-                                      );
-                                    }).toList(),
-                                  );
-                                },
+                      child: _filteredItems.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No items found',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Try a different search term',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
-                          : ListView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: _wishlistManager.itemCount,
-                              itemBuilder: (context, index) {
-                                return _buildListCard(_wishlistManager.wishlistItems[index]);
-                              },
-                            ),
+                          : isGridView
+                              ? SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final cardWidth = (constraints.maxWidth - 16) / 2;
+                                      return Wrap(
+                                        spacing: 16,
+                                        runSpacing: 16,
+                                        children: _filteredItems.map((item) {
+                                          return SizedBox(
+                                            width: cardWidth,
+                                            child: _buildGridCard(item),
+                                          );
+                                        }).toList(),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : ListView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _filteredItems.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildListCard(_filteredItems[index]);
+                                  },
+                                ),
                     ),
                   ],
                 ),
               ),
       ),
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 2),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 2,
+        wishlistCount: _wishlistManager.itemCount,
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -11,6 +12,24 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
+  final WishlistManager _wishlistManager = WishlistManager();
+  
+  @override
+  void initState() {
+    super.initState();
+    _wishlistManager.addListener(_onWishlistChanged);
+  }
+
+  @override
+  void dispose() {
+    _wishlistManager.removeListener(_onWishlistChanged);
+    super.dispose();
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
+  }
+
   final List<Map<String, dynamic>> categories = [
     {
       'icon': Icons.devices,
@@ -527,7 +546,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 1),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 1,
+        wishlistCount: _wishlistManager.itemCount,
+      ),
     );
   }
 }

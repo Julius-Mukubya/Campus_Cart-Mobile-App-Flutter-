@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'OrderSuccess.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -11,9 +12,26 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  final WishlistManager _wishlistManager = WishlistManager();
   String selectedDeliveryMethod = 'Standard';
   String selectedAddress = 'Home Address';
   String selectedPaymentMethod = 'Mobile Money';
+  
+  @override
+  void initState() {
+    super.initState();
+    _wishlistManager.addListener(_onWishlistChanged);
+  }
+
+  @override
+  void dispose() {
+    _wishlistManager.removeListener(_onWishlistChanged);
+    super.dispose();
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
+  }
   
   List<Map<String, dynamic>> cartItems = [
     {
@@ -596,7 +614,7 @@ class _CartScreenState extends State<CartScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: DropdownButtonFormField<String>(
-                        value: selectedDeliveryMethod,
+                        initialValue: selectedDeliveryMethod,
                         items: const [
                           DropdownMenuItem(
                             value: 'Standard',
@@ -636,7 +654,7 @@ class _CartScreenState extends State<CartScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: DropdownButtonFormField<String>(
-                        value: selectedAddress,
+                        initialValue: selectedAddress,
                         items: const [
                           DropdownMenuItem(
                             value: 'Home Address',
@@ -676,7 +694,7 @@ class _CartScreenState extends State<CartScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: DropdownButtonFormField<String>(
-                        value: selectedPaymentMethod,
+                        initialValue: selectedPaymentMethod,
                         items: const [
                           DropdownMenuItem(
                             value: 'Mobile Money',
@@ -965,7 +983,10 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
       ),
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 3),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 3,
+        wishlistCount: _wishlistManager.itemCount,
+      ),
     );
   }
 }

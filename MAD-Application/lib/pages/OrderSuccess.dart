@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
 
 class OrderSuccess extends StatelessWidget {
-  const OrderSuccess({Key? key}) : super(key: key);
+  const OrderSuccess({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final wishlistManager = WishlistManager();
+    
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -71,7 +74,10 @@ class OrderSuccess extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNavigation(currentIndex: 0),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 0,
+        wishlistCount: wishlistManager.itemCount,
+      ),
     );
   }
 }
