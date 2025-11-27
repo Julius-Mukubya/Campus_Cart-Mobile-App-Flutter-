@@ -112,7 +112,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       child: CircleAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage(_userManager.profileImage),
+                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        child: Text(
+                          _userManager.name.isNotEmpty 
+                              ? _userManager.name[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(

@@ -68,11 +68,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircleAvatar(
               radius: 40,
               backgroundColor: AppColors.primary.withOpacity(0.1),
-              backgroundImage: NetworkImage(_userManager.profileImage),
-              child: const Icon(
-                Icons.person,
-                size: 40,
-                color: AppColors.primary,
+              child: Text(
+                _userManager.name.isNotEmpty 
+                    ? _userManager.name[0].toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
@@ -97,26 +101,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppColors.secondaryText,
                   ),
                 ),
-                const SizedBox(height: 8),
-                if (_userManager.isPremium)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Premium Member',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -416,20 +400,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'onTap': () => Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AddressesScreen()),
-        ),
-      },
-      {
-        'icon': Icons.payment_outlined,
-        'title': 'Payment Methods',
-        'subtitle': 'Manage payment options',
-        'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Addresses - Coming Soon'),
-            backgroundColor: AppColors.accent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
         ),
       },
       {

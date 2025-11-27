@@ -28,6 +28,110 @@ class _AddressesScreenState extends State<AddressesScreen> {
     setState(() {});
   }
 
+  void _showEditAddressDialog(Map<String, dynamic> address) {
+    final labelController = TextEditingController(text: address['label']);
+    final nameController = TextEditingController(text: address['name']);
+    final phoneController = TextEditingController(text: address['phone']);
+    final addressController = TextEditingController(text: address['address']);
+    final cityController = TextEditingController(text: address['city']);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Edit Address',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: labelController,
+                decoration: const InputDecoration(
+                  labelText: 'Label (e.g., Home, Office)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Street Address',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: cityController,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (labelController.text.isNotEmpty &&
+                  nameController.text.isNotEmpty &&
+                  addressController.text.isNotEmpty) {
+                _addressManager.updateAddress(address['id'], {
+                  'label': labelController.text,
+                  'name': nameController.text,
+                  'phone': phoneController.text,
+                  'address': addressController.text,
+                  'city': cityController.text,
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Address updated successfully'),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+            ),
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddAddressDialog() {
     final labelController = TextEditingController();
     final nameController = TextEditingController();
@@ -249,15 +353,41 @@ class _AddressesScreenState extends State<AddressesScreen> {
                         PopupMenuButton(
                           icon: const Icon(Icons.more_vert),
                           itemBuilder: (context) => [
+                            PopupMenuItem(
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.edit, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                              onTap: () {
+                                Future.delayed(Duration.zero, () {
+                                  _showEditAddressDialog(address);
+                                });
+                              },
+                            ),
                             if (!address['isDefault'])
                               PopupMenuItem(
-                                child: const Text('Set as Default'),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Set as Default'),
+                                  ],
+                                ),
                                 onTap: () {
                                   _addressManager.setDefaultAddress(address['id']);
                                 },
                               ),
                             PopupMenuItem(
-                              child: const Text('Delete'),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18, color: AppColors.error),
+                                  SizedBox(width: 8),
+                                  Text('Delete', style: TextStyle(color: AppColors.error)),
+                                ],
+                              ),
                               onTap: () {
                                 _addressManager.deleteAddress(address['id']);
                                 ScaffoldMessenger.of(context).showSnackBar(
