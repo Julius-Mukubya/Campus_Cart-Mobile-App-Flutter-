@@ -157,8 +157,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        category['color'].withOpacity(0.1),
-                        category['color'].withOpacity(0.05),
+                        AppColors.primary.withOpacity(0.05),
+                        AppColors.secondary.withOpacity(0.02),
                       ],
                     ),
                   ),
@@ -175,8 +175,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                category['color'].withOpacity(0.2),
-                                category['color'].withOpacity(0.1),
+                                AppColors.primary.withOpacity(0.1),
+                                AppColors.secondary.withOpacity(0.05),
                               ],
                             ),
                           ),
@@ -184,7 +184,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             child: Icon(
                               category['icon'],
                               size: 50,
-                              color: category['color'],
+                              color: AppColors.primary,
                             ),
                           ),
                         );
@@ -195,8 +195,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                category['color'].withOpacity(0.2),
-                                category['color'].withOpacity(0.1),
+                                AppColors.primary.withOpacity(0.1),
+                                AppColors.secondary.withOpacity(0.05),
                               ],
                             ),
                           ),
@@ -234,8 +234,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ),
                     child: Text(
                       '${category['productCount']}',
-                      style: TextStyle(
-                        color: category['color'],
+                      style: const TextStyle(
+                        color: AppColors.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -250,13 +250,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: category['color'].withOpacity(0.2),
+                      color: AppColors.primary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       category['icon'],
                       size: 20,
-                      color: category['color'],
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -305,23 +305,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     children: [
                       Text(
                         '${category['productCount']} items',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: category['color'],
+                          color: AppColors.primary,
                         ),
                       ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: category['color'].withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
-                          color: category['color'],
+                          color: AppColors.primary,
                         ),
                       ),
                     ],
