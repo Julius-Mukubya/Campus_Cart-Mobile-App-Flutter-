@@ -3,6 +3,7 @@ import 'OrderSuccess.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -13,6 +14,7 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
+  final CartManager _cartManager = CartManager();
   String selectedDeliveryMethod = 'Standard';
   String selectedAddress = 'Home Address';
   String selectedPaymentMethod = 'Mobile Money';
@@ -21,103 +23,55 @@ class _CartScreenState extends State<CartScreen> {
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
   }
 
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
   void _onWishlistChanged() {
     setState(() {});
   }
-  
-  List<Map<String, dynamic>> cartItems = [
-    {
-      'name': 'Wireless Headphones',
-      'price': 85000,
-      'quantity': 1,
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
-      'rating': 4.8,
-      'discount': 20,
-    },
-    {
-      'name': 'Designer T-Shirt',
-      'price': 45000,
-      'quantity': 2,
-      'category': 'Fashion',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
-      'rating': 4.9,
-      'discount': 25,
-    },
-    {
-      'name': 'Coffee Maker',
-      'price': 95000,
-      'quantity': 1,
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
-      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
-      'rating': 4.7,
-      'discount': 18,
-    },
-  ];
 
-  double get subtotal {
-    return cartItems.fold(
-      0,
-      (sum, item) => sum + (item['price'] * item['quantity']),
-    );
+  void _onCartChanged() {
+    setState(() {});
   }
 
-  double get deliveryFee => 5000;
-  double get tax => subtotal * 0.18; // 18% tax
-  double get total => subtotal + deliveryFee + tax;
-
-  void increaseQuantity(int index) {
-    setState(() {
-      cartItems[index]['quantity']++;
-    });
+  void increaseQuantity(String productName) {
+    final item = _cartManager.cartItems.firstWhere((item) => item['name'] == productName);
+    _cartManager.updateQuantity(productName, (item['quantity'] ?? 1) + 1);
   }
 
-  void decreaseQuantity(int index) {
-    setState(() {
-      if (cartItems[index]['quantity'] > 1) {
-        cartItems[index]['quantity']--;
-      }
-    });
+  void decreaseQuantity(String productName) {
+    final item = _cartManager.cartItems.firstWhere((item) => item['name'] == productName);
+    final currentQuantity = item['quantity'] ?? 1;
+    if (currentQuantity > 1) {
+      _cartManager.updateQuantity(productName, currentQuantity - 1);
+    }
   }
 
-  void removeItem(int index) {
-    final removedItem = cartItems[index];
-    setState(() {
-      cartItems.removeAt(index);
-    });
-    
+  void removeItem(String productName) {
+    _cartManager.removeFromCart(productName);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${removedItem['name']} removed from cart'),
+        content: const Text('Item removed from cart'),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'Undo',
-          textColor: AppColors.white,
-          onPressed: () {
-            setState(() {
-              cartItems.insert(index, removedItem);
-            });
-          },
-        ),
       ),
     );
   }
 
-  Widget _buildCartItem(Map<String, dynamic> item, int index) {
-    final discountedPrice = item['price'] * (1 - item['discount'] / 100);
+
+
+  Widget _buildCartItem(Map<String, dynamic> item) {
+    final price = double.tryParse(item['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+    final discount = item['discount'] != null ? double.tryParse(item['discount'].toString().replaceAll('%', '').replaceAll('-', '')) ?? 0 : 0;
+    final discountedPrice = discount > 0 ? price * (1 - discount / 100) : price;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -192,7 +146,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => removeItem(index),
+                        onTap: () => removeItem(item['name']),
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
@@ -240,9 +194,9 @@ class _CartScreenState extends State<CartScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (item['discount'] > 0) ...[
+                          if (discount > 0) ...[
                             Text(
-                              'UGX ${item['price'].toStringAsFixed(0)}',
+                              item['price'].toString().contains('UGX') ? item['price'] : 'UGX ${price.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.secondaryText,
@@ -259,7 +213,7 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                           ] else ...[
                             Text(
-                              'UGX ${item['price'].toStringAsFixed(0)}',
+                              item['price'].toString().contains('UGX') ? item['price'] : 'UGX ${price.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -282,7 +236,7 @@ class _CartScreenState extends State<CartScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             GestureDetector(
-                              onTap: () => decreaseQuantity(index),
+                              onTap: () => decreaseQuantity(item['name']),
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
@@ -312,7 +266,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => increaseQuantity(index),
+                              onTap: () => increaseQuantity(item['name']),
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
@@ -360,35 +314,35 @@ class _CartScreenState extends State<CartScreen> {
           const Text(
             'Order Summary',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppColors.text,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
           // Subtotal
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Subtotal (${cartItems.length} items)',
+                'Subtotal (${_cartManager.itemCount} items)',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.secondaryText,
                 ),
               ),
               Text(
-                'UGX ${subtotal.toStringAsFixed(0)}',
+                'UGX ${_cartManager.subtotal.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.text,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           
           // Delivery Fee
           Row(
@@ -397,37 +351,14 @@ class _CartScreenState extends State<CartScreen> {
               Text(
                 'Delivery Fee',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.secondaryText,
                 ),
               ),
               Text(
-                'UGX ${deliveryFee.toStringAsFixed(0)}',
+                'UGX ${_cartManager.deliveryFee.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          
-          // Tax
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Tax (18%)',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.secondaryText,
-                ),
-              ),
-              Text(
-                'UGX ${tax.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.text,
                 ),
@@ -435,7 +366,7 @@ class _CartScreenState extends State<CartScreen> {
             ],
           ),
           
-          const Divider(height: 24),
+          const Divider(height: 20),
           
           // Total
           Row(
@@ -444,15 +375,15 @@ class _CartScreenState extends State<CartScreen> {
               const Text(
                 'Total',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: AppColors.text,
                 ),
               ),
               Text(
-                'UGX ${total.toStringAsFixed(0)}',
+                'UGX ${_cartManager.total.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
                 ),
@@ -741,7 +672,7 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                           ),
                           Text(
-                            'UGX ${total.toStringAsFixed(0)}',
+                            'UGX ${_cartManager.total.toStringAsFixed(0)}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -808,28 +739,6 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.text,
-              size: 16,
-            ),
-          ),
-        ),
         title: const Text(
           'My Cart',
           style: TextStyle(
@@ -854,21 +763,16 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-            child: Badge(
-              label: Text('${cartItems.length}'),
-              backgroundColor: AppColors.primary,
-              textColor: AppColors.white,
-              child: const Icon(
-                Icons.shopping_cart_outlined,
-                color: AppColors.text,
-                size: 20,
-              ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.text,
+              size: 24,
             ),
           ),
         ],
       ),
       body: SafeArea(
-        child: cartItems.isEmpty
+        child: _cartManager.cartItems.isEmpty
             ? _buildEmptyCart()
             : Padding(
                 padding: const EdgeInsets.all(16),
@@ -896,7 +800,7 @@ class _CartScreenState extends State<CartScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${cartItems.length} ${cartItems.length == 1 ? 'Item' : 'Items'} in Cart',
+                                  '${_cartManager.itemCount} ${_cartManager.itemCount == 1 ? 'Item' : 'Items'} in Cart',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -935,9 +839,9 @@ class _CartScreenState extends State<CartScreen> {
                     // Cart Items
                     Expanded(
                       child: ListView.builder(
-                        itemCount: cartItems.length,
+                        itemCount: _cartManager.itemCount,
                         itemBuilder: (context, index) {
-                          return _buildCartItem(cartItems[index], index);
+                          return _buildCartItem(_cartManager.cartItems[index]);
                         },
                       ),
                     ),
@@ -969,7 +873,7 @@ class _CartScreenState extends State<CartScreen> {
                             const Icon(Icons.payment, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'Proceed to Checkout • UGX ${total.toStringAsFixed(0)}',
+                              'Proceed to Checkout • UGX ${_cartManager.total.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -986,6 +890,7 @@ class _CartScreenState extends State<CartScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 3,
         wishlistCount: _wishlistManager.itemCount,
+        cartCount: _cartManager.itemCount,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
 
 class WishlistScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   bool isGridView = true;
   final WishlistManager _wishlistManager = WishlistManager();
+  final CartManager _cartManager = CartManager();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   List<Map<String, dynamic>> _filteredItems = [];
@@ -71,6 +73,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   void addToCart(Map<String, dynamic> item) {
+    _cartManager.addToCart(item);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${item['name']} added to cart'),
@@ -868,6 +871,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 2,
         wishlistCount: _wishlistManager.itemCount,
+        cartCount: _cartManager.itemCount,
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   final WishlistManager _wishlistManager = WishlistManager();
-  Set<String> cartItems = {}; // Track cart by product name
+  final CartManager _cartManager = CartManager();
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
   
@@ -329,7 +330,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 12,
                 child: GestureDetector(
                   onTap: () {
+                    final isInWishlist = _wishlistManager.isInWishlist(product['name']);
                     _wishlistManager.toggleWishlist(product);
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isInWishlist 
+                              ? '${product['name']} removed from wishlist'
+                              : '${product['name']} added to wishlist'
+                        ),
+                        backgroundColor: isInWishlist ? AppColors.error : AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -405,24 +421,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
-                        setState(() {
-                          if (cartItems.contains(product['name'])) {
-                            cartItems.remove(product['name']);
-                          } else {
-                            cartItems.add(product['name']);
-                          }
-                        });
+                        _cartManager.addToCart(product);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${product['name']} added to cart'),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                          color: cartItems.contains(product['name'])
+                          color: _cartManager.isInCart(product['name'])
                               ? AppColors.accent
                               : AppColors.primary,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Icon(
-                          cartItems.contains(product['name'])
+                          _cartManager.isInCart(product['name'])
                               ? Icons.shopping_cart
                               : Icons.add_shopping_cart,
                           size: 16,
@@ -806,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 0,
         wishlistCount: _wishlistManager.itemCount,
-        cartCount: cartItems.length,
+        cartCount: _cartManager.itemCount,
       ),
     );
   }

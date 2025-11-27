@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -360,6 +361,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wishlistManager = WishlistManager();
+    final cartManager = CartManager();
     final accountItems = [
       {
         'icon': Icons.receipt_long_outlined,
@@ -604,6 +606,7 @@ class ProfileScreen extends StatelessWidget {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 4,
         wishlistCount: wishlistManager.itemCount,
+        cartCount: cartManager.itemCount,
       ),
     );
   }

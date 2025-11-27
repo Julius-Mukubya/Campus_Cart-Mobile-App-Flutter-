@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class OrderSuccess extends StatelessWidget {
   const OrderSuccess({super.key});
@@ -8,6 +9,7 @@ class OrderSuccess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wishlistManager = WishlistManager();
+    final cartManager = CartManager();
     
     return Scaffold(
       appBar: AppBar(
@@ -77,6 +79,7 @@ class OrderSuccess extends StatelessWidget {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 0,
         wishlistCount: wishlistManager.itemCount,
+        cartCount: cartManager.itemCount,
       ),
     );
   }

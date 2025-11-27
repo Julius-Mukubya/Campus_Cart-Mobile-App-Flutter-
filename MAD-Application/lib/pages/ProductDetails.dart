@@ -299,7 +299,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     right: 12,
                     child: GestureDetector(
                       onTap: () {
+                        final isInWishlist = _wishlistManager.isInWishlist(widget.product['name']);
                         _wishlistManager.toggleWishlist(widget.product);
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isInWishlist 
+                                  ? '${widget.product['name']} removed from wishlist'
+                                  : '${widget.product['name']} added to wishlist'
+                            ),
+                            backgroundColor: isInWishlist ? AppColors.error : AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),

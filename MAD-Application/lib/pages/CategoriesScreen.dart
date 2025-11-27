@@ -3,6 +3,7 @@ import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -13,20 +14,27 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
+  final CartManager _cartManager = CartManager();
   
   @override
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
   }
 
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
   void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void _onCartChanged() {
     setState(() {});
   }
 
@@ -549,6 +557,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 1,
         wishlistCount: _wishlistManager.itemCount,
+        cartCount: _cartManager.itemCount,
       ),
     );
   }
