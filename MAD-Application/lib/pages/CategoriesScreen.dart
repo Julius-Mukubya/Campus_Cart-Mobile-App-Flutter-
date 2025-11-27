@@ -564,7 +564,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 }
 
 // New screen to show products for a specific category
-class CategoryProductsScreen extends StatelessWidget {
+class CategoryProductsScreen extends StatefulWidget {
   final Map<String, dynamic> category;
   final List<Map<String, dynamic>> products;
 
@@ -573,6 +573,36 @@ class CategoryProductsScreen extends StatelessWidget {
     required this.category,
     required this.products,
   });
+
+  @override
+  State<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
+}
+
+class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
+  final WishlistManager _wishlistManager = WishlistManager();
+  final CartManager _cartManager = CartManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
+  }
+
+  @override
+  void dispose() {
+    _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
+    super.dispose();
+  }
+
+  void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void _onCartChanged() {
+    setState(() {});
+  }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
@@ -707,23 +737,47 @@ class CategoryProductsScreen extends StatelessWidget {
               Positioned(
                 top: 12,
                 right: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                child: GestureDetector(
+                  onTap: () {
+                    final isInWishlist = _wishlistManager.isInWishlist(product['name']);
+                    _wishlistManager.toggleWishlist(product);
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isInWishlist 
+                              ? '${product['name']} removed from wishlist'
+                              : '${product['name']} added to wishlist'
+                        ),
+                        backgroundColor: isInWishlist ? AppColors.error : AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        duration: const Duration(seconds: 1),
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: AppColors.grey,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _wishlistManager.isInWishlist(product['name'])
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 16,
+                      color: _wishlistManager.isInWishlist(product['name'])
+                          ? Colors.red
+                          : AppColors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -774,16 +828,34 @@ class CategoryProductsScreen extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(
-                          Icons.add_shopping_cart,
-                          size: 16,
-                          color: AppColors.white,
+                      GestureDetector(
+                        onTap: () {
+                          _cartManager.addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${product['name']} added to cart'),
+                              backgroundColor: AppColors.success,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: _cartManager.isInCart(product['name'])
+                                ? AppColors.accent
+                                : AppColors.primary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            _cartManager.isInCart(product['name'])
+                                ? Icons.shopping_cart
+                                : Icons.add_shopping_cart,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -839,7 +911,7 @@ class CategoryProductsScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          category['title'],
+          widget.category['title'],
           style: const TextStyle(
             color: AppColors.text,
             fontWeight: FontWeight.bold,
@@ -877,7 +949,7 @@ class CategoryProductsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        category['icon'],
+                        widget.category['icon'],
                         color: AppColors.primary,
                         size: 24,
                       ),
@@ -888,7 +960,7 @@ class CategoryProductsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            category['description'],
+                            widget.category['description'],
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -897,7 +969,7 @@ class CategoryProductsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${products.length} products available',
+                            '${widget.products.length} products available',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.secondaryText,
@@ -914,7 +986,7 @@ class CategoryProductsScreen extends StatelessWidget {
               
               // Products Grid
               Expanded(
-                child: products.isEmpty
+                child: widget.products.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -952,7 +1024,7 @@ class CategoryProductsScreen extends StatelessWidget {
                             return Wrap(
                               spacing: 16,
                               runSpacing: 16,
-                            children: products.map((product) {
+                            children: widget.products.map((product) {
                               return SizedBox(
                                 width: cardWidth,
                                 child: GestureDetector(

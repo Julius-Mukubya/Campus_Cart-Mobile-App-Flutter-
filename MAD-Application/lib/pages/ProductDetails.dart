@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/cart_manager.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -13,21 +14,27 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
-  bool isInCart = false;
+  final CartManager _cartManager = CartManager();
 
   @override
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
   }
 
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
   void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void _onCartChanged() {
     setState(() {});
   }
 
@@ -421,15 +428,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 56,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withOpacity(0.85),
-                        ],
+                        colors: _cartManager.isInCart(widget.product['name'])
+                            ? [
+                                AppColors.accent,
+                                AppColors.accent.withOpacity(0.85),
+                              ]
+                            : [
+                                AppColors.primary,
+                                AppColors.primary.withOpacity(0.85),
+                              ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: (_cartManager.isInCart(widget.product['name'])
+                                  ? AppColors.accent
+                                  : AppColors.primary)
+                              .withOpacity(0.4),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -437,18 +452,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        setState(() {
-                          isInCart = !isInCart;
-                        });
-                        if (isInCart) {
+                        if (!_cartManager.isInCart(widget.product['name'])) {
+                          _cartManager.addToCart(widget.product);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Added to cart!'),
-                              duration: const Duration(seconds: 2),
-                              backgroundColor: AppColors.primary,
+                              content: Text('${widget.product['name']} added to cart'),
+                              backgroundColor: AppColors.success,
                               behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              duration: const Duration(seconds: 1),
                             ),
                           );
+                        } else {
+                          Navigator.pushNamed(context, '/cart');
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -459,13 +477,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       icon: Icon(
-                        isInCart
+                        _cartManager.isInCart(widget.product['name'])
                             ? Icons.shopping_cart
                             : Icons.add_shopping_cart_rounded,
                         color: AppColors.white,
                       ),
                       label: Text(
-                        isInCart ? 'In Cart' : 'Add to Cart',
+                        _cartManager.isInCart(widget.product['name'])
+                            ? 'View Cart'
+                            : 'Add to Cart',
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
