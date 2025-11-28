@@ -17,7 +17,7 @@ class CartManager extends ChangeNotifier {
   
   double get subtotal {
     return _cartItems.fold(0.0, (sum, item) {
-      final price = _extractPrice(item['price']);
+      final price = _getDiscountedPrice(item);
       final quantity = item['quantity'] ?? 1;
       return sum + (price * quantity);
     });
@@ -27,10 +27,29 @@ class CartManager extends ChangeNotifier {
   
   double get total => subtotal + deliveryFee;
 
-  double _extractPrice(String priceString) {
+  double _extractPrice(dynamic priceString) {
+    if (priceString is double) return priceString;
+    if (priceString is int) return priceString.toDouble();
     // Extract numeric value from price string like "UGX 85,000"
-    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    final numericString = priceString.toString().replaceAll(RegExp(r'[^0-9]'), '');
     return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    
+    // Check if item has a discount
+    if (item['discount'] != null && item['discount'].toString().isNotEmpty) {
+      final discountStr = item['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
   }
 
   void addToCart(Map<String, dynamic> product) {

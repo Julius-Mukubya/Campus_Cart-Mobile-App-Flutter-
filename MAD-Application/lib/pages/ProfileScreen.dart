@@ -12,7 +12,6 @@ import 'package:madpractical/pages/PaymentMethodsScreen.dart';
 import 'package:madpractical/pages/NotificationsScreen.dart';
 import 'package:madpractical/pages/PrivacySecurityScreen.dart';
 import 'package:madpractical/pages/HelpSupportScreen.dart';
-import 'package:madpractical/pages/NotificationsListScreen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -529,16 +528,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('Logged out successfully'),
-                                  backgroundColor: AppColors.success,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
+                              Navigator.pop(context); // Close dialog
+                              // Navigate to sign in screen and clear all routes
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/signin',
+                                (route) => false,
                               );
                             },
                             style: ElevatedButton.styleFrom(

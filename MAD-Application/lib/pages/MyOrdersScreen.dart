@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/order_manager.dart';
+import 'package:madpractical/pages/OrderDetailsScreen.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -11,6 +12,22 @@ class MyOrdersScreen extends StatefulWidget {
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   final OrderManager _orderManager = OrderManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _orderManager.addListener(_onOrdersChanged);
+  }
+
+  @override
+  void dispose() {
+    _orderManager.removeListener(_onOrdersChanged);
+    super.dispose();
+  }
+
+  void _onOrdersChanged() {
+    setState(() {});
+  }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -125,22 +142,32 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 itemCount: _orderManager.orderCount,
                 itemBuilder: (context, index) {
                   final order = _orderManager.orders[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.08),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderDetailsScreen(order: order),
                         ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -243,43 +270,30 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                // Navigate to order details
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('View details for ${order['id']}'),
-                                    backgroundColor: AppColors.primary,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primary,
-                                side: const BorderSide(color: AppColors.primary),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: const Text(
-                                'View Details',
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Tap to view details',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 12,
+                                color: AppColors.primary,
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
+                  ),
                   );
                 },
               ),

@@ -8,6 +8,7 @@ import 'package:madpractical/pages/CategoriesScreen.dart';
 import 'package:madpractical/pages/WishlistScreen.dart';
 import 'package:madpractical/pages/ProfileScreen.dart';
 import 'package:madpractical/pages/SplashScreen.dart';
+import 'package:madpractical/pages/MyOrdersScreen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 void main() {
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
         '/categories': (context) => const CategoriesScreen(),
         '/wishlist': (context) => const WishlistScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/my-orders': (context) => const MyOrdersScreen(),
       },
     );
   }

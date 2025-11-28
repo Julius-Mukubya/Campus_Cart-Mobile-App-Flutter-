@@ -4,6 +4,7 @@ import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/order_manager.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 
 class CartScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  final OrderManager _orderManager = OrderManager();
   String selectedDeliveryMethod = 'Standard';
   String selectedAddress = 'Home Address';
   String selectedPaymentMethod = 'Mobile Money';
@@ -40,6 +42,33 @@ class _CartScreenState extends State<CartScreen> {
 
   void _onCartChanged() {
     setState(() {});
+  }
+
+  double _extractPrice(dynamic price) {
+    if (price is double) return price;
+    if (price is int) return price.toDouble();
+    if (price is String) {
+      final numericString = price.replaceAll(RegExp(r'[^0-9]'), '');
+      return double.tryParse(numericString) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    
+    // Check if item has a discount
+    if (item['discount'] != null && item['discount'].toString().isNotEmpty) {
+      final discountStr = item['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
   }
 
   void increaseQuantity(String productName) {
@@ -694,6 +723,36 @@ class _CartScreenState extends State<CartScreen> {
                           final orderSubtotal = _cartManager.subtotal;
                           final orderDeliveryFee = _cartManager.deliveryFee;
                           final orderTotal = _cartManager.total;
+                          final orderItems = List<Map<String, dynamic>>.from(
+                            _cartManager.cartItems.map((item) => {
+                              'name': item['name'],
+                              'quantity': item['quantity'],
+                              'price': _getDiscountedPrice(item),
+                              'image': item['image'] ?? '',
+                            })
+                          );
+                          
+                          // Generate order ID
+                          final now = DateTime.now();
+                          final orderId = 'ORD-${now.year}-${now.millisecondsSinceEpoch.toString().substring(7)}';
+                          
+                          // Create order object
+                          final order = {
+                            'id': orderId,
+                            'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+                            'status': 'Processing',
+                            'total': orderTotal,
+                            'items': _cartManager.itemCount,
+                            'products': orderItems,
+                            'deliveryMethod': selectedDeliveryMethod,
+                            'shippingAddress': selectedAddress,
+                            'paymentMethod': selectedPaymentMethod,
+                            'subtotal': orderSubtotal,
+                            'deliveryFee': orderDeliveryFee,
+                          };
+                          
+                          // Add order to OrderManager
+                          _orderManager.addOrder(order);
                           
                           // Clear the cart
                           _cartManager.clearCart();
