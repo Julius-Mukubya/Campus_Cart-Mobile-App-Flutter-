@@ -4,6 +4,7 @@ import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/widgets/notification_icon.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -748,27 +749,8 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.text,
-              size: 24,
-            ),
-          ),
+        actions: const [
+          NotificationIcon(),
         ],
       ),
       body: SafeArea(

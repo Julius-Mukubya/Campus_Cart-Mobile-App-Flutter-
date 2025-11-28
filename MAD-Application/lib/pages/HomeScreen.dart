@@ -4,6 +4,8 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/notification_manager.dart';
+import 'package:madpractical/pages/NotificationsListScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  final NotificationManager _notificationManager = NotificationManager();
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
   
@@ -506,11 +509,27 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.text,
-            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsListScreen(),
+                ),
+              );
+            },
+            icon: _notificationManager.unreadCount > 0
+                ? Badge(
+                    label: Text('${_notificationManager.unreadCount}'),
+                    backgroundColor: AppColors.error,
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.text,
+                    ),
+                  )
+                : const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.text,
+                  ),
           ),
         ],
       ),

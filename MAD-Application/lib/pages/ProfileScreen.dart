@@ -12,6 +12,8 @@ import 'package:madpractical/pages/PaymentMethodsScreen.dart';
 import 'package:madpractical/pages/NotificationsScreen.dart';
 import 'package:madpractical/pages/PrivacySecurityScreen.dart';
 import 'package:madpractical/pages/HelpSupportScreen.dart';
+import 'package:madpractical/pages/NotificationsListScreen.dart';
+import 'package:madpractical/widgets/notification_icon.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -465,27 +467,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.settings,
-              color: AppColors.text,
-              size: 20,
-            ),
-          ),
+        actions: const [
+          NotificationIcon(),
         ],
       ),
       body: SafeArea(

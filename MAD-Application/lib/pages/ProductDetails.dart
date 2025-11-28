@@ -204,28 +204,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.text,
-              size: 20,
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
