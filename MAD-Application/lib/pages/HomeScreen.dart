@@ -238,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               product['price'],
               style: const TextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: AppColors.secondaryText,
                 decoration: TextDecoration.lineThrough,
               ),
@@ -252,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'UGX ${discountedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: 10,
                 color: AppColors.primary,
               ),
               maxLines: 1,
@@ -266,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
         product['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 11,
+          fontSize: 10,
           color: AppColors.primary,
         ),
         maxLines: 1,

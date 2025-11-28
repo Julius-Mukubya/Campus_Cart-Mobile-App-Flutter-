@@ -59,6 +59,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return originalPrice;
   }
 
+  Widget _buildMainPriceSection() {
+    final originalPrice = _extractPrice(widget.product['price'] ?? 'UGX 0');
+    final discountedPrice = _getDiscountedPrice(widget.product);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.product['price'] ?? 'UGX 0',
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.secondaryText,
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'UGX ${discountedPrice.toStringAsFixed(0)}',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        widget.product['price'] ?? 'UGX 0',
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: AppColors.text,
+        ),
+      );
+    }
+  }
+
   Widget _buildPriceSection(Map<String, dynamic> product) {
     final originalPrice = _extractPrice(product['price']);
     final discountedPrice = _getDiscountedPrice(product);
@@ -72,7 +112,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: Text(
               product['price'],
               style: const TextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: AppColors.secondaryText,
                 decoration: TextDecoration.lineThrough,
               ),
@@ -86,7 +126,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               'UGX ${discountedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 10,
                 color: AppColors.primary,
               ),
               maxLines: 1,
@@ -100,7 +140,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         product['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
           color: AppColors.primary,
         ),
         maxLines: 1,
@@ -410,13 +450,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.product['price'] ?? 'UGX 5000',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text,
-                        ),
+                      Expanded(
+                        child: _buildMainPriceSection(),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(

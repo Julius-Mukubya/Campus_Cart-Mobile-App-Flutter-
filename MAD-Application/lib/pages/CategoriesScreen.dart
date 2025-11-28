@@ -73,7 +73,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             child: Text(
               product['price'],
               style: const TextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: AppColors.secondaryText,
                 decoration: TextDecoration.lineThrough,
               ),
@@ -87,7 +87,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               'UGX ${discountedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 10,
                 color: AppColors.primary,
               ),
               maxLines: 1,
@@ -101,7 +101,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         product['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
           color: AppColors.primary,
         ),
         maxLines: 1,
@@ -691,7 +691,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
             child: Text(
               product['price'],
               style: const TextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: AppColors.secondaryText,
                 decoration: TextDecoration.lineThrough,
               ),
@@ -705,7 +705,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
               'UGX ${discountedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 10,
                 color: AppColors.primary,
               ),
               maxLines: 1,
@@ -719,7 +719,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         product['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
           color: AppColors.primary,
         ),
         maxLines: 1,

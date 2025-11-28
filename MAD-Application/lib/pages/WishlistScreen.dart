@@ -107,7 +107,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             child: Text(
               item['price'],
               style: const TextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: AppColors.secondaryText,
                 decoration: TextDecoration.lineThrough,
               ),
@@ -121,7 +121,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               'UGX ${discountedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 10,
                 color: AppColors.primary,
               ),
               maxLines: 1,
@@ -135,7 +135,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         item['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 10,
           color: AppColors.primary,
         ),
         maxLines: 1,
