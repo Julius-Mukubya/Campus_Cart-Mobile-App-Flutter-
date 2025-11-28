@@ -8,6 +8,10 @@ import 'package:madpractical/services/order_manager.dart';
 import 'package:madpractical/pages/MyOrdersScreen.dart';
 import 'package:madpractical/pages/AddressesScreen.dart';
 import 'package:madpractical/pages/EditProfileScreen.dart';
+import 'package:madpractical/pages/PaymentMethodsScreen.dart';
+import 'package:madpractical/pages/NotificationsScreen.dart';
+import 'package:madpractical/pages/PrivacySecurityScreen.dart';
+import 'package:madpractical/pages/HelpSupportScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -407,13 +411,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Payment Methods',
         'subtitle': 'Manage payment options',
         'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Payment Methods - Coming Soon'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
         ),
       },
     ];
@@ -424,13 +424,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Notifications',
         'subtitle': 'Manage notifications',
         'color': AppColors.primary,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Notifications - Coming Soon'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
         ),
       },
       {
@@ -438,13 +434,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Privacy & Security',
         'subtitle': 'Account security settings',
         'color': AppColors.accent,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Privacy & Security - Coming Soon'),
-            backgroundColor: AppColors.accent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PrivacySecurityScreen()),
         ),
       },
       {
@@ -452,13 +444,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Help & Support',
         'subtitle': 'Get help and support',
         'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Help & Support - Coming Soon'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
         ),
       },
     ];
