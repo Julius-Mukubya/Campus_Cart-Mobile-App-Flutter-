@@ -25,6 +25,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
     _filteredItems = _wishlistManager.wishlistItems;
   }
 
@@ -32,6 +33,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void dispose() {
     _searchController.dispose();
     _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -39,6 +41,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
     setState(() {
       _filterItems();
     });
+  }
+
+  void _onCartChanged() {
+    setState(() {});
   }
 
   void _filterItems() {
@@ -409,11 +415,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: _cartManager.isInCart(item['name'])
+                                ? AppColors.accent
+                                : AppColors.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Icon(
-                            Icons.add_shopping_cart,
+                          child: Icon(
+                            _cartManager.isInCart(item['name'])
+                                ? Icons.shopping_cart
+                                : Icons.add_shopping_cart,
                             size: 16,
                             color: AppColors.white,
                           ),
@@ -610,21 +620,25 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: _cartManager.isInCart(item['name'])
+                                ? AppColors.accent
+                                : AppColors.primary,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.add_shopping_cart_rounded,
+                                _cartManager.isInCart(item['name'])
+                                    ? Icons.shopping_cart
+                                    : Icons.add_shopping_cart_rounded,
                                 size: 16,
                                 color: AppColors.white,
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
-                                'Add',
-                                style: TextStyle(
+                                _cartManager.isInCart(item['name']) ? 'In Cart' : 'Add',
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.white,

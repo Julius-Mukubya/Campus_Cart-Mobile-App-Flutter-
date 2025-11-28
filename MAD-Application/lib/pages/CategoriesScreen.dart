@@ -192,7 +192,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'rating': 4.7,
       'discount': '-18%',
       'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
     },
     {
@@ -219,7 +219,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'rating': 4.6,
       'discount': '-12%',
       'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1574025876844-6c9ba8602866?q=80&w=1121&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Modern LED table lamp with adjustable brightness and USB charging port.',
     },
     {
@@ -228,7 +228,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'rating': 4.4,
       'discount': '-28%',
       'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1637157216470-d92cd2edb2e8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Non-slip yoga mat with extra cushioning for comfortable workouts.',
     },
     {
@@ -246,7 +246,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       'rating': 4.8,
       'discount': '-10%',
       'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1760113724916-a87ffecd8e22?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
     },
     {

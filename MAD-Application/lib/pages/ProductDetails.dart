@@ -192,7 +192,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       'rating': 4.7,
       'discount': '-18%',
       'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Automatic coffee maker with programmable settings.',
     },
     {
@@ -219,7 +219,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       'rating': 4.8,
       'discount': '-10%',
       'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
+      'image': 'https://images.unsplash.com/photo-1760113724916-a87ffecd8e22?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
     },
     {
