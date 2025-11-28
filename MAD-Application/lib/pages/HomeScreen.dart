@@ -204,6 +204,72 @@ class _HomeScreenState extends State<HomeScreen> {
     return allProducts.where((product) => product['category'] == selectedCategory).toList();
   }
 
+  double _extractPrice(String priceString) {
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    
+    if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
+  }
+
+  Widget _buildPriceSection(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    final discountedPrice = _getDiscountedPrice(product);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            product['price'],
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.secondaryText,
+              decoration: TextDecoration.lineThrough,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            'UGX ${discountedPrice.toStringAsFixed(0)}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: AppColors.primary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        product['price'],
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: AppColors.primary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+  }
+
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
       height: 240,
@@ -463,17 +529,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 const SizedBox(height: 6),
                 
-                // Price
-                Text(
-                  product['price'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: AppColors.primary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                // Price with Discount
+                _buildPriceSection(product),
               ],
             ),
           ),
@@ -539,13 +596,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            Row(
+      body: Column(
+        children: [
+          // Fixed Search Bar and Categories
+          Container(
+            color: AppColors.background,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search Bar
+                Row(
               children: [
                 Expanded(
                   child: Container(
@@ -596,10 +657,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.text,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             
             SizedBox(
-              height: 90,
+              height: 75,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
@@ -613,13 +674,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     },
                     child: Container(
-                      width: 70,
-                      margin: const EdgeInsets.only(right: 16),
+                      width: 65,
+                      margin: const EdgeInsets.only(right: 12),
                       child: Column(
                         children: [
                           Container(
-                            width: 60,
-                            height: 60,
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected 
@@ -637,10 +698,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: isSelected 
                                   ? AppColors.primary
                                   : AppColors.text,
-                              size: 28,
+                              size: 24,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             category['title'],
                             style: TextStyle(
@@ -663,9 +724,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
+              ],
+            ),
+          ),
 
-            // Banner Slideshow
+          // Scrollable Content (Banner and Products)
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
+                  
+                  // Banner Slideshow
             SizedBox(
               height: 150,
               child: PageView.builder(
@@ -842,8 +914,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-          ],
-        ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
 
       // Bottom Navigation Bar
