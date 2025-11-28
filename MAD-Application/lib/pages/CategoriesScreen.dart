@@ -16,6 +16,9 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  String _sortBy = 'Default';
+  String _searchQuery = '';
+  String _tempSortBy = 'Default';
   
   @override
   void initState() {
@@ -268,6 +271,207 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   int _getProductCount(String categoryTitle) {
     return allProducts.where((product) => product['category'] == categoryTitle).length;
+  }
+
+  List<Map<String, dynamic>> get filteredCategories {
+    var filtered = categories;
+    
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((category) {
+        return category['title'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               category['description'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+    
+    // Sort categories
+    switch (_sortBy) {
+      case 'Name: A to Z':
+        filtered.sort((a, b) => a['title'].toString().compareTo(b['title'].toString()));
+        break;
+      case 'Name: Z to A':
+        filtered.sort((a, b) => b['title'].toString().compareTo(a['title'].toString()));
+        break;
+      case 'Most Products':
+        filtered.sort((a, b) => _getProductCount(b['title']).compareTo(_getProductCount(a['title'])));
+        break;
+      case 'Least Products':
+        filtered.sort((a, b) => _getProductCount(a['title']).compareTo(_getProductCount(b['title'])));
+        break;
+      case 'Default':
+      default:
+        break;
+    }
+    
+    return filtered;
+  }
+
+  void _showFilterDialog() {
+    // Reset temp sort to current sort when opening dialog
+    _tempSortBy = _sortBy;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.5,
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Sort Categories',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setModalState(() {
+                          _tempSortBy = 'Default';
+                        });
+                      },
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sort By Section
+                      const Text(
+                        'Sort By',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          'Default',
+                          'Name: A to Z',
+                          'Name: Z to A',
+                          'Most Products',
+                          'Least Products',
+                        ].map((sort) {
+                          final isSelected = _tempSortBy == sort;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _tempSortBy = sort;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.lightGrey.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                sort,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Apply Button
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _sortBy = _tempSortBy;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Apply Sort (${filteredCategories.length} categories)',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildCategoryCard(Map<String, dynamic> category) {
@@ -536,15 +740,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.lightGrey),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Padding(
+                            const Padding(
                               padding: EdgeInsets.all(12),
                               child: Icon(Icons.search, color: AppColors.grey),
                             ),
                             Expanded(
                               child: TextField(
-                                decoration: InputDecoration(
+                                onChanged: (value) {
+                                  setState(() {
+                                    _searchQuery = value;
+                                  });
+                                },
+                                decoration: const InputDecoration(
                                   hintText: 'Search for Categories',
                                   hintStyle: TextStyle(color: AppColors.grey),
                                   border: InputBorder.none,
@@ -556,14 +765,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.lightGrey),
+                    GestureDetector(
+                      onTap: _showFilterDialog,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.lightGrey),
+                        ),
+                        child: const Icon(Icons.tune, color: AppColors.text),
                       ),
-                      child: const Icon(Icons.tune, color: AppColors.text),
                     ),
                   ],
                 ),
@@ -573,35 +785,65 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               
               // Categories Grid
               Expanded(
-                child: GridView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.59,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CategoryProductsScreen(
-                              category: category,
-                              products: allProducts.where((product) => 
-                                product['category'] == category['title']).toList(),
+                child: filteredCategories.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: AppColors.secondaryText,
                             ),
-                          ),
-                        );
-                      },
-                      child: _buildCategoryCard(category),
-                    );
-                  },
-                ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No categories found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.secondaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try a different search term',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.secondaryText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.59,
+                        ),
+                        itemCount: filteredCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = filteredCategories[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CategoryProductsScreen(
+                                    category: category,
+                                    products: allProducts.where((product) => 
+                                      product['category'] == category['title']).toList(),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: _buildCategoryCard(category),
+                          );
+                        },
+                      ),
               ),
             ],
           ),

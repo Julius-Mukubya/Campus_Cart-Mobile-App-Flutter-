@@ -21,6 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final NotificationManager _notificationManager = NotificationManager();
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
+  String _sortBy = 'Default';
+  double _minPrice = 0;
+  double _maxPrice = 200000;
+  double _minRating = 0;
   
   final List<Map<String, String>> banners = [
     {
@@ -198,10 +202,45 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   List<Map<String, dynamic>> get filteredProducts {
-    if (selectedCategory == 'All') {
-      return allProducts;
+    var products = allProducts;
+    
+    // Filter by category
+    if (selectedCategory != 'All') {
+      products = products.where((product) => product['category'] == selectedCategory).toList();
     }
-    return allProducts.where((product) => product['category'] == selectedCategory).toList();
+    
+    // Filter by price range
+    products = products.where((product) {
+      final price = _getDiscountedPrice(product);
+      return price >= _minPrice && price <= _maxPrice;
+    }).toList();
+    
+    // Filter by rating
+    products = products.where((product) {
+      final rating = product['rating'] as double;
+      return rating >= _minRating;
+    }).toList();
+    
+    // Sort products
+    switch (_sortBy) {
+      case 'Price: Low to High':
+        products.sort((a, b) => _getDiscountedPrice(a).compareTo(_getDiscountedPrice(b)));
+        break;
+      case 'Price: High to Low':
+        products.sort((a, b) => _getDiscountedPrice(b).compareTo(_getDiscountedPrice(a)));
+        break;
+      case 'Rating: High to Low':
+        products.sort((a, b) => (b['rating'] as double).compareTo(a['rating'] as double));
+        break;
+      case 'Name: A to Z':
+        products.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+        break;
+      case 'Default':
+      default:
+        break;
+    }
+    
+    return products;
   }
 
   double _extractPrice(String priceString) {
@@ -273,6 +312,268 @@ class _HomeScreenState extends State<HomeScreen> {
         overflow: TextOverflow.ellipsis,
       );
     }
+  }
+
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Filter & Sort',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setModalState(() {
+                          _sortBy = 'Default';
+                          _minPrice = 0;
+                          _maxPrice = 200000;
+                          _minRating = 0;
+                        });
+                        setState(() {});
+                      },
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sort By Section
+                      const Text(
+                        'Sort By',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          'Default',
+                          'Price: Low to High',
+                          'Price: High to Low',
+                          'Rating: High to Low',
+                          'Name: A to Z',
+                        ].map((sort) {
+                          final isSelected = _sortBy == sort;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _sortBy = sort;
+                              });
+                              setState(() {});
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.lightGrey.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                sort,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Price Range Section
+                      const Text(
+                        'Price Range',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'UGX ${_minPrice.toInt()}',
+                            style: const TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            'UGX ${_maxPrice.toInt()}',
+                            style: const TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      RangeSlider(
+                        values: RangeValues(_minPrice, _maxPrice),
+                        min: 0,
+                        max: 200000,
+                        divisions: 20,
+                        activeColor: AppColors.primary,
+                        inactiveColor: AppColors.lightGrey,
+                        onChanged: (values) {
+                          setModalState(() {
+                            _minPrice = values.start;
+                            _maxPrice = values.end;
+                          });
+                          setState(() {});
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Rating Section
+                      const Text(
+                        'Minimum Rating',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: List.generate(5, (index) {
+                          final rating = index + 1;
+                          final isSelected = _minRating >= rating;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _minRating = rating.toDouble();
+                              });
+                              setState(() {});
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Icon(
+                                isSelected ? Icons.star : Icons.star_border,
+                                color: isSelected
+                                    ? Colors.amber
+                                    : AppColors.grey,
+                                size: 32,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      if (_minRating > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            '${_minRating.toInt()} stars and above',
+                            style: const TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Apply Button
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Apply Filters (${filteredProducts.length} products)',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
@@ -640,14 +941,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.lightGrey),
+                GestureDetector(
+                  onTap: _showFilterDialog,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.lightGrey),
+                    ),
+                    child: const Icon(Icons.tune, color: AppColors.text),
                   ),
-                  child: const Icon(Icons.tune, color: AppColors.text),
                 ),
               ],
             ),
