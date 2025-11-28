@@ -875,20 +875,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.black,
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedCategory = 'All';
-                    });
-                  },
-                  child: const Text(
-                    'View all', 
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 10),

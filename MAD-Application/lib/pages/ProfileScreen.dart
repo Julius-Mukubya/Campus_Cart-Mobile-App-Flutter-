@@ -511,7 +511,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Logout',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.text,
+                            color: AppColors.primary,
                           ),
                         ),
                         content: const Text(
@@ -521,7 +521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: Text(
+                            child: const Text(
                               'Cancel',
                               style: TextStyle(color: AppColors.secondaryText),
                             ),
@@ -537,11 +537,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.error,
+                              backgroundColor: AppColors.primary,
                               foregroundColor: AppColors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
+                              elevation: 2,
                             ),
                             child: const Text('Logout'),
                           ),
@@ -550,13 +551,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 0,
+                    elevation: 2,
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,

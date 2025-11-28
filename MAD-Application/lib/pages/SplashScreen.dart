@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 30),
               const Text(
-                'ShopHub',
+                'Campus Cart',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your Shopping Destination',
+                'Your Campus Shopping Destination',
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.white.withOpacity(0.8),

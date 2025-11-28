@@ -855,7 +855,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/home');
+                        },
                         child: const Text(
                           'View all',
                           style: TextStyle(
@@ -874,10 +876,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       itemCount: relatedProducts.length,
                       itemBuilder: (context, index) {
                         final product = relatedProducts[index];
-                        return Container(
-                          width: 160,
-                          margin: const EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailScreen(product: product),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 160,
+                            margin: const EdgeInsets.only(right: 12),
+                            decoration: BoxDecoration(
                             color: AppColors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: AppColors.lightGrey),
@@ -957,16 +968,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   Positioned(
                                     top: 8,
                                     right: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.white.withOpacity(0.9),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.favorite_border,
-                                        size: 16,
-                                        color: AppColors.grey,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        final isInWishlist = _wishlistManager.isInWishlist(product['name']);
+                                        _wishlistManager.toggleWishlist(product);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              isInWishlist
+                                                  ? '${product['name']} removed from wishlist'
+                                                  : '${product['name']} added to wishlist',
+                                            ),
+                                            backgroundColor: isInWishlist ? AppColors.error : AppColors.success,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.white.withOpacity(0.9),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Icon(
+                                          _wishlistManager.isInWishlist(product['name'])
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          size: 16,
+                                          color: _wishlistManager.isInWishlist(product['name'])
+                                              ? Colors.red
+                                              : AppColors.grey,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1004,6 +1037,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                             color: AppColors.text,
                                           ),
                                         ),
+                                        const Spacer(),
+                                        GestureDetector(
+                                          onTap: () {
+                                            _cartManager.addToCart(product);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('${product['name']} added to cart'),
+                                                backgroundColor: AppColors.success,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                              color: _cartManager.isInCart(product['name'])
+                                                  ? AppColors.accent
+                                                  : AppColors.primary,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Icon(
+                                              _cartManager.isInCart(product['name'])
+                                                  ? Icons.shopping_cart
+                                                  : Icons.add_shopping_cart,
+                                              size: 14,
+                                              color: AppColors.white,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
@@ -1013,7 +1076,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                             ],
                           ),
-                        );
+                        ),
+                      );
                       },
                     ),
                   ),
