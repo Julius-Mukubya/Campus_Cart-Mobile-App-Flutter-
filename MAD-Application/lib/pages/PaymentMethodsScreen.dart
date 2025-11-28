@@ -45,7 +45,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Payment Type',
                   border: OutlineInputBorder(),
@@ -139,7 +139,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Payment Type',
                   border: OutlineInputBorder(),

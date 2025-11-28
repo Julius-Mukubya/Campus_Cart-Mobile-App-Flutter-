@@ -14,7 +14,7 @@ class UserManager extends ChangeNotifier {
   String _email = 'johndoe@example.com';
   String _phone = '+256 700 123 456';
   String _profileImage = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop';
-  bool _isPremium = true;
+  final bool _isPremium = true;
   
   // Getters
   String get name => _name;

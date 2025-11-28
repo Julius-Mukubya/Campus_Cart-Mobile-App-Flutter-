@@ -7,11 +7,11 @@ class AppBottomNavigation extends StatelessWidget {
   final int cartCount;
 
   const AppBottomNavigation({
-    Key? key, 
+    super.key, 
     required this.currentIndex,
     this.wishlistCount = 0,
     this.cartCount = 0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
