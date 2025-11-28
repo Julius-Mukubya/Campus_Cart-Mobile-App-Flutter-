@@ -73,6 +73,122 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
+  double _extractPrice(String priceString) {
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    
+    if (item['discount'] != null && item['discount'].toString().isNotEmpty) {
+      final discountStr = item['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
+  }
+
+  Widget _buildPriceSection(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    final discountedPrice = _getDiscountedPrice(item);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              item['price'],
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.secondaryText,
+                decoration: TextDecoration.lineThrough,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'UGX ${discountedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: AppColors.primary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        item['price'],
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: AppColors.primary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+  }
+
+  Widget _buildPriceSectionList(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    final discountedPrice = _getDiscountedPrice(item);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item['price'],
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.secondaryText,
+              decoration: TextDecoration.lineThrough,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            'UGX ${discountedPrice.toStringAsFixed(0)}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppColors.primary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        item['price'],
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: AppColors.primary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+  }
+
   void addToCart(Map<String, dynamic> item) {
     _cartManager.addToCart(item);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -308,17 +424,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   
                   const SizedBox(height: 4),
                   
-                  // Price
-                  Text(
-                    item['price'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.primary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  // Price with Discount
+                  _buildPriceSection(item),
                 ],
               ),
             ),
@@ -469,16 +576,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item['price'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: AppColors.primary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            _buildPriceSectionList(item),
                             if (item['discount'] != null) ...[
                               const SizedBox(height: 4),
                               Container(

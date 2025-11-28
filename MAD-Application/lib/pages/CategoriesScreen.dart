@@ -39,6 +39,77 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     setState(() {});
   }
 
+  double _extractPrice(String priceString) {
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    
+    if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
+  }
+
+  Widget _buildPriceSection(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    final discountedPrice = _getDiscountedPrice(product);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              product['price'],
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.secondaryText,
+                decoration: TextDecoration.lineThrough,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'UGX ${discountedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: AppColors.primary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        product['price'],
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: AppColors.primary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+  }
+
   final List<Map<String, dynamic>> categories = [
     {
       'icon': Icons.devices,
@@ -586,6 +657,77 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     setState(() {});
   }
 
+  double _extractPrice(String priceString) {
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    
+    if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      
+      if (discountPercent > 0) {
+        final discountAmount = originalPrice * (discountPercent / 100);
+        return originalPrice - discountAmount;
+      }
+    }
+    
+    return originalPrice;
+  }
+
+  Widget _buildPriceSection(Map<String, dynamic> product) {
+    final originalPrice = _extractPrice(product['price']);
+    final discountedPrice = _getDiscountedPrice(product);
+    final hasDiscount = originalPrice != discountedPrice;
+
+    if (hasDiscount) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              product['price'],
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.secondaryText,
+                decoration: TextDecoration.lineThrough,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'UGX ${discountedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: AppColors.primary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        product['price'],
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: AppColors.primary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+  }
+
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
       height: 240,
@@ -845,15 +987,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   
                   const SizedBox(height: 4),
                   
-                  // Price
-                  Text(
-                    product['price'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  // Price with Discount
+                  _buildPriceSection(product),
                 ],
               ),
             ),

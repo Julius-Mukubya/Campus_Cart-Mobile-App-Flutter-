@@ -234,25 +234,30 @@ class _HomeScreenState extends State<HomeScreen> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            product['price'],
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppColors.secondaryText,
-              decoration: TextDecoration.lineThrough,
+          Flexible(
+            child: Text(
+              product['price'],
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.secondaryText,
+                decoration: TextDecoration.lineThrough,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            'UGX ${discountedPrice.toStringAsFixed(0)}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: AppColors.primary,
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'UGX ${discountedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppColors.primary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       );
@@ -261,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
         product['price'],
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 11,
           color: AppColors.primary,
         ),
         maxLines: 1,
