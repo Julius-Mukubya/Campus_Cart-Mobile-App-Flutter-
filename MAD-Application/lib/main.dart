@@ -4,6 +4,9 @@ import 'package:madpractical/pages/HomeScreen.dart';
 import 'package:madpractical/pages/ProductDetails.dart';
 import 'package:madpractical/pages/SignInScreen.dart';
 import 'package:madpractical/pages/SignUpScreen.dart';
+import 'package:madpractical/pages/ForgotPasswordScreen.dart';
+import 'package:madpractical/pages/OtpVerificationScreen.dart';
+import 'package:madpractical/pages/ResetPasswordScreen.dart';
 import 'package:madpractical/pages/CategoriesScreen.dart';
 import 'package:madpractical/pages/WishlistScreen.dart';
 import 'package:madpractical/pages/ProfileScreen.dart';
@@ -62,6 +65,9 @@ class MyApp extends StatelessWidget {
         '/': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/signin': (context) => SignInScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/otp-verification': (context) => const OtpVerificationScreen(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
         '/home': (context) => HomeScreen(),
         '/cart': (context) => CartScreen(),
         '/categories': (context) => const CategoriesScreen(),
