@@ -46,9 +46,14 @@ class _HomeScreenState extends State<HomeScreen> {
     // Auto-scroll banner every 3 seconds
     Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
     _wishlistManager.addListener(_onWishlistChanged);
+    _cartManager.addListener(_onCartChanged);
   }
 
   void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void _onCartChanged() {
     setState(() {});
   }
   
@@ -67,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _bannerController.dispose();
     _wishlistManager.removeListener(_onWishlistChanged);
+    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
   

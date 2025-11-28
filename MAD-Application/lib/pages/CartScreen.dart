@@ -690,11 +690,26 @@ class _CartScreenState extends State<CartScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
+                          // Store order details before clearing cart
+                          final orderSubtotal = _cartManager.subtotal;
+                          final orderDeliveryFee = _cartManager.deliveryFee;
+                          final orderTotal = _cartManager.total;
+                          
+                          // Clear the cart
+                          _cartManager.clearCart();
+                          
                           Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const OrderSuccess(),
+                              builder: (context) => OrderSuccess(
+                                subtotal: orderSubtotal,
+                                deliveryFee: orderDeliveryFee,
+                                total: orderTotal,
+                                deliveryMethod: selectedDeliveryMethod,
+                                shippingAddress: selectedAddress,
+                                paymentMethod: selectedPaymentMethod,
+                              ),
                             ),
                           );
                         },
