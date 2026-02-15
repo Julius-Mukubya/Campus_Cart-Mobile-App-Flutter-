@@ -337,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.grey.withOpacity(0.3),
+                  color: AppColors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -417,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.lightGrey.withOpacity(0.3),
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
@@ -578,18 +578,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
-      height: 240,
+      height: 260, // Increased from 240 to accommodate content
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: AppColors.black.withOpacity(0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -614,8 +614,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withOpacity(0.05),
-                      AppColors.secondary.withOpacity(0.02),
+                      AppColors.primary.withValues(alpha: 0.05),
+                      AppColors.secondary.withValues(alpha: 0.02),
                     ],
                   ),
                 ),
@@ -632,8 +632,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.primary.withOpacity(0.1),
-                              AppColors.secondary.withOpacity(0.05),
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.secondary.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -652,8 +652,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.primary.withOpacity(0.1),
-                              AppColors.secondary.withOpacity(0.05),
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.secondary.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -682,13 +682,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     gradient: LinearGradient(
                       colors: [
                         AppColors.accent,
-                        AppColors.accent.withOpacity(0.8),
+                        AppColors.accent.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accent.withOpacity(0.4),
+                        color: AppColors.accent.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -731,11 +731,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withOpacity(0.1),
+                          color: AppColors.black.withValues(alpha: 0.1),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -757,8 +757,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           
           // Product Details Section
-          SizedBox(
-            height: 110,
+          Expanded( // Use Expanded instead of fixed height
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Column(
@@ -773,7 +772,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: AppColors.text.withOpacity(0.9),
+                      color: AppColors.text.withValues(alpha: 0.9),
                       height: 1.2,
                     ),
                     maxLines: 2,
@@ -781,7 +780,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 6),
+                const SizedBox(height: 4), // Reduced spacing
                 
                 // Rating and Cart Icon Row
                 Row(
@@ -833,7 +832,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 
-                const SizedBox(height: 6),
+                const SizedBox(height: 4), // Reduced spacing
                 
                 // Price with Discount
                 _buildPriceSection(product),
@@ -993,7 +992,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected 
-                                  ? AppColors.primary.withOpacity(0.1)
+                                  ? AppColors.primary.withValues(alpha: 0.1)
                                   : Colors.transparent,
                               border: Border.all(
                                 color: isSelected 
@@ -1065,7 +1064,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -1102,7 +1101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [
-                                  AppColors.primary.withOpacity(0.8),
+                                  AppColors.primary.withValues(alpha: 0.8),
                                   Colors.transparent,
                                 ],
                               ),
@@ -1149,7 +1148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   decoration: BoxDecoration(
                                     color: dotIndex == _currentBannerPage
                                         ? AppColors.white
-                                        : AppColors.white.withOpacity(0.4),
+                                        : AppColors.white.withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),

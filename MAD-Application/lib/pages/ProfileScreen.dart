@@ -303,7 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -334,7 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: item['color'].withOpacity(0.1),
+                      color: item['color'].withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -380,6 +380,153 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  List<Map<String, dynamic>> _getBusinessMenuItems() {
+    final userRole = _userManager.role;
+    
+    switch (userRole) {
+      case 'seller':
+        return [
+          {
+            'icon': Icons.dashboard,
+            'title': 'Seller Dashboard',
+            'subtitle': 'Sales overview',
+            'color': AppColors.primary,
+            'onTap': () => Navigator.pushNamed(context, '/seller/dashboard'),
+          },
+          {
+            'icon': Icons.inventory_2,
+            'title': 'My Products',
+            'subtitle': 'Manage product list',
+            'color': AppColors.accent,
+            'onTap': () => Navigator.pushNamed(context, '/seller/products'),
+          },
+          {
+            'icon': Icons.add_box,
+            'title': 'Add Product',
+            'subtitle': 'Create a new product',
+            'color': AppColors.success,
+            'onTap': () => Navigator.pushNamed(context, '/seller/add-product'),
+          },
+          {
+            'icon': Icons.receipt_long,
+            'title': 'Seller Orders',
+            'subtitle': 'Manage customer orders',
+            'color': Colors.blue,
+            'onTap': () => Navigator.pushNamed(context, '/seller/orders'),
+          },
+          {
+            'icon': Icons.account_balance_wallet,
+            'title': 'Earnings / Payouts',
+            'subtitle': 'View earnings & withdrawals',
+            'color': Colors.green,
+            'onTap': () => Navigator.pushNamed(context, '/seller/earnings'),
+          },
+          {
+            'icon': Icons.store_mall_directory,
+            'title': 'Store Settings',
+            'subtitle': 'Update store details',
+            'color': Colors.purple,
+            'onTap': () => Navigator.pushNamed(context, '/seller/settings'),
+          },
+        ];
+      
+      case 'staff':
+        return [
+          {
+            'icon': Icons.dashboard,
+            'title': 'Staff Dashboard',
+            'subtitle': 'Assigned tasks overview',
+            'color': AppColors.primary,
+            'onTap': () => Navigator.pushNamed(context, '/staff/dashboard'),
+          },
+          {
+            'icon': Icons.assignment,
+            'title': 'Orders to Process',
+            'subtitle': 'Pack, ship, update status',
+            'color': AppColors.accent,
+            'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
+          },
+          {
+            'icon': Icons.support_agent,
+            'title': 'Support Tickets',
+            'subtitle': 'Customer issues & returns',
+            'color': AppColors.success,
+            'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
+          },
+          {
+            'icon': Icons.flag,
+            'title': 'Moderation Queue',
+            'subtitle': 'Flagged listings/reviews',
+            'color': Colors.orange,
+            'onTap': () => Navigator.pushNamed(context, '/staff/moderation'),
+          },
+        ];
+      
+      case 'admin':
+        return [
+          {
+            'icon': Icons.admin_panel_settings,
+            'title': 'Admin Dashboard',
+            'subtitle': 'Platform overview',
+            'color': AppColors.primary,
+            'onTap': () => Navigator.pushNamed(context, '/admin/dashboard'),
+          },
+          {
+            'icon': Icons.store,
+            'title': 'Manage Sellers',
+            'subtitle': 'Approve/suspend sellers',
+            'color': AppColors.accent,
+            'onTap': () => Navigator.pushNamed(context, '/admin/sellers'),
+          },
+          {
+            'icon': Icons.category,
+            'title': 'Manage Categories',
+            'subtitle': 'Add/edit/delete categories',
+            'color': AppColors.success,
+            'onTap': () => Navigator.pushNamed(context, '/admin/categories'),
+          },
+          {
+            'icon': Icons.inventory,
+            'title': 'Manage Products',
+            'subtitle': 'View all products & takedowns',
+            'color': Colors.blue,
+            'onTap': () => Navigator.pushNamed(context, '/admin/products'),
+          },
+          {
+            'icon': Icons.shopping_bag,
+            'title': 'Manage Orders',
+            'subtitle': 'View all orders',
+            'color': Colors.green,
+            'onTap': () => Navigator.pushNamed(context, '/admin/orders'),
+          },
+          {
+            'icon': Icons.payment,
+            'title': 'Payments / Refunds',
+            'subtitle': 'Review transactions',
+            'color': Colors.purple,
+            'onTap': () => Navigator.pushNamed(context, '/admin/payments'),
+          },
+          {
+            'icon': Icons.analytics,
+            'title': 'Reports',
+            'subtitle': 'Analytics & exports',
+            'color': Colors.orange,
+            'onTap': () => Navigator.pushNamed(context, '/admin/reports'),
+          },
+          {
+            'icon': Icons.settings,
+            'title': 'System Settings',
+            'subtitle': 'Shipping, taxes, payments',
+            'color': Colors.grey,
+            'onTap': () => Navigator.pushNamed(context, '/admin/settings'),
+          },
+        ];
+      
+      default:
+        return [];
+    }
   }
 
   @override
@@ -491,6 +638,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               const SizedBox(height: 20),
               
+              // Business/Management Section (only for non-customer roles)
+              if (_userManager.role != 'customer') ...[
+                _buildMenuSection('Business / Management', _getBusinessMenuItems()),
+                const SizedBox(height: 20),
+              ],
+              
               // Settings Section
               _buildMenuSection('Settings', settingsItems),
               
@@ -529,7 +682,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ElevatedButton(
                             onPressed: () {
                               Navigator.pop(context); // Close dialog
-                              // Navigate to sign in screen and clear all routes
+                              // Clear user data and navigate to sign in screen
+                              _userManager.logout();
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
                                 '/signin',

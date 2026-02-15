@@ -12,7 +12,23 @@ import 'package:madpractical/pages/WishlistScreen.dart';
 import 'package:madpractical/pages/ProfileScreen.dart';
 import 'package:madpractical/pages/SplashScreen.dart';
 import 'package:madpractical/pages/MyOrdersScreen.dart';
+import 'package:madpractical/pages/access_denied_screen.dart';
+// Seller screens
+import 'package:madpractical/pages/seller/seller_dashboard_screen.dart';
+import 'package:madpractical/pages/seller/my_products_screen.dart';
+import 'package:madpractical/pages/seller/add_product_screen.dart';
+import 'package:madpractical/pages/seller/edit_product_screen.dart';
+import 'package:madpractical/pages/seller/seller_orders_screen.dart';
+import 'package:madpractical/pages/seller/earnings_screen.dart';
+// Staff screens
+import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
+import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
+import 'package:madpractical/pages/staff/support_tickets_screen.dart';
+// Admin screens
+import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
+import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 void main() {
   runApp(MyApp());
@@ -52,12 +68,37 @@ class MyApp extends StatelessWidget {
       // Start on a splash screen which will redirect to sign in
       initialRoute: '/splash',
       onGenerateRoute: (settings) {
+        // Check user role for protected routes
+        final userManager = UserManager();
+        final userRole = userManager.role;
+        
+        // Role-based route protection
+        if (settings.name?.startsWith('/seller/') == true && userRole != 'seller') {
+          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
+        }
+        if (settings.name?.startsWith('/staff/') == true && userRole != 'staff') {
+          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
+        }
+        if (settings.name?.startsWith('/admin/') == true && userRole != 'admin') {
+          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
+        }
+        
+        // Handle product details route
         if (settings.name == '/product_details') {
           final product = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => ProductDetailScreen(product: product),
           );
         }
+        
+        // Handle edit product route
+        if (settings.name == '/seller/edit-product') {
+          final product = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => EditProductScreen(product: product),
+          );
+        }
+        
         return null;
       },
       routes: {
@@ -74,6 +115,20 @@ class MyApp extends StatelessWidget {
         '/wishlist': (context) => const WishlistScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/my-orders': (context) => const MyOrdersScreen(),
+        '/access-denied': (context) => const AccessDeniedScreen(),
+        // Seller routes
+        '/seller/dashboard': (context) => const SellerDashboardScreen(),
+        '/seller/products': (context) => const MyProductsScreen(),
+        '/seller/add-product': (context) => const AddProductScreen(),
+        '/seller/orders': (context) => const SellerOrdersScreen(),
+        '/seller/earnings': (context) => const EarningsScreen(),
+        // Staff routes
+        '/staff/dashboard': (context) => const StaffDashboardScreen(),
+        '/staff/orders': (context) => const OrdersToProcessScreen(),
+        '/staff/tickets': (context) => const SupportTicketsScreen(),
+        // Admin routes
+        '/admin/dashboard': (context) => const AdminDashboardScreen(),
+        '/admin/sellers': (context) => const ManageSellersScreen(),
       },
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -12,6 +13,200 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  // Test users with different roles
+  final Map<String, Map<String, String>> _testUsers = {
+    'seller@test.com': {
+      'password': 'seller123',
+      'role': 'seller',
+      'name': 'John Seller',
+      'phone': '+256 700 123 456',
+    },
+    'staff@test.com': {
+      'password': 'staff123',
+      'role': 'staff',
+      'name': 'Jane Staff',
+      'phone': '+256 700 234 567',
+    },
+    'admin@test.com': {
+      'password': 'admin123',
+      'role': 'admin',
+      'name': 'Mike Admin',
+      'phone': '+256 700 345 678',
+    },
+    'customer@test.com': {
+      'password': 'customer123',
+      'role': 'customer',
+      'name': 'Sarah Customer',
+      'phone': '+256 700 456 789',
+    },
+  };
+
+  void _signIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorMessage('Please enter both email and password');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Check if user exists and password matches
+    if (_testUsers.containsKey(email)) {
+      final user = _testUsers[email]!;
+      if (user['password'] == password) {
+        // Update user manager with the logged-in user's info
+        final userManager = UserManager();
+        userManager.updateProfile(
+          name: user['name']!,
+          email: email,
+          phone: user['phone']!,
+          role: user['role']!,
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show success message with role info
+        _showSuccessMessage('Welcome ${user['name']}! Logged in as ${user['role']}');
+
+        // Navigate to home and ensure profile screen rebuilds
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorMessage('Invalid password');
+      }
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      _showErrorMessage('User not found');
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Widget _buildTestUsersInfo() {
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Test Users',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ..._testUsers.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      entry.value['password']!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _getRoleColor(entry.value['role']!).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      entry.value['role']!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: _getRoleColor(entry.value['role']!),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return AppColors.error;
+      case 'staff':
+        return AppColors.accent;
+      case 'seller':
+        return AppColors.primary;
+      case 'customer':
+        return AppColors.success;
+      default:
+        return AppColors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +231,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -180,9 +375,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/home');
-                  },
+                  onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
@@ -190,14 +383,23 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     elevation: 4,
                   ),
-                  child: const Text(
-                    "Log In",
-                    style: TextStyle(
-                      fontSize: 16, 
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Log In",
+                          style: TextStyle(
+                            fontSize: 16, 
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
 
@@ -276,6 +478,9 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
 
               const SizedBox(height: 30),
+
+              // Test users info
+              _buildTestUsersInfo(),
               ],
             ),
           ),
