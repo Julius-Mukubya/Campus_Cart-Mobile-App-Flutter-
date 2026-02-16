@@ -21,6 +21,7 @@ import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/order_details_screen.dart';
 import 'package:madpractical/pages/seller/earnings_screen.dart';
+import 'package:madpractical/pages/seller/store_settings_screen.dart';
 // Staff screens
 import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
 import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
@@ -131,6 +132,7 @@ class MyApp extends StatelessWidget {
         '/seller/add-product': (context) => const AddProductScreen(),
         '/seller/orders': (context) => const SellerOrdersScreen(),
         '/seller/earnings': (context) => const EarningsScreen(),
+        '/seller/settings': (context) => const StoreSettingsScreen(),
         // Staff routes
         '/staff/dashboard': (context) => const StaffDashboardScreen(),
         '/staff/orders': (context) => const OrdersToProcessScreen(),
