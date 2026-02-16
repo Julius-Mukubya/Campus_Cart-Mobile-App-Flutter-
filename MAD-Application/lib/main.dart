@@ -19,6 +19,7 @@ import 'package:madpractical/pages/seller/my_products_screen.dart';
 import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
+import 'package:madpractical/pages/seller/order_details_screen.dart';
 import 'package:madpractical/pages/seller/earnings_screen.dart';
 // Staff screens
 import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
@@ -84,7 +85,7 @@ class MyApp extends StatelessWidget {
         }
         
         // Handle product details route
-        if (settings.name == '/product_details') {
+        if (settings.name == '/product_details' || settings.name == '/product-details') {
           final product = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => ProductDetailScreen(product: product),
@@ -96,6 +97,14 @@ class MyApp extends StatelessWidget {
           final product = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => EditProductScreen(product: product),
+          );
+        }
+        
+        // Handle order details route
+        if (settings.name == '/seller/order-details') {
+          final order = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => OrderDetailsScreen(order: order),
           );
         }
         
