@@ -11,6 +11,29 @@ class MyProductsScreen extends StatefulWidget {
 
 class _MyProductsScreenState extends State<MyProductsScreen> {
   String _searchQuery = '';
+  String _sortBy = 'Default';
+  String _filterByCategory = 'All';
+  String _filterByStatus = 'All';
+  String _filterByStock = 'All';
+  
+  // Temporary variables for filter dialog
+  String _tempSortBy = 'Default';
+  String _tempFilterByCategory = 'All';
+  String _tempFilterByStatus = 'All';
+  String _tempFilterByStock = 'All';
+  
+  final List<String> _categories = ['All', 'Electronics', 'Fashion', 'Home', 'Sports', 'Groceries', 'Books'];
+  final List<String> _statusOptions = ['All', 'Active', 'Out of Stock'];
+  final List<String> _stockOptions = ['All', 'In Stock', 'Low Stock', 'Out of Stock'];
+  final List<String> _sortOptions = [
+    'Default',
+    'Name: A to Z',
+    'Name: Z to A',
+    'Price: Low to High',
+    'Price: High to Low',
+    'Stock: High to Low',
+    'Stock: Low to High',
+  ];
   
   final List<Map<String, dynamic>> _products = [
     {
@@ -43,15 +66,444 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
       'category': 'Electronics',
     },
+    {
+      'id': '4',
+      'name': 'Designer T-Shirt',
+      'price': 'UGX 45,000',
+      'stock': 3,
+      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+      'status': 'Active',
+      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
+      'category': 'Fashion',
+    },
+    {
+      'id': '5',
+      'name': 'Coffee Maker',
+      'price': 'UGX 95,000',
+      'stock': 12,
+      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?w=400&h=400&fit=crop',
+      'status': 'Active',
+      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
+      'category': 'Home',
+    },
+    {
+      'id': '6',
+      'name': 'Running Shoes',
+      'price': 'UGX 75,000',
+      'stock': 2,
+      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+      'status': 'Active',
+      'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
+      'category': 'Sports',
+    },
   ];
 
+  double _extractPrice(String priceString) {
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
   List<Map<String, dynamic>> get filteredProducts {
-    if (_searchQuery.isEmpty) return _products;
-    return _products.where((product) =>
-      product['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-      (product['description'] != null && 
-       product['description'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
-    ).toList();
+    var products = _products;
+    
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      products = products.where((product) =>
+        product['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        (product['description'] != null && 
+         product['description'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
+      ).toList();
+    }
+    
+    // Filter by category
+    if (_filterByCategory != 'All') {
+      products = products.where((product) => product['category'] == _filterByCategory).toList();
+    }
+    
+    // Filter by status
+    if (_filterByStatus != 'All') {
+      products = products.where((product) => product['status'] == _filterByStatus).toList();
+    }
+    
+    // Filter by stock level
+    if (_filterByStock != 'All') {
+      products = products.where((product) {
+        final stock = product['stock'] as int;
+        switch (_filterByStock) {
+          case 'In Stock':
+            return stock > 5;
+          case 'Low Stock':
+            return stock > 0 && stock <= 5;
+          case 'Out of Stock':
+            return stock == 0;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+    
+    // Sort products
+    switch (_sortBy) {
+      case 'Name: A to Z':
+        products.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+        break;
+      case 'Name: Z to A':
+        products.sort((a, b) => b['name'].toString().compareTo(a['name'].toString()));
+        break;
+      case 'Price: Low to High':
+        products.sort((a, b) => _extractPrice(a['price']).compareTo(_extractPrice(b['price'])));
+        break;
+      case 'Price: High to Low':
+        products.sort((a, b) => _extractPrice(b['price']).compareTo(_extractPrice(a['price'])));
+        break;
+      case 'Stock: High to Low':
+        products.sort((a, b) => (b['stock'] as int).compareTo(a['stock'] as int));
+        break;
+      case 'Stock: Low to High':
+        products.sort((a, b) => (a['stock'] as int).compareTo(b['stock'] as int));
+        break;
+      case 'Default':
+      default:
+        break;
+    }
+    
+    return products;
+  }
+
+  void _showFilterDialog() {
+    // Reset temp values to current values when opening dialog
+    _tempSortBy = _sortBy;
+    _tempFilterByCategory = _filterByCategory;
+    _tempFilterByStatus = _filterByStatus;
+    _tempFilterByStock = _filterByStock;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Filter & Sort Products',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setModalState(() {
+                          _tempSortBy = 'Default';
+                          _tempFilterByCategory = 'All';
+                          _tempFilterByStatus = 'All';
+                          _tempFilterByStock = 'All';
+                        });
+                      },
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sort By Section
+                      const Text(
+                        'Sort By',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _sortOptions.map((sort) {
+                          final isSelected = _tempSortBy == sort;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _tempSortBy = sort;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                sort,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Filter by Category
+                      const Text(
+                        'Filter by Category',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _categories.map((category) {
+                          final isSelected = _tempFilterByCategory == category;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _tempFilterByCategory = category;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.accent
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.accent
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                category,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Filter by Status
+                      const Text(
+                        'Filter by Status',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _statusOptions.map((status) {
+                          final isSelected = _tempFilterByStatus == status;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _tempFilterByStatus = status;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.success
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.success
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                status,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Filter by Stock Level
+                      const Text(
+                        'Filter by Stock Level',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _stockOptions.map((stock) {
+                          final isSelected = _tempFilterByStock == stock;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _tempFilterByStock = stock;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.purple
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.purple
+                                      : AppColors.lightGrey,
+                                ),
+                              ),
+                              child: Text(
+                                stock,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? AppColors.white
+                                      : AppColors.text,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Apply Button
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _sortBy = _tempSortBy;
+                        _filterByCategory = _tempFilterByCategory;
+                        _filterByStatus = _tempFilterByStatus;
+                        _filterByStock = _tempFilterByStock;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Apply Filters (${filteredProducts.length} products)',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
@@ -251,17 +703,20 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                         ),
                       ),
                     ),
-                    Container(
-                      margin: const EdgeInsets.all(8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.tune,
-                        color: AppColors.primary,
-                        size: 20,
+                    GestureDetector(
+                      onTap: _showFilterDialog,
+                      child: Container(
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.tune,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
