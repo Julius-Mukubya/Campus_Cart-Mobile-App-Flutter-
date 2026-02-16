@@ -20,6 +20,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       'stock': 15,
       'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
       'status': 'Active',
+      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
+      'category': 'Electronics',
     },
     {
       'id': '2',
@@ -28,6 +30,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       'stock': 8,
       'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
       'status': 'Active',
+      'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
+      'category': 'Electronics',
     },
     {
       'id': '3',
@@ -36,13 +40,17 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       'stock': 0,
       'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
       'status': 'Out of Stock',
+      'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
+      'category': 'Electronics',
     },
   ];
 
   List<Map<String, dynamic>> get filteredProducts {
     if (_searchQuery.isEmpty) return _products;
     return _products.where((product) =>
-      product['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase())
+      product['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      (product['description'] != null && 
+       product['description'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
     ).toList();
   }
 
@@ -65,6 +73,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start, // Align to top for better layout
           children: [
             // Product Image
             Container(
@@ -96,7 +105,19 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  if (product['description'] != null) ...[
+                    Text(
+                      product['description'],
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.secondaryText,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   Text(
                     product['price'],
                     style: const TextStyle(
