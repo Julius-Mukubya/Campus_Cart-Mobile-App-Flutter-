@@ -23,23 +23,31 @@ class _SignInScreenState extends State<SignInScreen> {
       'name': 'John Seller',
       'phone': '+256 700 123 456',
     },
-    'staff@test.com': {
-      'password': 'staff123',
+    'support@test.com': {
+      'password': 'support123',
       'role': 'staff',
-      'name': 'Jane Staff',
+      'staffType': 'support',
+      'name': 'Jane Support',
       'phone': '+256 700 234 567',
+    },
+    'delivery@test.com': {
+      'password': 'delivery123',
+      'role': 'staff',
+      'staffType': 'delivery',
+      'name': 'Tom Delivery',
+      'phone': '+256 700 345 678',
     },
     'admin@test.com': {
       'password': 'admin123',
       'role': 'admin',
       'name': 'Mike Admin',
-      'phone': '+256 700 345 678',
+      'phone': '+256 700 456 789',
     },
     'customer@test.com': {
       'password': 'customer123',
       'role': 'customer',
       'name': 'Sarah Customer',
-      'phone': '+256 700 456 789',
+      'phone': '+256 700 567 890',
     },
   };
 
@@ -70,6 +78,7 @@ class _SignInScreenState extends State<SignInScreen> {
           email: email,
           phone: user['phone']!,
           role: user['role']!,
+          staffType: user['staffType'], // Will be null for non-staff users
         );
 
         setState(() {
@@ -77,7 +86,11 @@ class _SignInScreenState extends State<SignInScreen> {
         });
 
         // Show success message with role info
-        _showSuccessMessage('Welcome ${user['name']}! Logged in as ${user['role']}');
+        String roleDisplay = user['role']!;
+        if (user['role'] == 'staff' && user['staffType'] != null) {
+          roleDisplay = '${user['staffType']} staff';
+        }
+        _showSuccessMessage('Welcome ${user['name']}! Logged in as $roleDisplay');
 
         // Navigate to home and ensure profile screen rebuilds
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);

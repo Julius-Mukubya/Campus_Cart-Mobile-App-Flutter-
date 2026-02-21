@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -10,6 +11,7 @@ class StaffDashboardScreen extends StatefulWidget {
 }
 
 class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
+  final userManager = UserManager();
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -108,6 +110,25 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final staffType = userManager.staffType;
+    final isSupport = staffType == 'support';
+    final isDelivery = staffType == 'delivery';
+    
+    // Dashboard title and icon based on staff type
+    String dashboardTitle = 'Staff Dashboard';
+    IconData dashboardIcon = Icons.support_agent;
+    String welcomeSubtitle = 'Manage your tasks';
+    
+    if (isSupport) {
+      dashboardTitle = 'Customer Support Dashboard';
+      dashboardIcon = Icons.headset_mic;
+      welcomeSubtitle = 'Help customers and resolve issues';
+    } else if (isDelivery) {
+      dashboardTitle = 'Delivery Dashboard';
+      dashboardIcon = Icons.local_shipping;
+      welcomeSubtitle = 'Manage pickups and deliveries';
+    }
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -135,9 +156,9 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
             ),
           ),
         ),
-        title: const Text(
-          'Staff Dashboard',
-          style: TextStyle(
+        title: Text(
+          dashboardTitle,
+          style: const TextStyle(
             color: AppColors.text,
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -181,7 +202,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Manage orders and support customers',
+                            welcomeSubtitle,
                             style: TextStyle(
                               fontSize: 16,
                               color: AppColors.secondaryText,
@@ -196,8 +217,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(
-                        Icons.support_agent,
+                      child: Icon(
+                        dashboardIcon,
                         color: AppColors.primary,
                         size: 32,
                       ),
@@ -208,7 +229,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               
               const SizedBox(height: 24),
               
-              // Summary Cards
+              // Summary Cards - Different for each staff type
               const Text(
                 'Today\'s Overview',
                 style: TextStyle(
@@ -219,24 +240,59 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               ),
               const SizedBox(height: 16),
               
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.2,
-                children: [
-                  _buildSummaryCard('Orders Assigned', '12', Icons.assignment, AppColors.primary),
-                  _buildSummaryCard('Tickets Pending', '5', Icons.support, AppColors.accent),
-                  _buildSummaryCard('Orders Processed', '8', Icons.check_circle, AppColors.success),
-                  _buildSummaryCard('Issues Resolved', '3', Icons.done_all, Colors.green),
-                ],
-              ),
+              if (isSupport) ...[
+                // Customer Support Summary Cards
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildSummaryCard('Open Tickets', '8', Icons.support, AppColors.accent),
+                    _buildSummaryCard('In Progress', '5', Icons.pending, Colors.orange),
+                    _buildSummaryCard('Resolved Today', '12', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Avg Response', '5 min', Icons.timer, AppColors.primary),
+                  ],
+                ),
+              ] else if (isDelivery) ...[
+                // Delivery Personnel Summary Cards
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildSummaryCard('Pending Pickup', '6', Icons.inventory, AppColors.accent),
+                    _buildSummaryCard('In Transit', '4', Icons.local_shipping, Colors.blue),
+                    _buildSummaryCard('Delivered Today', '15', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Total Distance', '45 km', Icons.route, AppColors.primary),
+                  ],
+                ),
+              ] else ...[
+                // Default Staff Summary Cards
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildSummaryCard('Orders Assigned', '12', Icons.assignment, AppColors.primary),
+                    _buildSummaryCard('Tickets Pending', '5', Icons.support, AppColors.accent),
+                    _buildSummaryCard('Orders Processed', '8', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Issues Resolved', '3', Icons.done_all, Colors.green),
+                  ],
+                ),
+              ],
               
               const SizedBox(height: 32),
               
-              // Quick Actions
+              // Quick Actions - Different for each staff type
               const Text(
                 'Quick Actions',
                 style: TextStyle(
@@ -247,22 +303,73 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               ),
               const SizedBox(height: 16),
               
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.3,
-                children: [
-                  _buildQuickAction('Process Orders', Icons.inventory, AppColors.primary, () {
-                    Navigator.pushNamed(context, '/staff/orders');
-                  }),
-                  _buildQuickAction('Support Tickets', Icons.headset_mic, AppColors.accent, () {
-                    Navigator.pushNamed(context, '/staff/tickets');
-                  }),
-                ],
-              ),
+              if (isSupport) ...[
+                // Customer Support Quick Actions
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildQuickAction('Support Tickets', Icons.headset_mic, AppColors.accent, () {
+                      Navigator.pushNamed(context, '/staff/tickets');
+                    }),
+                    _buildQuickAction('Live Chat', Icons.chat, Colors.blue, () {
+                      Navigator.pushNamed(context, '/staff/chat');
+                    }),
+                    _buildQuickAction('Moderation', Icons.flag, Colors.orange, () {
+                      Navigator.pushNamed(context, '/staff/moderation');
+                    }),
+                    _buildQuickAction('Knowledge Base', Icons.library_books, AppColors.success, () {
+                      // Navigate to knowledge base
+                    }),
+                  ],
+                ),
+              ] else if (isDelivery) ...[
+                // Delivery Personnel Quick Actions
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildQuickAction('Orders to Deliver', Icons.assignment, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/staff/orders');
+                    }),
+                    _buildQuickAction('Active Deliveries', Icons.local_shipping, Colors.blue, () {
+                      Navigator.pushNamed(context, '/staff/active-deliveries');
+                    }),
+                    _buildQuickAction('Delivery History', Icons.history, AppColors.success, () {
+                      Navigator.pushNamed(context, '/staff/delivery-history');
+                    }),
+                    _buildQuickAction('Route Planner', Icons.map, Colors.orange, () {
+                      // Navigate to route planner
+                    }),
+                  ],
+                ),
+              ] else ...[
+                // Default Staff Quick Actions
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildQuickAction('Process Orders', Icons.inventory, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/staff/orders');
+                    }),
+                    _buildQuickAction('Support Tickets', Icons.headset_mic, AppColors.accent, () {
+                      Navigator.pushNamed(context, '/staff/tickets');
+                    }),
+                  ],
+                ),
+              ],
               
               const SizedBox(height: 20),
             ],

@@ -24,16 +24,27 @@ Use these credentials to test different user roles in the app:
   - Earnings / Payouts
   - Store Settings
 
-### 👨‍💼 **Staff User**
-- **Email**: `staff@test.com`
-- **Password**: `staff123`
-- **Role**: Staff
-- **Name**: Jane Staff
+### 🎧 **Customer Support Staff**
+- **Email**: `support@test.com`
+- **Password**: `support123`
+- **Role**: Staff (Customer Support)
+- **Name**: Jane Support
 - **Features**:
   - Staff Dashboard
-  - Orders to Process
-  - Support Tickets
-  - Moderation Queue
+  - Support Tickets (handle customer inquiries)
+  - Live Chat (real-time customer support)
+  - Moderation Queue (review flagged content)
+
+### 🚚 **Delivery Personnel**
+- **Email**: `delivery@test.com`
+- **Password**: `delivery123`
+- **Role**: Staff (Delivery)
+- **Name**: Tom Delivery
+- **Features**:
+  - Staff Dashboard
+  - Orders to Deliver (pick up & deliver)
+  - Active Deliveries (track ongoing)
+  - Delivery History (completed deliveries)
 
 ### 👑 **Admin User**
 - **Email**: `admin@test.com`
@@ -69,7 +80,10 @@ Use these credentials to test different user roles in the app:
 
 ### Profile Screen
 - **Customer**: Only sees Account and Settings sections
-- **Seller/Staff/Admin**: Additional "Business / Management" section with role-specific menu items
+- **Seller**: Additional "Business / Management" section with seller-specific menu items
+- **Customer Support Staff**: Dashboard, Support Tickets, Live Chat, Moderation Queue
+- **Delivery Personnel**: Dashboard, Orders to Deliver, Active Deliveries, Delivery History
+- **Admin**: Full administrative menu with all management features
 
 ### Navigation
 - Role-based menu items in the Business/Management section

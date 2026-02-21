@@ -433,7 +433,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ];
       
       case 'staff':
-        return [
+        final userManager = UserManager();
+        final staffType = userManager.staffType;
+        
+        // Common items for all staff
+        List<Map<String, dynamic>> staffItems = [
           {
             'icon': Icons.dashboard,
             'title': 'Staff Dashboard',
@@ -441,28 +445,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'color': AppColors.primary,
             'onTap': () => Navigator.pushNamed(context, '/staff/dashboard'),
           },
-          {
-            'icon': Icons.assignment,
-            'title': 'Orders to Process',
-            'subtitle': 'Pack, ship, update status',
-            'color': AppColors.accent,
-            'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
-          },
-          {
-            'icon': Icons.support_agent,
-            'title': 'Support Tickets',
-            'subtitle': 'Customer issues & returns',
-            'color': AppColors.success,
-            'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
-          },
-          {
-            'icon': Icons.flag,
-            'title': 'Moderation Queue',
-            'subtitle': 'Flagged listings/reviews',
-            'color': Colors.orange,
-            'onTap': () => Navigator.pushNamed(context, '/staff/moderation'),
-          },
         ];
+        
+        // Add role-specific items
+        if (staffType == 'support') {
+          // Customer Support specific items
+          staffItems.addAll([
+            {
+              'icon': Icons.support_agent,
+              'title': 'Support Tickets',
+              'subtitle': 'Customer issues & inquiries',
+              'color': AppColors.success,
+              'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
+            },
+            {
+              'icon': Icons.chat,
+              'title': 'Live Chat',
+              'subtitle': 'Real-time customer support',
+              'color': Colors.blue,
+              'onTap': () => Navigator.pushNamed(context, '/staff/chat'),
+            },
+            {
+              'icon': Icons.flag,
+              'title': 'Moderation Queue',
+              'subtitle': 'Flagged listings/reviews',
+              'color': Colors.orange,
+              'onTap': () => Navigator.pushNamed(context, '/staff/moderation'),
+            },
+          ]);
+        } else if (staffType == 'delivery') {
+          // Delivery Personnel specific items
+          staffItems.addAll([
+            {
+              'icon': Icons.assignment,
+              'title': 'Orders to Deliver',
+              'subtitle': 'Pick up & deliver orders',
+              'color': AppColors.accent,
+              'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
+            },
+            {
+              'icon': Icons.local_shipping,
+              'title': 'Active Deliveries',
+              'subtitle': 'Track ongoing deliveries',
+              'color': Colors.blue,
+              'onTap': () => Navigator.pushNamed(context, '/staff/active-deliveries'),
+            },
+            {
+              'icon': Icons.history,
+              'title': 'Delivery History',
+              'subtitle': 'Completed deliveries',
+              'color': AppColors.success,
+              'onTap': () => Navigator.pushNamed(context, '/staff/delivery-history'),
+            },
+          ]);
+        } else {
+          // Default staff items (if staffType is not set)
+          staffItems.addAll([
+            {
+              'icon': Icons.assignment,
+              'title': 'Orders to Process',
+              'subtitle': 'Pack, ship, update status',
+              'color': AppColors.accent,
+              'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
+            },
+            {
+              'icon': Icons.support_agent,
+              'title': 'Support Tickets',
+              'subtitle': 'Customer issues & returns',
+              'color': AppColors.success,
+              'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
+            },
+          ]);
+        }
+        
+        return staffItems;
       
       case 'admin':
         return [
