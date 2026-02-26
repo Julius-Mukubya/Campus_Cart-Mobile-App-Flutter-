@@ -23,31 +23,38 @@ class _SignInScreenState extends State<SignInScreen> {
       'name': 'John Seller',
       'phone': '+256 700 123 456',
     },
+    'coordinator@test.com': {
+      'password': 'coordinator123',
+      'role': 'staff',
+      'staffType': 'coordinator',
+      'name': 'Order Coordinator',
+      'phone': '+256 700 234 567',
+    },
     'support@test.com': {
       'password': 'support123',
       'role': 'staff',
       'staffType': 'support',
       'name': 'Jane Support',
-      'phone': '+256 700 234 567',
+      'phone': '+256 700 345 678',
     },
     'delivery@test.com': {
       'password': 'delivery123',
       'role': 'staff',
       'staffType': 'delivery',
       'name': 'Tom Delivery',
-      'phone': '+256 700 345 678',
+      'phone': '+256 700 456 789',
     },
     'admin@test.com': {
       'password': 'admin123',
       'role': 'admin',
       'name': 'Mike Admin',
-      'phone': '+256 700 456 789',
+      'phone': '+256 700 567 890',
     },
     'customer@test.com': {
       'password': 'customer123',
       'role': 'customer',
       'name': 'Sarah Customer',
-      'phone': '+256 700 567 890',
+      'phone': '+256 700 678 901',
     },
   };
 
@@ -158,6 +165,11 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
           const SizedBox(height: 12),
           ..._testUsers.entries.map((entry) {
+            String displayRole = entry.value['role']!;
+            if (entry.value['role'] == 'staff' && entry.value['staffType'] != null) {
+              displayRole = entry.value['staffType']!;
+            }
+            
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
@@ -189,7 +201,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      entry.value['role']!,
+                      displayRole,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,

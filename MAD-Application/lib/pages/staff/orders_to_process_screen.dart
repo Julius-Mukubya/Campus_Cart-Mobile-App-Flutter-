@@ -11,38 +11,45 @@ class OrdersToProcessScreen extends StatefulWidget {
 
 class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Pending', 'Processing', 'Ready to Ship'];
+  final List<String> _filters = ['All', 'Accepted', 'Assigned'];
   
   final List<Map<String, dynamic>> _orders = [
     {
       'id': '#ORD001',
       'customer': 'John Doe',
+      'seller': 'Tech Store',
       'items': 2,
       'total': 'UGX 125,000',
-      'status': 'Pending',
+      'status': 'Accepted',
       'date': '2024-02-13',
       'priority': 'High',
       'address': '123 Main St, Kampala',
+      'sellerAddress': 'Shop 45, Campus Mall',
     },
     {
       'id': '#ORD002',
       'customer': 'Jane Smith',
+      'seller': 'Fashion Hub',
       'items': 1,
       'total': 'UGX 85,000',
-      'status': 'Processing',
+      'status': 'Accepted',
       'date': '2024-02-12',
       'priority': 'Medium',
       'address': '456 Oak Ave, Entebbe',
+      'sellerAddress': 'Shop 12, Student Center',
     },
     {
       'id': '#ORD003',
       'customer': 'Mike Johnson',
+      'seller': 'Book Corner',
       'items': 3,
       'total': 'UGX 200,000',
-      'status': 'Ready to Ship',
+      'status': 'Assigned',
       'date': '2024-02-11',
       'priority': 'Low',
       'address': '789 Pine Rd, Jinja',
+      'sellerAddress': 'Shop 8, Library Building',
+      'assignedTo': 'Tom Delivery',
     },
   ];
 
@@ -53,11 +60,9 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Pending':
-        return AppColors.accent;
-      case 'Processing':
+      case 'Accepted':
         return AppColors.primary;
-      case 'Ready to Ship':
+      case 'Assigned':
         return AppColors.success;
       default:
         return AppColors.grey;
@@ -148,13 +153,29 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
             
             const SizedBox(height: 12),
             
-            // Customer Info
+            // Customer and Seller Info
             Row(
               children: [
                 const Icon(Icons.person, size: 16, color: AppColors.grey),
                 const SizedBox(width: 8),
                 Text(
                   order['customer'],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.text,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Row(
+              children: [
+                const Icon(Icons.store, size: 16, color: AppColors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  order['seller'],
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.text,
@@ -206,10 +227,10 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
                 ),
                 Row(
                   children: [
-                    if (order['status'] == 'Pending') ...[
+                    if (order['status'] == 'Accepted') ...[
                       ElevatedButton(
                         onPressed: () {
-                          _updateOrderStatus(order, 'Processing');
+                          _assignDelivery(order);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -221,46 +242,31 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
                           elevation: 0,
                         ),
                         child: const Text(
-                          'Start Processing',
+                          'Assign Delivery',
                           style: TextStyle(fontSize: 12),
                         ),
                       ),
-                    ] else if (order['status'] == 'Processing') ...[
-                      ElevatedButton(
-                        onPressed: () {
-                          _updateOrderStatus(order, 'Ready to Ship');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
+                    ] else if (order['status'] == 'Assigned') ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Mark Ready',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ] else if (order['status'] == 'Ready to Ship') ...[
-                      ElevatedButton(
-                        onPressed: () {
-                          _addTrackingNumber(order);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Add Tracking',
-                          style: TextStyle(fontSize: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.local_shipping, size: 14, color: AppColors.success),
+                            const SizedBox(width: 4),
+                            Text(
+                              order['assignedTo'],
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -292,62 +298,62 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
     );
   }
 
-  void _updateOrderStatus(Map<String, dynamic> order, String newStatus) {
-    setState(() {
-      order['status'] = newStatus;
-    });
+  void _assignDelivery(Map<String, dynamic> order) {
+    // List of available delivery personnel
+    final deliveryPersonnel = [
+      'Tom Delivery',
+      'Sarah Driver',
+      'Mike Courier',
+      'Jane Express',
+    ];
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Order ${order['id']} updated to $newStatus'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _addTrackingNumber(Map<String, dynamic> order) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Add Tracking Number'),
+        title: const Text('Assign Delivery Personnel'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Order: ${order['id']}'),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Tracking Number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            Text(
+              'Order: ${order['id']}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
+            Text('Customer: ${order['customer']}'),
+            Text('Seller: ${order['seller']}'),
+            const SizedBox(height: 16),
+            const Text(
+              'Select delivery personnel:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            ...deliveryPersonnel.map((person) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.person, color: AppColors.primary),
+              title: Text(person),
+              onTap: () {
+                setState(() {
+                  order['status'] = 'Assigned';
+                  order['assignedTo'] = person;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Order ${order['id']} assigned to $person'),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            )),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tracking number added successfully!'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Add'),
           ),
         ],
       ),
@@ -451,13 +457,23 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
                   children: [
                     _buildDetailRow('Order Date', order['date']),
                     const SizedBox(height: 16),
+                    _buildDetailRow('Customer', order['customer']),
+                    const SizedBox(height: 16),
+                    _buildDetailRow('Seller', order['seller']),
+                    const SizedBox(height: 16),
                     _buildDetailRow('Items', '${order['items']} items'),
                     const SizedBox(height: 16),
                     _buildDetailRow('Total Amount', order['total']),
                     const SizedBox(height: 16),
                     _buildDetailRow('Priority', order['priority']),
                     const SizedBox(height: 16),
+                    _buildDetailRow('Pickup Address', order['sellerAddress']),
+                    const SizedBox(height: 16),
                     _buildDetailRow('Delivery Address', order['address']),
+                    if (order['assignedTo'] != null) ...[
+                      const SizedBox(height: 16),
+                      _buildDetailRow('Assigned To', order['assignedTo']),
+                    ],
                     const SizedBox(height: 24),
                     const Text(
                       'Order Items',
@@ -642,7 +658,7 @@ class _OrdersToProcessScreenState extends State<OrdersToProcessScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Orders will appear here when available',
+                          'Accepted orders from sellers will appear here',
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.secondaryText,

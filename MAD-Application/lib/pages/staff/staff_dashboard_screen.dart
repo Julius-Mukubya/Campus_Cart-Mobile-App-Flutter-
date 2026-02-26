@@ -36,7 +36,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 18),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: 10),
           Flexible(
@@ -96,7 +96,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 10),
             Text(
@@ -121,13 +121,18 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     final staffType = userManager.staffType;
     final isSupport = staffType == 'support';
     final isDelivery = staffType == 'delivery';
+    final isCoordinator = staffType == 'coordinator' || staffType == null; // Default to coordinator
     
     // Dashboard title and icon based on staff type
     String dashboardTitle = 'Staff Dashboard';
     IconData dashboardIcon = Icons.support_agent;
     String welcomeSubtitle = 'Manage your tasks';
     
-    if (isSupport) {
+    if (isCoordinator) {
+      dashboardTitle = 'Order Coordinator Dashboard';
+      dashboardIcon = Icons.assignment_turned_in;
+      welcomeSubtitle = 'Coordinate orders and deliveries';
+    } else if (isSupport) {
       dashboardTitle = 'Customer Support Dashboard';
       dashboardIcon = Icons.headset_mic;
       welcomeSubtitle = 'Help customers and resolve issues';
@@ -248,7 +253,23 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               ),
               const SizedBox(height: 16),
               
-              if (isSupport) ...[
+              if (isCoordinator) ...[
+                // Order Coordinator Summary Cards
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildSummaryCard('Pending', '12', Icons.pending_actions, AppColors.accent),
+                    _buildSummaryCard('Processing', '8', Icons.sync, AppColors.primary),
+                    _buildSummaryCard('Ready', '5', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Assigned', '15', Icons.local_shipping, Colors.blue),
+                  ],
+                ),
+              ] else if (isSupport) ...[
                 // Customer Support Summary Cards
                 GridView.count(
                   shrinkWrap: true,
@@ -280,22 +301,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     _buildSummaryCard('Distance', '45 km', Icons.route, AppColors.primary),
                   ],
                 ),
-              ] else ...[
-                // Default Staff Summary Cards
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.2,
-                  children: [
-                    _buildSummaryCard('Orders Assigned', '12', Icons.assignment, AppColors.primary),
-                    _buildSummaryCard('Tickets Pending', '5', Icons.support, AppColors.accent),
-                    _buildSummaryCard('Orders Processed', '8', Icons.check_circle, AppColors.success),
-                    _buildSummaryCard('Issues Resolved', '3', Icons.done_all, Colors.green),
-                  ],
-                ),
               ],
               
               const SizedBox(height: 32),
@@ -311,7 +316,31 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               ),
               const SizedBox(height: 16),
               
-              if (isSupport) ...[
+              if (isCoordinator) ...[
+                // Order Coordinator Quick Actions
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildQuickAction('Process Orders', Icons.assignment, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/staff/orders');
+                    }),
+                    _buildQuickAction('Assign Delivery', Icons.local_shipping, Colors.blue, () {
+                      Navigator.pushNamed(context, '/staff/orders');
+                    }),
+                    _buildQuickAction('View Analytics', Icons.analytics, AppColors.success, () {
+                      // Navigate to analytics
+                    }),
+                    _buildQuickAction('Manage Sellers', Icons.store, Colors.orange, () {
+                      // Navigate to seller management
+                    }),
+                  ],
+                ),
+              ] else if (isSupport) ...[
                 // Customer Support Quick Actions
                 GridView.count(
                   shrinkWrap: true,
@@ -356,24 +385,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     }),
                     _buildQuickAction('Route Planner', Icons.map, Colors.orange, () {
                       Navigator.pushNamed(context, '/staff/route-planner');
-                    }),
-                  ],
-                ),
-              ] else ...[
-                // Default Staff Quick Actions
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.3,
-                  children: [
-                    _buildQuickAction('Process Orders', Icons.inventory, AppColors.primary, () {
-                      Navigator.pushNamed(context, '/staff/orders');
-                    }),
-                    _buildQuickAction('Support Tickets', Icons.headset_mic, AppColors.accent, () {
-                      Navigator.pushNamed(context, '/staff/tickets');
                     }),
                   ],
                 ),

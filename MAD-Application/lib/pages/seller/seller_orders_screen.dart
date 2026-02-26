@@ -265,29 +265,37 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                   ),
                   const SizedBox(height: 6),
                   
-                  // Status and items info
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(order['status']).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      order['status'],
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _getStatusColor(order['status']),
+                  // Status and items info in a Row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order['status']).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          order['status'],
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusColor(order['status']),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${order['items']} items • ${order['date']}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.secondaryText,
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${order['items']} items • ${order['date']}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.secondaryText,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
