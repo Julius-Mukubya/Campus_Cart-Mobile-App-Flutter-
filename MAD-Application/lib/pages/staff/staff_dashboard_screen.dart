@@ -355,7 +355,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                       Navigator.pushNamed(context, '/staff/delivery-history');
                     }),
                     _buildQuickAction('Route Planner', Icons.map, Colors.orange, () {
-                      // Navigate to route planner
+                      Navigator.pushNamed(context, '/staff/route-planner');
                     }),
                   ],
                 ),
