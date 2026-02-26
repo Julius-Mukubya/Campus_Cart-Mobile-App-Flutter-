@@ -14,7 +14,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   final userManager = UserManager();
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -31,31 +31,39 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 18),
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
+          const SizedBox(height: 10),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.secondaryText,
+          Flexible(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.secondaryText,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -252,7 +260,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   children: [
                     _buildSummaryCard('Open Tickets', '8', Icons.support, AppColors.accent),
                     _buildSummaryCard('In Progress', '5', Icons.pending, Colors.orange),
-                    _buildSummaryCard('Resolved Today', '12', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Resolved', '12', Icons.check_circle, AppColors.success),
                     _buildSummaryCard('Avg Response', '5 min', Icons.timer, AppColors.primary),
                   ],
                 ),
@@ -266,10 +274,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.2,
                   children: [
-                    _buildSummaryCard('Pending Pickup', '6', Icons.inventory, AppColors.accent),
+                    _buildSummaryCard('Pending', '6', Icons.inventory, AppColors.accent),
                     _buildSummaryCard('In Transit', '4', Icons.local_shipping, Colors.blue),
-                    _buildSummaryCard('Delivered Today', '15', Icons.check_circle, AppColors.success),
-                    _buildSummaryCard('Total Distance', '45 km', Icons.route, AppColors.primary),
+                    _buildSummaryCard('Delivered', '15', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('Distance', '45 km', Icons.route, AppColors.primary),
                   ],
                 ),
               ] else ...[
@@ -322,8 +330,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     _buildQuickAction('Moderation', Icons.flag, Colors.orange, () {
                       Navigator.pushNamed(context, '/staff/moderation');
                     }),
-                    _buildQuickAction('Knowledge Base', Icons.library_books, AppColors.success, () {
-                      // Navigate to knowledge base
+                    _buildQuickAction('Help Center', Icons.library_books, AppColors.success, () {
+                      Navigator.pushNamed(context, '/staff/help-center');
                     }),
                   ],
                 ),
@@ -337,13 +345,13 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.3,
                   children: [
-                    _buildQuickAction('Orders to Deliver', Icons.assignment, AppColors.primary, () {
+                    _buildQuickAction('Deliveries', Icons.assignment, AppColors.primary, () {
                       Navigator.pushNamed(context, '/staff/orders');
                     }),
-                    _buildQuickAction('Active Deliveries', Icons.local_shipping, Colors.blue, () {
+                    _buildQuickAction('Active Orders', Icons.local_shipping, Colors.blue, () {
                       Navigator.pushNamed(context, '/staff/active-deliveries');
                     }),
-                    _buildQuickAction('Delivery History', Icons.history, AppColors.success, () {
+                    _buildQuickAction('History', Icons.history, AppColors.success, () {
                       Navigator.pushNamed(context, '/staff/delivery-history');
                     }),
                     _buildQuickAction('Route Planner', Icons.map, Colors.orange, () {

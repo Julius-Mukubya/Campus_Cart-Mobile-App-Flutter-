@@ -168,8 +168,8 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
           children: [
             // Customer Avatar
             Container(
-              width: 80,
-              height: 80,
+              width: 70,
+              height: 70,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: DecorationImage(
@@ -179,25 +179,28 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
               ),
             ),
             
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             
             // Order Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Order ID with urgent badge
                   Row(
                     children: [
-                      Text(
-                        order['id'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                      Flexible(
+                        child: Text(
+                          order['id'],
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       if (isUrgent) ...[
                         const SizedBox(width: 6),
@@ -210,7 +213,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                           child: Text(
                             'URGENT',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
                               color: AppColors.error,
                             ),
@@ -219,7 +222,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   
                   // Customer name and address
                   Text(
@@ -240,7 +243,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                         child: Text(
                           order['address'],
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             color: AppColors.secondaryText,
                           ),
                           maxLines: 1,
@@ -249,50 +252,48 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   
                   // Total price
                   Text(
                     order['total'],
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   
                   // Status and items info
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(order['status']).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          order['status'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getStatusColor(order['status']),
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(order['status']).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      order['status'],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _getStatusColor(order['status']),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${order['items']} items • ${order['date']}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.secondaryText,
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${order['items']} items • ${order['date']}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.secondaryText,
+                    ),
                   ),
                 ],
               ),
             ),
+            
+            const SizedBox(width: 8),
             
             // Action Button
             GestureDetector(
@@ -304,7 +305,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -312,7 +313,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
                 child: const Icon(
                   Icons.visibility_outlined,
                   color: AppColors.primary,
-                  size: 20,
+                  size: 18,
                 ),
               ),
             ),

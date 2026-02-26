@@ -111,46 +111,46 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
           children: [
             // Ticket Header
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(ticket['category']),
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ticket['id'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.text,
-                          ),
-                        ),
-                        Text(
-                          ticket['category'],
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getCategoryIcon(ticket['category']),
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
                 ),
-                Row(
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ticket['id'],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      Text(
+                        ticket['category'],
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.secondaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -167,9 +167,9 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getStatusColor(ticket['status']).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -177,7 +177,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                       child: Text(
                         ticket['status'],
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: _getStatusColor(ticket['status']),
                         ),
@@ -194,35 +194,51 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
             Text(
               ticket['subject'],
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: AppColors.text,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             
             const SizedBox(height: 8),
             
             // Customer and Date
-            Row(
+            Wrap(
+              spacing: 16,
+              runSpacing: 4,
               children: [
-                const Icon(Icons.person, size: 16, color: AppColors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  ticket['customer'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.text,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.person, size: 14, color: AppColors.grey),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        ticket['customer'],
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.text,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 24),
-                const Icon(Icons.calendar_today, size: 16, color: AppColors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  ticket['date'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.text,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_today, size: 14, color: AppColors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      ticket['date'],
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.text,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -239,7 +255,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
               child: Text(
                 ticket['lastMessage'],
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: AppColors.text,
                   fontStyle: FontStyle.italic,
                 ),
@@ -251,8 +267,10 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
             const SizedBox(height: 12),
             
             // Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
               children: [
                 if (ticket['status'] == 'Open') ...[
                   ElevatedButton(
@@ -293,7 +311,6 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(width: 8),
                 OutlinedButton(
                   onPressed: () {
                     _viewTicketDetails(ticket);
