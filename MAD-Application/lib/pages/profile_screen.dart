@@ -5,13 +5,13 @@ import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/order_manager.dart';
-import 'package:madpractical/pages/MyOrdersScreen.dart';
-import 'package:madpractical/pages/AddressesScreen.dart';
-import 'package:madpractical/pages/EditProfileScreen.dart';
-import 'package:madpractical/pages/PaymentMethodsScreen.dart';
-import 'package:madpractical/pages/NotificationsScreen.dart';
-import 'package:madpractical/pages/PrivacySecurityScreen.dart';
-import 'package:madpractical/pages/HelpSupportScreen.dart';
+import 'package:madpractical/pages/my_orders_screen.dart';
+import 'package:madpractical/pages/addresses_screen.dart';
+import 'package:madpractical/pages/edit_profile_screen.dart';
+import 'package:madpractical/pages/payment_methods_screen.dart';
+import 'package:madpractical/pages/notifications_screen.dart';
+import 'package:madpractical/pages/privacy_security_screen.dart';
+import 'package:madpractical/pages/help_support_screen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -49,8 +49,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.secondary.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.secondary.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -64,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(50),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -72,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: CircleAvatar(
               radius: 40,
-              backgroundColor: AppColors.primary.withOpacity(0.1),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
               child: Text(
                 _userManager.name.isNotEmpty 
                     ? _userManager.name[0].toUpperCase()
@@ -125,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.1),
+                    color: AppColors.black.withValues(alpha: 0.1),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -154,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.08),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -165,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -203,7 +203,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.08),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.1),
+                    color: AppColors.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -252,7 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.08),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -263,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(

@@ -11,54 +11,88 @@ class RoutePlannerScreen extends StatefulWidget {
 
 class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   final List<Map<String, dynamic>> _deliveryStops = [
+    // Order 1: Pickup from seller
     {
-      'id': 'STOP001',
+      'id': 'STOP001-PICKUP',
       'orderId': '#ORD001',
-      'customer': 'John Doe',
+      'type': 'pickup',
+      'locationName': 'Tech Store',
+      'address': 'Shop 45, Campus Mall',
+      'phone': '+256 700 111 222',
+      'distance': '1.2 km',
+      'estimatedTime': '5 min',
+      'status': 'pending', // pending, deliverer_confirmed, completed
+      'priority': 1,
+      'items': 2,
+      'delivererConfirmed': false,
+      'sellerConfirmed': false,
+    },
+    // Order 1: Delivery to customer
+    {
+      'id': 'STOP001-DELIVERY',
+      'orderId': '#ORD001',
+      'type': 'delivery',
+      'locationName': 'John Doe',
       'address': '123 Main St, Kampala',
       'phone': '+256 700 123 456',
       'distance': '2.5 km',
       'estimatedTime': '10 min',
-      'status': 'pending',
-      'priority': 1,
+      'status': 'locked', // locked until pickup is completed
+      'priority': 2,
       'items': 2,
+      'delivererConfirmed': false,
+      'customerConfirmed': false,
     },
+    // Order 2: Pickup from seller
     {
-      'id': 'STOP002',
+      'id': 'STOP002-PICKUP',
       'orderId': '#ORD003',
-      'customer': 'Mike Johnson',
+      'type': 'pickup',
+      'locationName': 'Book Corner',
+      'address': 'Shop 8, Library Building',
+      'phone': '+256 700 333 444',
+      'distance': '3.8 km',
+      'estimatedTime': '15 min',
+      'status': 'pending',
+      'priority': 3,
+      'items': 3,
+      'delivererConfirmed': false,
+      'sellerConfirmed': false,
+    },
+    // Order 2: Delivery to customer
+    {
+      'id': 'STOP002-DELIVERY',
+      'orderId': '#ORD003',
+      'type': 'delivery',
+      'locationName': 'Mike Johnson',
       'address': '789 Pine Rd, Jinja',
       'phone': '+256 700 789 012',
       'distance': '5.8 km',
       'estimatedTime': '20 min',
-      'status': 'pending',
-      'priority': 2,
+      'status': 'locked',
+      'priority': 4,
       'items': 3,
-    },
-    {
-      'id': 'STOP003',
-      'orderId': '#ORD005',
-      'customer': 'Sarah Wilson',
-      'address': '321 Cedar St, Mbarara',
-      'phone': '+256 700 321 654',
-      'distance': '8.2 km',
-      'estimatedTime': '30 min',
-      'status': 'pending',
-      'priority': 3,
-      'items': 1,
+      'delivererConfirmed': false,
+      'customerConfirmed': false,
     },
   ];
 
-  String _totalDistance = '16.5 km';
-  String _totalTime = '1 hr 10 min';
+  final String _totalDistance = '13.3 km';
+  final String _totalTime = '50 min';
 
   Widget _buildStopCard(Map<String, dynamic> stop, int index) {
     final isCompleted = stop['status'] == 'completed';
+    final isLocked = stop['status'] == 'locked';
+    final isPickup = stop['type'] == 'pickup';
+    final delivererConfirmed = stop['delivererConfirmed'] ?? false;
+    final otherPartyConfirmed = isPickup 
+        ? (stop['sellerConfirmed'] ?? false)
+        : (stop['customerConfirmed'] ?? false);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: isLocked ? AppColors.lightGrey : AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: isCompleted ? Border.all(color: AppColors.success, width: 2) : null,
         boxShadow: [
@@ -82,20 +116,24 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   decoration: BoxDecoration(
                     color: isCompleted 
                         ? AppColors.success 
-                        : AppColors.primary.withValues(alpha: 0.1),
+                        : isLocked
+                            ? AppColors.grey.withValues(alpha: 0.3)
+                            : AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: isCompleted
                         ? const Icon(Icons.check, color: AppColors.white, size: 20)
-                        : Text(
-                            '${stop['priority']}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
+                        : isLocked
+                            ? const Icon(Icons.lock, color: AppColors.grey, size: 18)
+                            : Text(
+                                '${stop['priority']}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -103,16 +141,39 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        stop['orderId'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isPickup 
+                                  ? Colors.orange.withValues(alpha: 0.1)
+                                  : Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isPickup ? 'PICKUP' : 'DELIVERY',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: isPickup ? Colors.orange : Colors.blue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            stop['orderId'],
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.text,
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 2),
                       Text(
-                        stop['customer'],
+                        stop['locationName'],
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.secondaryText,
@@ -134,6 +195,22 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.success,
+                      ),
+                    ),
+                  ),
+                if (isLocked)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Locked',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.grey,
                       ),
                     ),
                   ),
@@ -248,7 +325,68 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
               ],
             ),
             
-            if (!isCompleted) ...[
+            // Confirmation Status
+            if (!isCompleted && !isLocked) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Confirmation Status:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          delivererConfirmed ? Icons.check_circle : Icons.radio_button_unchecked,
+                          size: 16,
+                          color: delivererConfirmed ? AppColors.success : AppColors.grey,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Deliverer confirmed',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: delivererConfirmed ? AppColors.success : AppColors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          otherPartyConfirmed ? Icons.check_circle : Icons.radio_button_unchecked,
+                          size: 16,
+                          color: otherPartyConfirmed ? AppColors.success : AppColors.grey,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isPickup ? 'Seller confirmed' : 'Customer confirmed',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: otherPartyConfirmed ? AppColors.success : AppColors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
+            if (!isCompleted && !isLocked) ...[
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -270,11 +408,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _markAsCompleted(stop),
+                      onPressed: delivererConfirmed 
+                          ? null 
+                          : () => _confirmAction(stop),
                       icon: const Icon(Icons.check_circle, size: 16),
-                      label: const Text('Complete'),
+                      label: Text(isPickup ? 'Confirm Pickup' : 'Confirm Delivery'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
+                        backgroundColor: delivererConfirmed ? AppColors.grey : AppColors.success,
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
@@ -303,16 +443,120 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     );
   }
 
-  void _markAsCompleted(Map<String, dynamic> stop) {
-    setState(() {
-      stop['status'] = 'completed';
-    });
+  void _confirmAction(Map<String, dynamic> stop) {
+    final isPickup = stop['type'] == 'pickup';
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${stop['orderId']} marked as delivered'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(isPickup ? 'Confirm Pickup' : 'Confirm Delivery'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isPickup 
+                  ? 'Have you picked up the items from ${stop['locationName']}?'
+                  : 'Have you delivered the items to ${stop['locationName']}?',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 16, color: AppColors.accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isPickup
+                          ? 'Seller must also confirm handover'
+                          : 'Customer must also confirm receipt',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                stop['delivererConfirmed'] = true;
+                // Simulate seller/customer confirmation after a delay
+                Future.delayed(const Duration(seconds: 2), () {
+                  if (mounted) {
+                    setState(() {
+                      if (isPickup) {
+                        stop['sellerConfirmed'] = true;
+                        // Unlock the corresponding delivery stop
+                        final deliveryStop = _deliveryStops.firstWhere(
+                          (s) => s['orderId'] == stop['orderId'] && s['type'] == 'delivery',
+                          orElse: () => {},
+                        );
+                        if (deliveryStop.isNotEmpty) {
+                          deliveryStop['status'] = 'pending';
+                        }
+                      } else {
+                        stop['customerConfirmed'] = true;
+                      }
+                      
+                      // Mark as completed when both parties confirm
+                      if ((isPickup && stop['sellerConfirmed']) || 
+                          (!isPickup && stop['customerConfirmed'])) {
+                        stop['status'] = 'completed';
+                      }
+                    });
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isPickup 
+                              ? 'Seller confirmed handover. Item picked up!'
+                              : 'Customer confirmed receipt. Delivery complete!',
+                        ),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                });
+              });
+              Navigator.pop(context);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isPickup 
+                        ? 'Pickup confirmed. Waiting for seller confirmation...'
+                        : 'Delivery confirmed. Waiting for customer confirmation...',
+                  ),
+                  backgroundColor: AppColors.primary,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: AppColors.white,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
       ),
     );
   }

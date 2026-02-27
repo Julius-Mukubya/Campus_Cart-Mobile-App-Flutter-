@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/notification_manager.dart';
-import 'package:madpractical/pages/NotificationsListScreen.dart';
+import 'package:madpractical/pages/notifications_list_screen.dart';
 
 class NotificationIcon extends StatelessWidget {
   final double size;
@@ -35,7 +35,7 @@ class NotificationIcon extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.1),
+              color: AppColors.black.withValues(alpha: 0.1),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

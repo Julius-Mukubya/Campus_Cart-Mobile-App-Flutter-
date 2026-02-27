@@ -374,17 +374,17 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.3,
                   children: [
-                    _buildQuickAction('Deliveries', Icons.assignment, AppColors.primary, () {
-                      Navigator.pushNamed(context, '/staff/orders');
+                    _buildQuickAction('Route Planner', Icons.map, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/staff/route-planner');
                     }),
-                    _buildQuickAction('Active Orders', Icons.local_shipping, Colors.blue, () {
-                      Navigator.pushNamed(context, '/staff/active-deliveries');
+                    _buildQuickAction('My Orders', Icons.assignment, Colors.blue, () {
+                      Navigator.pushNamed(context, '/staff/orders');
                     }),
                     _buildQuickAction('History', Icons.history, AppColors.success, () {
                       Navigator.pushNamed(context, '/staff/delivery-history');
                     }),
-                    _buildQuickAction('Route Planner', Icons.map, Colors.orange, () {
-                      Navigator.pushNamed(context, '/staff/route-planner');
+                    _buildQuickAction('Statistics', Icons.analytics, Colors.orange, () {
+                      // Navigate to statistics
                     }),
                   ],
                 ),

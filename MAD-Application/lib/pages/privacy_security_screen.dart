@@ -120,7 +120,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
+                  color: AppColors.black.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -155,7 +155,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -210,7 +210,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -284,10 +284,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.error.withOpacity(0.08),
+                      color: AppColors.error.withValues(alpha: 0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -377,7 +377,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -437,8 +437,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isDestructive 
-                    ? AppColors.error.withOpacity(0.1)
-                    : AppColors.primary.withOpacity(0.1),
+                    ? AppColors.error.withValues(alpha: 0.1)
+                    : AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

@@ -3,13 +3,13 @@
 ## Table of Contents
 1. [Overview](#overview)
 2. [User Roles & Authentication](#user-roles--authentication)
-3. [Customer Features](#customer-features)
-4. [Seller Features](#seller-features)
-5. [Staff Features](#staff-features)
-6. [Admin Features](#admin-features)
-7. [Technical Architecture](#technical-architecture)
-8. [Navigation Flow](#navigation-flow)
-9. [Key Components](#key-components)
+3. [All Screens & Features](#all-screens--features)
+4. [Customer Screens](#customer-screens)
+5. [Seller Screens](#seller-screens)
+6. [Staff Screens](#staff-screens)
+7. [Admin Screens](#admin-screens)
+8. [Order Flow](#order-flow)
+9. [Technical Architecture](#technical-architecture)
 
 ---
 
@@ -18,8 +18,9 @@
 Campus Cart is a comprehensive e-commerce mobile application built with Flutter, designed specifically for campus communities. It provides a multi-role platform where customers can shop, sellers can manage their stores, staff can handle operations, and admins can oversee the entire platform.
 
 ### Key Features
-- Multi-role authentication system
+- Multi-role authentication system with 6 user types
 - Real-time shopping experience
+- Dual confirmation system for pickups and deliveries
 - Order management and tracking
 - Live chat support
 - Content moderation
@@ -37,17 +38,19 @@ Campus Cart is a comprehensive e-commerce mobile application built with Flutter,
    - Manage cart and wishlist
    - Track orders
    - Access customer support
+   - Confirm delivery receipt
 
 2. **Seller**
    - Manage product inventory
-   - Process orders
+   - Accept/reject orders
+   - Confirm item handover to delivery personnel
    - Track sales and earnings
    - Manage store settings
 
 3. **Staff** (3 Sub-types)
    - **Order Coordinator**: Process orders, assign deliveries, manage order flow
    - **Customer Support**: Handle tickets, live chat, moderation
-   - **Delivery Personnel**: Manage pickups and deliveries with route planning
+   - **Delivery Personnel**: Accept assignments, confirm pickups/deliveries, manage routes
 
 4. **Admin**
    - Platform-wide management
@@ -90,6 +93,59 @@ Password: admin123
 3. User enters credentials
 4. System validates and determines role
 5. Redirects to appropriate dashboard based on role
+
+---
+
+## All Screens & Features
+
+### Complete Screen List (30+ Screens)
+
+#### Authentication & Onboarding
+1. Splash Screen
+2. Sign In Screen
+3. Sign Up Screen
+4. Forgot Password Screen
+
+#### Customer Screens (10 screens)
+5. Customer Home Screen
+6. Product Details Screen
+7. Cart Screen
+8. Wishlist Screen
+9. Checkout Screen
+10. Order Tracking Screen
+11. Customer Profile Screen
+12. Customer Orders History
+13. Customer Support Screen
+14. Settings Screen
+
+#### Seller Screens (8 screens)
+15. Seller Dashboard
+16. Seller Products Screen
+17. Add/Edit Product Screen
+18. Seller Orders Screen
+19. Seller Analytics Screen
+20. Seller Profile Screen
+21. Seller Settings Screen
+22. Seller Earnings Screen
+
+#### Staff Screens (12 screens)
+23. Staff Dashboard (3 variants: Coordinator, Support, Delivery)
+24. Orders to Process Screen / My Assigned Orders
+25. Support Tickets Screen
+26. Live Chat Screen
+27. Moderation Screen
+28. Help Center Screen
+29. Route Planner Screen
+30. Active Deliveries Screen
+31. Delivery History Screen
+32. Staff Profile Screen
+
+#### Admin Screens (5 screens)
+33. Admin Dashboard
+34. Seller Management Screen
+35. User Management Screen
+36. Platform Analytics Screen
+37. Admin Settings Screen
 
 ---
 

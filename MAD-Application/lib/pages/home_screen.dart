@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/ProductDetails.dart';
+import 'package:madpractical/pages/product_details.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/notification_manager.dart';
-import 'package:madpractical/pages/NotificationsListScreen.dart';
+import 'package:madpractical/pages/notifications_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -876,6 +876,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/customer/orders');
+            },
+            icon: const Icon(
+              Icons.shopping_bag_outlined,
+              color: AppColors.text,
+            ),
+            tooltip: 'My Orders',
+          ),
           IconButton(
             onPressed: () {
               Navigator.push(

@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withOpacity(0.2),
+                      color: AppColors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 'Your Campus Shopping Destination',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.white.withOpacity(0.8),
+                  color: AppColors.white.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w300,
                 ),
               ),

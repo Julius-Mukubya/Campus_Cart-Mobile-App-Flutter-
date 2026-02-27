@@ -49,7 +49,7 @@ class _OrderSuccessState extends State<OrderSuccess> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -90,7 +90,7 @@ class _OrderSuccessState extends State<OrderSuccess> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -108,7 +108,7 @@ class _OrderSuccessState extends State<OrderSuccess> {
                           const SizedBox(height: 16),
                           _buildDetailRow('Payment', widget.paymentMethod),
                           const SizedBox(height: 20),
-                          Divider(color: AppColors.lightGrey.withOpacity(0.5)),
+                          Divider(color: AppColors.lightGrey.withValues(alpha: 0.5)),
                           const SizedBox(height: 20),
                           _buildDetailRow(
                             'Total Cost',
@@ -167,7 +167,7 @@ class _OrderSuccessState extends State<OrderSuccess> {
                 color: AppColors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),

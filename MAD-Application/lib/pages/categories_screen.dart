@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/ProductDetails.dart';
+import 'package:madpractical/pages/product_details.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
@@ -40,77 +40,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   void _onCartChanged() {
     setState(() {});
-  }
-
-  double _extractPrice(String priceString) {
-    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
-    return double.tryParse(numericString) ?? 0.0;
-  }
-
-  double _getDiscountedPrice(Map<String, dynamic> product) {
-    final originalPrice = _extractPrice(product['price']);
-    
-    if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
-      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
-      final discountPercent = double.tryParse(discountStr) ?? 0.0;
-      
-      if (discountPercent > 0) {
-        final discountAmount = originalPrice * (discountPercent / 100);
-        return originalPrice - discountAmount;
-      }
-    }
-    
-    return originalPrice;
-  }
-
-  Widget _buildPriceSection(Map<String, dynamic> product) {
-    final originalPrice = _extractPrice(product['price']);
-    final discountedPrice = _getDiscountedPrice(product);
-    final hasDiscount = originalPrice != discountedPrice;
-
-    if (hasDiscount) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              product['price'],
-              style: const TextStyle(
-                fontSize: 8,
-                color: AppColors.secondaryText,
-                decoration: TextDecoration.lineThrough,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              'UGX ${discountedPrice.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
-                color: AppColors.primary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      );
-    } else {
-      return Text(
-        product['price'],
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-          color: AppColors.primary,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-    }
   }
 
   final List<Map<String, dynamic>> categories = [
@@ -332,7 +261,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.grey.withOpacity(0.3),
+                  color: AppColors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -407,7 +336,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.lightGrey.withOpacity(0.3),
+                                    : AppColors.lightGrey.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
@@ -483,12 +412,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: AppColors.black.withOpacity(0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -514,8 +443,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.primary.withOpacity(0.05),
-                        AppColors.secondary.withOpacity(0.02),
+                        AppColors.primary.withValues(alpha: 0.05),
+                        AppColors.secondary.withValues(alpha: 0.02),
                       ],
                     ),
                   ),
@@ -532,8 +461,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                AppColors.primary.withOpacity(0.1),
-                                AppColors.secondary.withOpacity(0.05),
+                                AppColors.primary.withValues(alpha: 0.1),
+                                AppColors.secondary.withValues(alpha: 0.05),
                               ],
                             ),
                           ),
@@ -552,8 +481,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                AppColors.primary.withOpacity(0.1),
-                                AppColors.secondary.withOpacity(0.05),
+                                AppColors.primary.withValues(alpha: 0.1),
+                                AppColors.secondary.withValues(alpha: 0.05),
                               ],
                             ),
                           ),
@@ -579,11 +508,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withOpacity(0.1),
+                          color: AppColors.black.withValues(alpha: 0.1),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -607,7 +536,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -672,7 +601,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -725,8 +654,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withOpacity(0.1),
-                      AppColors.secondary.withOpacity(0.05),
+                      AppColors.primary.withValues(alpha: 0.1),
+                      AppColors.secondary.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -978,12 +907,12 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: AppColors.black.withOpacity(0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1008,8 +937,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withOpacity(0.05),
-                      AppColors.secondary.withOpacity(0.02),
+                      AppColors.primary.withValues(alpha: 0.05),
+                      AppColors.secondary.withValues(alpha: 0.02),
                     ],
                   ),
                 ),
@@ -1026,8 +955,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.primary.withOpacity(0.1),
-                              AppColors.secondary.withOpacity(0.05),
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.secondary.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -1046,8 +975,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.primary.withOpacity(0.1),
-                              AppColors.secondary.withOpacity(0.05),
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.secondary.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -1076,13 +1005,13 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     gradient: LinearGradient(
                       colors: [
                         AppColors.accent,
-                        AppColors.accent.withOpacity(0.8),
+                        AppColors.accent.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accent.withOpacity(0.4),
+                        color: AppColors.accent.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1125,11 +1054,11 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withOpacity(0.1),
+                          color: AppColors.black.withValues(alpha: 0.1),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -1167,7 +1096,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: AppColors.text.withOpacity(0.9),
+                        color: AppColors.text.withValues(alpha: 0.9),
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -1256,7 +1185,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.black.withOpacity(0.1),
+                  color: AppColors.black.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -1293,8 +1222,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.primary.withOpacity(0.1),
-                      AppColors.secondary.withOpacity(0.05),
+                      AppColors.primary.withValues(alpha: 0.1),
+                      AppColors.secondary.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -1304,7 +1233,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.15),
+                        color: AppColors.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -1412,3 +1341,4 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     );
   }
 }
+
