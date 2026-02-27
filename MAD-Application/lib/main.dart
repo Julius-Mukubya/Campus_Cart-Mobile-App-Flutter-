@@ -27,7 +27,7 @@ import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
 import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
 import 'package:madpractical/pages/staff/support_tickets_screen.dart';
 import 'package:madpractical/pages/staff/live_chat_screen.dart';
-import 'package:madpractical/pages/staff/help_center_screen.dart';
+import 'package:madpractical/pages/help_center_screen.dart';
 import 'package:madpractical/pages/staff/route_planner_screen.dart';
 import 'package:madpractical/pages/staff/active_deliveries_screen.dart';
 import 'package:madpractical/pages/staff/delivery_history_screen.dart';
@@ -130,6 +130,7 @@ class MyApp extends StatelessWidget {
         '/wishlist': (context) => const WishlistScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/my-orders': (context) => const MyOrdersScreen(),
+        '/help-center': (context) => const HelpCenterScreen(),
         '/access-denied': (context) => const AccessDeniedScreen(),
         // Seller routes
         '/seller/dashboard': (context) => const SellerDashboardScreen(),

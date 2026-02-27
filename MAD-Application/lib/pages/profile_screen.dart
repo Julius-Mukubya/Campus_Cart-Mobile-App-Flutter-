@@ -11,7 +11,8 @@ import 'package:madpractical/pages/edit_profile_screen.dart';
 import 'package:madpractical/pages/payment_methods_screen.dart';
 import 'package:madpractical/pages/notifications_screen.dart';
 import 'package:madpractical/pages/privacy_security_screen.dart';
-import 'package:madpractical/pages/help_support_screen.dart';
+import 'package:madpractical/pages/faq_screen.dart';
+import 'package:madpractical/pages/contact_us_screen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -636,14 +637,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           MaterialPageRoute(builder: (context) => const PrivacySecurityScreen()),
         ),
       },
+    ];
+
+    final helpSupportItems = [
       {
-        'icon': Icons.help_outline,
-        'title': 'Help & Support',
-        'subtitle': 'Get help and support',
+        'icon': Icons.quiz_outlined,
+        'title': 'FAQ',
+        'subtitle': 'Frequently asked questions',
         'color': AppColors.success,
         'onTap': () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+          MaterialPageRoute(builder: (context) => const FaqScreen()),
+        ),
+      },
+      {
+        'icon': Icons.contact_support_outlined,
+        'title': 'Contact Us',
+        'subtitle': 'Get in touch with support',
+        'color': Colors.blue,
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ContactUsScreen()),
         ),
       },
     ];
@@ -695,6 +709,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               // Settings Section
               _buildMenuSection('Settings', settingsItems),
+              
+              const SizedBox(height: 20),
+              
+              // Help & Support Section
+              _buildMenuSection('Help & Support', helpSupportItems),
               
               const SizedBox(height: 32),
               
