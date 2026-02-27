@@ -465,13 +465,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'color': Colors.blue,
               'onTap': () => Navigator.pushNamed(context, '/staff/chat'),
             },
-            {
-              'icon': Icons.flag,
-              'title': 'Moderation Queue',
-              'subtitle': 'Flagged listings/reviews',
-              'color': Colors.orange,
-              'onTap': () => Navigator.pushNamed(context, '/staff/moderation'),
-            },
           ]);
         } else if (staffType == 'delivery') {
           // Delivery Personnel specific items

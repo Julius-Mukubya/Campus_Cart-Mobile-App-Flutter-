@@ -322,12 +322,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 AppColors.accent,
               ),
               _buildAlertCard(
-                'Flagged Products',
-                '2 products reported by users',
-                Icons.flag,
-                AppColors.error,
-              ),
-              _buildAlertCard(
                 'System Updates',
                 'New features available for deployment',
                 Icons.system_update,

@@ -356,9 +356,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     _buildQuickAction('Live Chat', Icons.chat, Colors.blue, () {
                       Navigator.pushNamed(context, '/staff/chat');
                     }),
-                    _buildQuickAction('Moderation', Icons.flag, Colors.orange, () {
-                      Navigator.pushNamed(context, '/staff/moderation');
-                    }),
                     _buildQuickAction('Help Center', Icons.library_books, AppColors.success, () {
                       Navigator.pushNamed(context, '/staff/help-center');
                     }),

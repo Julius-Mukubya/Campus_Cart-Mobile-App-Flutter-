@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/report_manager.dart';
-import 'package:madpractical/services/user_manager.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -17,8 +15,6 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
-  final ReportManager _reportManager = ReportManager();
-  final UserManager _userManager = UserManager();
 
   @override
   void initState() {
@@ -40,178 +36,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _onCartChanged() {
     setState(() {});
-  }
-
-  void _showReportDialog() {
-    String? selectedReason;
-    final TextEditingController detailsController = TextEditingController();
-    
-    final reasons = [
-      'Misleading description',
-      'Inappropriate content',
-      'Counterfeit product',
-      'Wrong category',
-      'Spam or scam',
-      'Quality concerns',
-      'Other',
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.flag, color: AppColors.error, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Report Product',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Help us understand the issue with this product',
-                  style: TextStyle(fontSize: 14, color: AppColors.secondaryText),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Reason for reporting',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...reasons.map((reason) => RadioListTile<String>(
-                  title: Text(reason, style: const TextStyle(fontSize: 14)),
-                  value: reason,
-                  groupValue: selectedReason,
-                  activeColor: AppColors.primary,
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedReason = value;
-                    });
-                  },
-                )),
-                const SizedBox(height: 16),
-                const Text(
-                  'Additional details (optional)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: detailsController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Provide more information...',
-                    hintStyle: const TextStyle(color: AppColors.grey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.lightGrey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.all(12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.grey),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: selectedReason == null
-                  ? null
-                  : () {
-                      Navigator.pop(context);
-                      _submitReport(selectedReason!, detailsController.text);
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text('Submit Report'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitReport(String reason, String details) {
-    // Submit report to ReportManager
-    _reportManager.submitReport(
-      itemId: widget.product['id']?.toString() ?? 'unknown',
-      itemType: 'Product',
-      itemTitle: widget.product['name'] ?? 'Unknown Product',
-      reason: reason,
-      reporterName: _userManager.name,
-      details: details.isNotEmpty ? details : null,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: AppColors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Report submitted',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    'Thank you for helping keep our marketplace safe',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   double _extractPrice(String priceString) {
@@ -491,32 +315,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.flag_outlined,
-                color: AppColors.error,
-                size: 18,
-              ),
-            ),
-            onPressed: _showReportDialog,
-            tooltip: 'Report product',
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(

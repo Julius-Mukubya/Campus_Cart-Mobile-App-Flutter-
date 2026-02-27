@@ -27,7 +27,6 @@ import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
 import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
 import 'package:madpractical/pages/staff/support_tickets_screen.dart';
 import 'package:madpractical/pages/staff/live_chat_screen.dart';
-import 'package:madpractical/pages/staff/moderation_screen.dart';
 import 'package:madpractical/pages/staff/help_center_screen.dart';
 import 'package:madpractical/pages/staff/route_planner_screen.dart';
 import 'package:madpractical/pages/staff/active_deliveries_screen.dart';
@@ -144,7 +143,6 @@ class MyApp extends StatelessWidget {
         '/staff/orders': (context) => const OrdersToProcessScreen(),
         '/staff/tickets': (context) => const SupportTicketsScreen(),
         '/staff/chat': (context) => const LiveChatScreen(),
-        '/staff/moderation': (context) => const ModerationScreen(),
         '/staff/help-center': (context) => const HelpCenterScreen(),
         '/staff/route-planner': (context) => const RoutePlannerScreen(),
         '/staff/active-deliveries': (context) => const ActiveDeliveriesScreen(),
