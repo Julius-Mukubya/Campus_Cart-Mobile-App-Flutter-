@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/services/report_manager.dart';
 
 class ModerationScreen extends StatefulWidget {
   const ModerationScreen({super.key});
@@ -12,46 +13,28 @@ class ModerationScreen extends StatefulWidget {
 class _ModerationScreenState extends State<ModerationScreen> {
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Products', 'Reviews', 'Comments'];
-  
-  final List<Map<String, dynamic>> _flaggedItems = [
-    {
-      'id': 'FLAG001',
-      'type': 'Product',
-      'title': 'Wireless Headphones Pro Max',
-      'reason': 'Misleading description',
-      'reporter': 'John Doe',
-      'date': '2024-02-13',
-      'status': 'Pending',
-      'description': 'Product claims noise cancellation but doesn\'t have this feature',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop',
-    },
-    {
-      'id': 'FLAG002',
-      'type': 'Review',
-      'title': 'Review on Smart Watch',
-      'reason': 'Spam content',
-      'reporter': 'Jane Smith',
-      'date': '2024-02-12',
-      'status': 'Pending',
-      'description': 'Review contains promotional links and spam',
-      'image': null,
-    },
-    {
-      'id': 'FLAG003',
-      'type': 'Comment',
-      'title': 'Comment on Running Shoes',
-      'reason': 'Inappropriate language',
-      'reporter': 'Mike Johnson',
-      'date': '2024-02-11',
-      'status': 'Reviewed',
-      'description': 'Comment contains offensive language',
-      'image': null,
-    },
-  ];
+  final ReportManager _reportManager = ReportManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _reportManager.addListener(_onReportsChanged);
+  }
+
+  @override
+  void dispose() {
+    _reportManager.removeListener(_onReportsChanged);
+    super.dispose();
+  }
+
+  void _onReportsChanged() {
+    setState(() {});
+  }
 
   List<Map<String, dynamic>> get filteredItems {
-    if (_selectedFilter == 'All') return _flaggedItems;
-    return _flaggedItems.where((item) => item['type'] == _selectedFilter.replaceAll('s', '')).toList();
+    final reports = _reportManager.reports;
+    if (_selectedFilter == 'All') return reports;
+    return reports.where((item) => item['type'] == _selectedFilter.replaceAll('s', '')).toList();
   }
 
   Color _getTypeColor(String type) {
@@ -301,9 +284,7 @@ class _ModerationScreenState extends State<ModerationScreen> {
   }
 
   void _approveItem(Map<String, dynamic> item) {
-    setState(() {
-      item['status'] = 'Reviewed';
-    });
+    _reportManager.updateReportStatus(item['id'], 'Reviewed');
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -315,9 +296,7 @@ class _ModerationScreenState extends State<ModerationScreen> {
   }
 
   void _removeItem(Map<String, dynamic> item) {
-    setState(() {
-      item['status'] = 'Reviewed';
-    });
+    _reportManager.updateReportStatus(item['id'], 'Removed');
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -330,7 +309,7 @@ class _ModerationScreenState extends State<ModerationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pendingCount = _flaggedItems.where((item) => item['status'] == 'Pending').length;
+    final pendingCount = _reportManager.pendingReportsCount;
     
     return Scaffold(
       backgroundColor: AppColors.background,
