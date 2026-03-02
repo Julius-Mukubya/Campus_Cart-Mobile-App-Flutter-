@@ -13,6 +13,7 @@ import 'package:madpractical/pages/notifications_screen.dart';
 import 'package:madpractical/pages/privacy_security_screen.dart';
 import 'package:madpractical/pages/faq_screen.dart';
 import 'package:madpractical/pages/contact_us_screen.dart';
+import 'package:madpractical/pages/ai_chat_support_screen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -801,6 +802,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AiChatSupportScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(
+          Icons.support_agent,
+          color: AppColors.white,
         ),
       ),
       bottomNavigationBar: AppBottomNavigation(

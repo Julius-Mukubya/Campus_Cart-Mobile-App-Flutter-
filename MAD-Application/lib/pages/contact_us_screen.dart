@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
 class ContactUsScreen extends StatelessWidget {
   const ContactUsScreen({super.key});
@@ -129,11 +130,19 @@ class ContactUsScreen extends StatelessWidget {
                     ),
                     _buildContactTile(
                       context,
-                      'Live Chat',
-                      'Get instant help from our team',
-                      Icons.chat_bubble_outline,
+                      'Customer Support Chat',
+                      'Get instant help from support',
+                      Icons.support_agent,
                       AppColors.primary,
                       'Available 24/7',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AiChatSupportScreen(),
+                          ),
+                        );
+                      },
                     ),
                     const Divider(height: 1),
                     _buildContactTile(
@@ -300,10 +309,11 @@ class ContactUsScreen extends StatelessWidget {
     String subtitle,
     IconData icon,
     Color color,
-    String availability,
-  ) {
+    String availability, {
+    VoidCallback? onTap,
+  }) {
     return InkWell(
-      onTap: () {
+      onTap: onTap ?? () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Opening $title...'),

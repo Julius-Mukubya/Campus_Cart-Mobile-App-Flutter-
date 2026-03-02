@@ -5,6 +5,7 @@ import 'package:madpractical/pages/product_details.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -776,6 +777,21 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               ),
             ],
           ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AiChatSupportScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(
+          Icons.support_agent,
+          color: AppColors.white,
         ),
       ),
       bottomNavigationBar: AppBottomNavigation(
