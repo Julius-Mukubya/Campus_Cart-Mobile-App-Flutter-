@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/firebase_storage_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,6 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -29,6 +34,124 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      
+      // Show options dialog
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Choose Image Source',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                title: const Text('Camera'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                title: const Text('Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (source == null) return;
+
+      // Pick image with error handling
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        // User cancelled or permission denied
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                source == ImageSource.camera 
+                  ? 'Camera access was cancelled. Please allow camera permission in settings.'
+                  : 'Gallery access was cancelled. Please allow storage permission in settings.'
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _isUploading = true;
+      });
+
+      // Upload to Firebase Storage
+      final FirebaseAuthService authService = FirebaseAuthService();
+      final String? userId = authService.currentUser?.uid;
+
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      final FirebaseStorageService storageService = FirebaseStorageService();
+      final String downloadUrl = await storageService.uploadProfileImage(
+        File(pickedFile.path),
+        userId,
+      );
+
+      // Update UserManager
+      _userManager.updateProfile(profileImage: downloadUrl);
+
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile picture updated successfully'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload image: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 
   void _saveProfile() {
@@ -110,41 +233,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ],
                       ),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                        child: Text(
-                          _userManager.name.isNotEmpty 
-                              ? _userManager.name[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                      child: _userManager.profileImage.isNotEmpty && 
+                             _userManager.profileImage.startsWith('http')
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundImage: NetworkImage(_userManager.profileImage),
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            )
+                          : CircleAvatar(
+                              radius: 50,
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              child: Text(
+                                _userManager.name.isNotEmpty 
+                                    ? _userManager.name[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                    ),
+                    if (_isUploading)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(60),
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: AppColors.white,
-                          size: 16,
+                      child: GestureDetector(
+                        onTap: _isUploading ? null : _pickAndUploadImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: AppColors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -12,8 +14,93 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuthService _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _agree = false;
+  bool _isLoading = false;
+
+  void _signUp() async {
+    final name = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validation
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showErrorMessage('Please fill in all fields');
+      return;
+    }
+
+    if (!_agree) {
+      _showErrorMessage('Please agree to the terms and conditions');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showErrorMessage('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Sign up with Firebase
+    final result = await _authService.signUp(
+      email: email,
+      password: password,
+      name: name,
+      role: 'customer', // Default role for new signups
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      // Update user manager
+      final userManager = UserManager();
+      userManager.updateProfile(
+        name: name,
+        email: email,
+        phone: '',
+        role: 'customer',
+      );
+
+      _showSuccessMessage(result['message']);
+      
+      // Navigate to home after a short delay
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } else {
+      _showErrorMessage(result['message']);
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -310,18 +397,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: _agree
-                        ? () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          }
-                        : null,
-                    child: const Text(
-                      "Create Account",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    onPressed: (_agree && !_isLoading) ? _signUp : null,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Text(
+                            "Create Account",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
 

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "909954943991",
+    "project_id": "campus-cart-68fb5",
+    "storage_bucket": "campus-cart-68fb5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:909954943991:android:39e5ec529e68cf68d23cf2",
+        "android_client_info": {
+          "package_name": "com.example.madpractical"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "909954943991-s09at9ditqc0g6p9bl6e73pkel4t0c2n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdQ9rcFBbekFHlEwz1pN20daz0OpEtUOg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "909954943991-s09at9ditqc0g6p9bl6e73pkel4t0c2n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "909954943991-ci4kn3m3nra3abokam6s46hgbjdglhu4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.madpractical"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

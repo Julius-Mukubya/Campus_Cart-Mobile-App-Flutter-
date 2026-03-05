@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 import 'package:madpractical/pages/cart_screen.dart';
 import 'package:madpractical/pages/home_screen.dart';
 import 'package:madpractical/pages/product_details.dart';
@@ -37,7 +40,11 @@ import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 

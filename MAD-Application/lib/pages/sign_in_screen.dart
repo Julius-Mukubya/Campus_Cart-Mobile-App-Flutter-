@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -12,51 +13,9 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuthService _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
-
-  // Test users with different roles
-  final Map<String, Map<String, String>> _testUsers = {
-    'seller@test.com': {
-      'password': 'seller123',
-      'role': 'seller',
-      'name': 'John Seller',
-      'phone': '+256 700 123 456',
-    },
-    'coordinator@test.com': {
-      'password': 'coordinator123',
-      'role': 'staff',
-      'staffType': 'coordinator',
-      'name': 'Order Coordinator',
-      'phone': '+256 700 234 567',
-    },
-    'support@test.com': {
-      'password': 'support123',
-      'role': 'staff',
-      'staffType': 'support',
-      'name': 'Jane Support',
-      'phone': '+256 700 345 678',
-    },
-    'delivery@test.com': {
-      'password': 'delivery123',
-      'role': 'staff',
-      'staffType': 'delivery',
-      'name': 'Tom Delivery',
-      'phone': '+256 700 456 789',
-    },
-    'admin@test.com': {
-      'password': 'admin123',
-      'role': 'admin',
-      'name': 'Mike Admin',
-      'phone': '+256 700 567 890',
-    },
-    'customer@test.com': {
-      'password': 'customer123',
-      'role': 'customer',
-      'name': 'Sarah Customer',
-      'phone': '+256 700 678 901',
-    },
-  };
 
   void _signIn() async {
     final email = _emailController.text.trim();
@@ -71,47 +30,43 @@ class _SignInScreenState extends State<SignInScreen> {
       _isLoading = true;
     });
 
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
+    // Sign in with Firebase
+    final result = await _authService.signIn(
+      email: email,
+      password: password,
+    );
 
-    // Check if user exists and password matches
-    if (_testUsers.containsKey(email)) {
-      final user = _testUsers[email]!;
-      if (user['password'] == password) {
-        // Update user manager with the logged-in user's info
-        final userManager = UserManager();
-        userManager.updateProfile(
-          name: user['name']!,
-          email: email,
-          phone: user['phone']!,
-          role: user['role']!,
-          staffType: user['staffType'], // Will be null for non-staff users
-        );
+    if (!mounted) return;
 
-        setState(() {
-          _isLoading = false;
-        });
+    setState(() {
+      _isLoading = false;
+    });
 
-        // Show success message with role info
-        String roleDisplay = user['role']!;
-        if (user['role'] == 'staff' && user['staffType'] != null) {
-          roleDisplay = '${user['staffType']} staff';
-        }
-        _showSuccessMessage('Welcome ${user['name']}! Logged in as $roleDisplay');
+    if (result['success']) {
+      // Get user data from result
+      final userData = result['userData'] as Map<String, dynamic>;
+      
+      // Update user manager with the logged-in user's info
+      final userManager = UserManager();
+      userManager.updateProfile(
+        name: userData['name'] ?? 'User',
+        email: userData['email'] ?? email,
+        phone: userData['phone'] ?? '',
+        role: userData['role'] ?? 'customer',
+        staffType: userData['staffType'], // Will be null for non-staff users
+      );
 
-        // Navigate to home and ensure profile screen rebuilds
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorMessage('Invalid password');
+      // Show success message
+      String roleDisplay = userData['role'] ?? 'customer';
+      if (userData['role'] == 'staff' && userData['staffType'] != null) {
+        roleDisplay = '${userData['staffType']} staff';
       }
+      _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
+
+      // Navigate to home
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } else {
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorMessage('User not found');
+      _showErrorMessage(result['message']);
     }
   }
 
@@ -135,102 +90,6 @@ class _SignInScreenState extends State<SignInScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
-  }
-
-  Widget _buildTestUsersInfo() {
-    return Container(
-      margin: const EdgeInsets.only(top: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                'Test Users',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ..._testUsers.entries.map((entry) {
-            String displayRole = entry.value['role']!;
-            if (entry.value['role'] == 'staff' && entry.value['staffType'] != null) {
-              displayRole = entry.value['staffType']!;
-            }
-            
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      entry.key,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      entry.value['password']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _getRoleColor(entry.value['role']!).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      displayRole,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: _getRoleColor(entry.value['role']!),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Color _getRoleColor(String role) {
-    switch (role) {
-      case 'admin':
-        return AppColors.error;
-      case 'staff':
-        return AppColors.accent;
-      case 'seller':
-        return AppColors.primary;
-      case 'customer':
-        return AppColors.success;
-      default:
-        return AppColors.grey;
-    }
   }
 
   @override
@@ -503,9 +362,6 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
 
               const SizedBox(height: 30),
-
-              // Test users info
-              _buildTestUsersInfo(),
               ],
             ),
           ),

@@ -72,20 +72,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              child: Text(
-                _userManager.name.isNotEmpty 
-                    ? _userManager.name[0].toUpperCase()
-                    : 'U',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
+            child: _userManager.profileImage.isNotEmpty && 
+                   _userManager.profileImage.startsWith('http')
+                ? CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(_userManager.profileImage),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  )
+                : CircleAvatar(
+                    radius: 40,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    child: Text(
+                      _userManager.name.isNotEmpty 
+                          ? _userManager.name[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 20),
           Expanded(
