@@ -805,12 +805,22 @@ class CategoryProductsScreen extends StatefulWidget {
 class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  final ProductService _productService = ProductService();
+  late List<Map<String, dynamic>> _products;
 
   @override
   void initState() {
     super.initState();
+    _products = List.from(widget.products);
     _wishlistManager.addListener(_onWishlistChanged);
     _cartManager.addListener(_onCartChanged);
+  }
+
+  Future<void> _refreshProducts() async {
+    final updated = await _productService.getProductsByCategory(
+      widget.category['title'],
+    );
+    if (mounted) setState(() => _products = updated);
   }
 
   @override
@@ -1257,7 +1267,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${widget.products.length} products available',
+                            '${_products.length} products available',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.secondaryText,
@@ -1274,7 +1284,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
               
               // Products Grid
               Expanded(
-                child: widget.products.isEmpty
+                child: _products.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1312,18 +1322,20 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                             return Wrap(
                               spacing: 16,
                               runSpacing: 16,
-                            children: widget.products.map((product) {
+                            children: _products.map((product) {
                               return SizedBox(
                                 width: cardWidth,
                                 child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
+                                  onTap: () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             ProductDetailScreen(product: product),
                                       ),
                                     );
+                                    // Refresh ratings after returning from product detail
+                                    if (mounted) _refreshProducts();
                                   },
                                   child: _buildProductCard(product),
                                 ),

@@ -1251,13 +1251,15 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final product = filteredProducts[index];
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ProductDetailScreen(product: product),
                       ),
                     );
+                    // Refresh ratings after returning from product detail
+                    if (mounted) _loadData();
                   },
                   child: _buildProductCard(product),
                 );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/review_service.dart';
+import 'package:madpractical/services/product_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -15,19 +17,99 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  final ReviewService _reviewService = ReviewService();
+  final ProductService _productService = ProductService();
+
+  // Review state
+  List<Map<String, dynamic>> _reviews = [];
+  List<Map<String, dynamic>> _relatedProducts = [];
+  bool _loadingReviews = true;
+  bool _submittingReview = false;
+  bool _hasReviewed = false;
+  double _userRating = 0;
+  final TextEditingController _reviewController = TextEditingController();
+  final TextEditingController _reviewTitleController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
     _cartManager.addListener(_onCartChanged);
+    _loadReviews();
+    _loadRelatedProducts();
   }
 
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
     _cartManager.removeListener(_onCartChanged);
+    _reviewController.dispose();
+    _reviewTitleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadReviews() async {
+    final productId = widget.product['productId'] ?? '';
+    if (productId.isEmpty) {
+      setState(() => _loadingReviews = false);
+      return;
+    }
+    final reviews = await _reviewService.getReviews(productId);
+    final hasReviewed = await _reviewService.hasUserReviewed(productId);
+    if (mounted) {
+      setState(() {
+        _reviews = reviews;
+        _hasReviewed = hasReviewed;
+        _loadingReviews = false;
+      });
+    }
+  }
+
+  Future<void> _loadRelatedProducts() async {
+    final category = widget.product['category'] ?? '';
+    if (category.isEmpty) return;
+    final products = await _productService.getProductsByCategory(category);
+    if (mounted) {
+      setState(() {
+        _relatedProducts = products
+            .where((p) => p['productId'] != widget.product['productId'])
+            .take(6)
+            .toList();
+      });
+    }
+  }
+
+  Future<void> _submitReview() async {
+    final productId = widget.product['productId'] ?? '';
+    if (productId.isEmpty) return;
+
+    setState(() => _submittingReview = true);
+
+    final result = await _reviewService.submitReview(
+      productId: productId,
+      rating: _userRating,
+      comment: _reviewController.text,
+      title: _reviewTitleController.text,
+    );
+
+    if (mounted) {
+      setState(() => _submittingReview = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result['message']),
+        backgroundColor: result['success'] ? AppColors.success : AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+      if (result['success']) {
+        _reviewController.clear();
+        _reviewTitleController.clear();
+        setState(() {
+          _userRating = 0;
+          _hasReviewed = true;
+        });
+        _loadReviews(); // Refresh
+      }
+    }
   }
 
   void _onWishlistChanged() {
@@ -148,134 +230,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
   }
-
-  final List<Map<String, dynamic>> allProducts = [
-    {
-      'name': 'Wireless Headphones',
-      'price': 'UGX 85,000',
-      'rating': 4.8,
-      'discount': '-20%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'description': 'Premium wireless headphones with noise cancellation.',
-    },
-    {
-      'name': 'Smart Watch',
-      'price': 'UGX 120,000',
-      'rating': 4.6,
-      'discount': '-15%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-      'description': 'Advanced smartwatch with fitness tracking.',
-    },
-    {
-      'name': 'Bluetooth Speaker',
-      'price': 'UGX 42,000',
-      'rating': 4.8,
-      'discount': '-22%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-      'description': 'Portable Bluetooth speaker with rich bass.',
-    },
-    {
-      'name': 'Designer T-Shirt',
-      'price': 'UGX 45,000',
-      'rating': 4.9,
-      'discount': '-25%',
-      'category': 'Fashion',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'description': 'Premium cotton t-shirt with modern design.',
-    },
-    {
-      'name': 'Coffee Maker',
-      'price': 'UGX 95,000',
-      'rating': 4.7,
-      'discount': '-18%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Automatic coffee maker with programmable settings.',
-    },
-    {
-      'name': 'Running Shoes',
-      'price': 'UGX 75,000',
-      'rating': 4.5,
-      'discount': '-30%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-      'description': 'Lightweight running shoes with excellent cushioning.',
-    },
-    {
-      'name': 'Organic Coffee Beans',
-      'price': 'UGX 32,000',
-      'rating': 4.7,
-      'discount': '-15%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
-      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
-    },
-    {
-      'name': 'Fresh Fruit Basket',
-      'price': 'UGX 45,000',
-      'rating': 4.8,
-      'discount': '-10%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1760113724916-a87ffecd8e22?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
-    },
-    {
-      'name': 'The Great Gatsby',
-      'price': 'UGX 28,000',
-      'rating': 4.9,
-      'discount': '-20%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
-      'description': 'Classic American novel by F. Scott Fitzgerald.',
-    },
-    {
-      'name': 'Programming Guide',
-      'price': 'UGX 55,000',
-      'rating': 4.6,
-      'discount': '-25%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
-      'description': 'Comprehensive guide to modern programming languages and techniques.',
-    },
-  ];
-
-  List<Map<String, dynamic>> get relatedProducts {
-    // First, get products from the same category
-    final sameCategoryProducts = allProducts
-        .where((p) =>
-            p['category'] == widget.product['category'] &&
-            p['name'] != widget.product['name'])
-        .toList();
-
-    // If we have enough products from the same category, return them
-    if (sameCategoryProducts.length >= 4) {
-      return sameCategoryProducts.take(4).toList();
-    }
-
-    // Otherwise, add products from other categories to fill up to 4
-    final otherProducts = allProducts
-        .where((p) => p['name'] != widget.product['name'])
-        .where((p) => !sameCategoryProducts.contains(p))
-        .toList();
-
-    return [...sameCategoryProducts, ...otherProducts].take(4).toList();
-  }
-
-  final List<Map<String, dynamic>> reviews = [
-    {
-      'user': 'User 1',
-      'comment': 'Lorem ipsum dolor sit amet.',
-      'time': 'A day ago',
-    },
-    {
-      'user': 'User 1',
-      'comment': 'Lorem ipsum dolor sit amet.',
-      'time': 'A day ago',
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -471,7 +425,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${widget.product['rating'] ?? 4.5} (99 Reviews)',
+                              '${widget.product['rating'] ?? 0} (${_reviews.length} ${_reviews.length == 1 ? 'Review' : 'Reviews'})',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -598,127 +552,148 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
+                  if (_reviews.isEmpty && !_loadingReviews)
+                    const SizedBox.shrink()
+                  else if (!_loadingReviews) ...[
+                    Builder(builder: (context) {
+                      final avgRating = _reviews.isEmpty ? 0.0
+                          : _reviews.map((r) => (r['rating'] as double)).reduce((a, b) => a + b) / _reviews.length;
+                      final dist = _reviewService.getRatingDistribution(_reviews);
+                      final total = _reviews.length;
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            '4.5/5',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.text,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '(99 reviews)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.secondaryText,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: List.generate(
-                              5,
-                              (index) => Icon(
-                                index < 4
-                                    ? Icons.star
-                                    : Icons.star_half,
-                                color: Colors.amber,
-                                size: 16,
+                          Column(
+                            children: [
+                              Text(
+                                '${avgRating.toStringAsFixed(1)}/5',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.text,
+                                ),
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '($total ${total == 1 ? 'review' : 'reviews'})',
+                                style: const TextStyle(fontSize: 12, color: AppColors.secondaryText),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: List.generate(5, (i) => Icon(
+                                  i < avgRating.round() ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 16,
+                                )),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: Column(
+                              children: [5, 4, 3, 2, 1].map((star) {
+                                final count = dist[star] ?? 0;
+                                final progress = total == 0 ? 0.0 : count / total;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: _buildRatingBar(star, progress),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildRatingBar(5, 0.6),
-                            const SizedBox(height: 4),
-                            _buildRatingBar(4, 0.25),
-                            const SizedBox(height: 4),
-                            _buildRatingBar(3, 0.1),
-                            const SizedBox(height: 4),
-                            _buildRatingBar(2, 0.03),
-                            const SizedBox(height: 4),
-                            _buildRatingBar(1, 0.02),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+                  ],
 
                   // User Reviews
-                  ...reviews.map((review) => Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.lightGrey),
+                  if (_loadingReviews)
+                    const Center(child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ))
+                  else if (_reviews.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.lightGrey),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No reviews yet. Be the first to review!',
+                          style: TextStyle(color: AppColors.secondaryText),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: const Icon(
-                                Icons.person,
-                                color: AppColors.primary,
-                                size: 20,
+                      ),
+                    )
+                  else
+                    ..._reviews.map((review) => Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.lightGrey),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                                child: const Icon(Icons.person, color: AppColors.primary, size: 20),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        review['user'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: AppColors.text,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          review['userName'] ?? review['user'] ?? 'Anonymous',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: AppColors.text,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        review['time'],
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.secondaryText,
+                                        Text(
+                                          review['createdAt'] ?? review['time'] ?? '',
+                                          style: const TextStyle(fontSize: 12, color: AppColors.secondaryText),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    review['comment'],
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.secondaryText,
-                                      height: 1.4,
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: List.generate(5, (i) => Icon(
+                                        i < (review['rating'] ?? 0) ? Icons.star : Icons.star_border,
+                                        color: Colors.amber,
+                                        size: 14,
+                                      )),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      review['comment'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.secondaryText,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )),
+                            ],
+                          ),
+                        )),
                   const SizedBox(height: 24),
 
                   // Add Review Section
+                  if (!_hasReviewed)
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -757,36 +732,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                             const SizedBox(width: 12),
                             Row(
-                              children: List.generate(
-                                5,
-                                (index) => GestureDetector(
-                                  onTap: () {
-                                    // Handle rating tap
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 2),
-                                    child: Icon(
-                                      Icons.star_border,
-                                      color: Colors.amber,
-                                      size: 28,
-                                    ),
+                              children: List.generate(5, (index) => GestureDetector(
+                                onTap: () => setState(() => _userRating = (index + 1).toDouble()),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                                  child: Icon(
+                                    index < _userRating ? Icons.star : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 28,
                                   ),
                                 ),
-                              ),
+                              )),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
                         // Review Text Field
                         TextField(
+                          controller: _reviewController,
                           maxLines: 4,
                           decoration: InputDecoration(
                             hintText: 'Share your experience with this product...',
-                            hintStyle: TextStyle(
-                              color: AppColors.grey,
-                              fontSize: 14,
-                            ),
+                            hintStyle: const TextStyle(color: AppColors.grey, fontSize: 14),
                             filled: true,
                             fillColor: AppColors.background,
                             border: OutlineInputBorder(
@@ -802,17 +769,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: () {
-                              // Handle review submission
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('Review submitted!'),
-                                  duration: const Duration(seconds: 2),
-                                  backgroundColor: AppColors.primary,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
+                            onPressed: (_submittingReview || _userRating == 0) ? null : _submitReview,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
@@ -820,14 +777,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                               elevation: 0,
                             ),
-                            child: const Text(
-                              'Submit Review',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
-                            ),
+                            child: _submittingReview
+                                ? const SizedBox(
+                                    width: 20, height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Submit Review',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -873,9 +838,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 220,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: relatedProducts.length,
+                      itemCount: _relatedProducts.length,
                       itemBuilder: (context, index) {
-                        final product = relatedProducts[index];
+                        final product = _relatedProducts[index];
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
