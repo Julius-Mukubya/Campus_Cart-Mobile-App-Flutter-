@@ -28,15 +28,27 @@ import 'package:madpractical/pages/seller/store_settings_screen.dart';
 // Staff screens
 import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
 import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
-import 'package:madpractical/pages/staff/support_tickets_screen.dart';
-import 'package:madpractical/pages/staff/live_chat_screen.dart';
+// Coordinator screens
+import 'package:madpractical/pages/staff/coordinator/unassigned_orders_screen.dart';
+import 'package:madpractical/pages/staff/coordinator/assign_pickup_screen.dart';
+import 'package:madpractical/pages/staff/coordinator/hq_management_screen.dart';
+import 'package:madpractical/pages/staff/coordinator/assign_delivery_screen.dart';
+// Support screens
+import 'package:madpractical/pages/staff/support/support_tickets_screen.dart';
+import 'package:madpractical/pages/staff/support/live_chat_screen.dart';
 import 'package:madpractical/pages/help_center_screen.dart';
-import 'package:madpractical/pages/staff/route_planner_screen.dart';
-import 'package:madpractical/pages/staff/active_deliveries_screen.dart';
-import 'package:madpractical/pages/staff/delivery_history_screen.dart';
+// Deliverer screens
+import 'package:madpractical/pages/staff/deliverer/pickup_orders_screen.dart';
+import 'package:madpractical/pages/staff/deliverer/final_delivery_orders_screen.dart';
+import 'package:madpractical/pages/staff/deliverer/route_planner_screen.dart';
+import 'package:madpractical/pages/staff/deliverer/active_deliveries_screen.dart';
+import 'package:madpractical/pages/staff/deliverer/delivery_history_screen.dart';
+// Seller screens (vendor)
+import 'package:madpractical/pages/seller/vendor_order_approval_screen.dart';
 // Admin screens
 import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
 import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
+import 'package:madpractical/pages/debug_firebase_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
 
@@ -155,9 +167,22 @@ class MyApp extends StatelessWidget {
         '/staff/route-planner': (context) => const RoutePlannerScreen(),
         '/staff/active-deliveries': (context) => const ActiveDeliveriesScreen(),
         '/staff/delivery-history': (context) => const DeliveryHistoryScreen(),
+        // Coordinator routes
+        '/staff/unassigned-orders': (context) => const UnassignedOrdersScreen(),
+        '/staff/assign-pickup': (context) => const AssignPickupScreen(),
+        '/staff/hq-management': (context) => const HQManagementScreen(),
+        '/staff/assign-delivery': (context) => const AssignDeliveryScreen(),
+        // Seller order approval route
+        '/seller/order-approvals': (context) => const VendorOrderApprovalScreen(),
+        // Delivery routes
+        '/delivery/pickup-orders': (context) => const PickupOrdersScreen(),
+        '/delivery/final-orders': (context) => const FinalDeliveryOrdersScreen(),
         // Admin routes
         '/admin/dashboard': (context) => const AdminDashboardScreen(),
         '/admin/sellers': (context) => const ManageSellersScreen(),
+        
+        // Debug route
+        '/debug/firebase': (context) => const DebugFirebaseScreen(),
       },
     );
   }

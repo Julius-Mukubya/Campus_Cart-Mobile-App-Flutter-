@@ -18,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _agree = false;
   bool _isLoading = false;
+  String _selectedRole = 'customer'; // Default role
 
   void _signUp() async {
     final name = _usernameController.text.trim();
@@ -49,7 +50,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       email: email,
       password: password,
       name: name,
-      role: 'customer', // Default role for new signups
+      role: _selectedRole,
     );
 
     if (!mounted) return;
@@ -65,15 +66,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
         name: name,
         email: email,
         phone: '',
-        role: 'customer',
+        role: _selectedRole,
       );
 
-      _showSuccessMessage(result['message']);
+      if (_selectedRole == 'seller') {
+        _showSuccessMessage('Account created successfully! Your seller application is pending admin approval.');
+      } else {
+        _showSuccessMessage(result['message']);
+      }
       
-      // Navigate to home after a short delay
-      await Future.delayed(const Duration(seconds: 1));
+      // Navigate to appropriate screen after a short delay
+      await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        if (_selectedRole == 'seller') {
+          // Redirect to sign in for sellers (they need approval first)
+          Navigator.pushReplacementNamed(context, '/signin');
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     } else {
       _showErrorMessage(result['message']);
@@ -328,6 +338,60 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     filled: true,
                     fillColor: AppColors.white,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Role Selection label
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Account Type",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // Role Selection Dropdown
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.lightGrey),
+                    color: AppColors.white,
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    hint: const Text(
+                      "Select account type",
+                      style: TextStyle(color: AppColors.grey),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'customer',
+                        child: Text('Customer - Shop and buy products'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'seller',
+                        child: Text('Seller - Sell products (requires approval)'),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedRole = newValue!;
+                      });
+                    },
+                    dropdownColor: AppColors.white,
+                    style: const TextStyle(color: AppColors.text),
                   ),
                 ),
 

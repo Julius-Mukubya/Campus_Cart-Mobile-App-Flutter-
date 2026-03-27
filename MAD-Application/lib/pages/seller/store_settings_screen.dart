@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/services/seller_service.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 class StoreSettingsScreen extends StatefulWidget {
   const StoreSettingsScreen({super.key});
@@ -11,24 +13,120 @@ class StoreSettingsScreen extends StatefulWidget {
 
 class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _storeNameController = TextEditingController(text: 'My Campus Store');
-  final _descriptionController = TextEditingController(text: 'Quality products for students');
-  final _phoneController = TextEditingController(text: '+256 700 123 456');
-  final _emailController = TextEditingController(text: 'seller@test.com');
-  final _addressController = TextEditingController(text: '123 Campus Road, Kampala');
+  final _storeNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
+  
+  final SellerService _sellerService = SellerService();
+  final UserManager _userManager = UserManager();
   
   bool _isOpen = true;
+  bool _isLoading = false;
+  bool _isLoadingData = true;
+  String? _storeId;
+  bool _isStoreVerified = false;
   
-  final Map<String, bool> _selectedCategories = {
-    'Electronics': true,
-    'Fashion': false,
-    'Home & Living': false,
-    'Sports': false,
-    'Groceries': false,
-    'Books': true,
-    'Beauty': false,
-    'Other': false,
-  };
+  String _selectedCategory = 'General Store';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoreData();
+  }
+
+  Future<void> _loadStoreData() async {
+    try {
+      final sellerId = _userManager.userId;
+      if (sellerId != null) {
+        final storeData = await _sellerService.getSellerStore(sellerId);
+        if (storeData != null) {
+          setState(() {
+            _storeId = storeData['storeId'];
+            _storeNameController.text = storeData['storeName'] ?? '';
+            _descriptionController.text = storeData['storeDescription'] ?? '';
+            _phoneController.text = storeData['storePhone'] ?? '';
+            _emailController.text = storeData['storeEmail'] ?? '';
+            _addressController.text = storeData['storeAddress'] ?? '';
+            _selectedCategory = storeData['storeCategory'] ?? 'General Store';
+            _isOpen = storeData['isActive'] ?? true;
+            _isStoreVerified = storeData['isVerified'] ?? false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading store data: $e');
+    } finally {
+      setState(() {
+        _isLoadingData = false;
+      });
+    }
+  }
+
+  Future<void> _saveStoreSettings() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final sellerId = _userManager.userId;
+      if (sellerId == null || _storeId == null) {
+        _showErrorMessage('Unable to save store settings. Please try again.');
+        return;
+      }
+
+      final result = await _sellerService.updateStoreInfo(
+        storeId: _storeId!,
+        sellerId: sellerId,
+        storeName: _storeNameController.text.trim(),
+        storeDescription: _descriptionController.text.trim(),
+        storeCategory: _selectedCategory,
+        storePhone: _phoneController.text.trim(),
+        storeEmail: _emailController.text.trim(),
+        storeAddress: _addressController.text.trim(),
+      );
+
+      if (result['success']) {
+        _showSuccessMessage(result['message']);
+        setState(() {
+          _isStoreVerified = false; // Reset verification status
+        });
+      } else {
+        _showErrorMessage(result['message']);
+      }
+    } catch (e) {
+      _showErrorMessage('An error occurred. Please try again.');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -112,6 +210,52 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingData) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppColors.background,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.black.withValues(alpha: 0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios,
+                color: AppColors.text,
+                size: 16,
+              ),
+            ),
+          ),
+          title: const Text(
+            'Store Settings',
+            style: TextStyle(
+              color: AppColors.text,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          actions: const [NotificationIcon()],
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -186,92 +330,46 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                 ],
               ),
               
-              // Store Categories
+              // Store Category
               _buildSection(
-                'Store Categories',
+                'Store Category',
                 [
                   const Text(
-                    'Select the categories your store sells',
+                    'Select your store category',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.secondaryText,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _selectedCategories.keys.map((category) {
-                      final isSelected = _selectedCategories[category]!;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategories[category] = !_selectedCategories[category]!;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected 
-                              ? AppColors.primary 
-                              : AppColors.background,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected 
-                                ? AppColors.primary 
-                                : AppColors.lightGrey,
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check_circle,
-                                  size: 16,
-                                  color: AppColors.white,
-                                ),
-                              if (isSelected) const SizedBox(width: 6),
-                              Text(
-                                category,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                  color: isSelected ? AppColors.white : AppColors.text,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if (!_selectedCategories.values.any((selected) => selected)) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning, size: 16, color: AppColors.error),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Please select at least one category',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.error,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.lightGrey),
+                      color: AppColors.white,
                     ),
-                  ],
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.category, color: AppColors.primary),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      items: _sellerService.getStoreCategories().map((category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedCategory = newValue!;
+                        });
+                      },
+                      dropdownColor: AppColors.white,
+                      style: const TextStyle(color: AppColors.text),
+                    ),
+                  ),
                 ],
               ),
               
@@ -317,6 +415,57 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                       }
                       return null;
                     },
+                  ),
+                ],
+              ),
+              
+              // Store Verification Status
+              _buildSection(
+                'Store Verification',
+                [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _isStoreVerified 
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isStoreVerified ? Icons.verified : Icons.pending,
+                          color: _isStoreVerified ? AppColors.success : AppColors.accent,
+                          size: 32,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isStoreVerified ? 'Store Verified' : 'Verification Pending',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isStoreVerified ? AppColors.success : AppColors.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _isStoreVerified 
+                                  ? 'Your store has been approved by admin'
+                                  : 'Store changes require admin approval',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -373,7 +522,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                               _isOpen = value;
                             });
                           },
-                          activeColor: AppColors.success,
+                          activeThumbColor: AppColors.success,
                         ),
                       ],
                     ),
@@ -385,35 +534,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Check if at least one category is selected
-                      if (!_selectedCategories.values.any((selected) => selected)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select at least one category'),
-                            backgroundColor: AppColors.error,
-                          ),
-                        );
-                        return;
-                      }
-                      
-                      // Get selected categories
-                      final selectedCategoryNames = _selectedCategories.entries
-                          .where((entry) => entry.value)
-                          .map((entry) => entry.key)
-                          .toList();
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Store settings saved! Categories: ${selectedCategoryNames.join(", ")}'
-                          ),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _isLoading ? null : _saveStoreSettings,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
@@ -422,13 +543,22 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
               

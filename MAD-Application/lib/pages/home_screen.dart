@@ -5,6 +5,7 @@ import 'package:madpractical/pages/product_details.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/notification_manager.dart';
+import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/pages/notifications_list_screen.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
@@ -20,12 +21,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
   final NotificationManager _notificationManager = NotificationManager();
+  final ProductService _productService = ProductService();
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
   String _sortBy = 'Default';
   double _minPrice = 0;
   double _maxPrice = 200000;
   double _minRating = 0;
+  
+  // Data from Firebase
+  List<Map<String, dynamic>> allProducts = [];
+  List<Map<String, dynamic>> categories = [];
+  bool _isLoading = true;
+  bool _hasError = false;
   
   final List<Map<String, String>> banners = [
     {
@@ -48,10 +56,109 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadData();
     // Auto-scroll banner every 3 seconds
     Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
     _wishlistManager.addListener(_onWishlistChanged);
     _cartManager.addListener(_onCartChanged);
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      // Test Firebase connection first
+      await _productService.testFirebaseConnection();
+
+      // Load products and categories from Firebase
+      final products = await _productService.getAllProducts();
+      final categoryList = await _productService.getCategories();
+
+      print('Loaded ${products.length} products');
+      print('Loaded ${categoryList.length} categories');
+
+      setState(() {
+        allProducts = products;
+        categories = [
+          {'icon': Icons.grid_view, 'title': 'All'},
+          ...categoryList.map((cat) => {
+            'icon': _getIconFromString(cat['icon']),
+            'title': cat['title'],
+          }),
+        ];
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+        // Use fallback data
+        _loadFallbackData();
+      });
+    }
+  }
+
+  void _loadFallbackData() {
+    allProducts = [
+      {
+        'name': 'Wireless Headphones',
+        'price': 'UGX 85,000',
+        'rating': 4.8,
+        'discount': '-20%',
+        'category': 'Electronics',
+        'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+        'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
+      },
+      {
+        'name': 'Smart Watch',
+        'price': 'UGX 120,000',
+        'rating': 4.6,
+        'discount': '-15%',
+        'category': 'Electronics',
+        'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+        'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
+      },
+      {
+        'name': 'Designer T-Shirt',
+        'price': 'UGX 45,000',
+        'rating': 4.9,
+        'discount': '-25%',
+        'category': 'Fashion',
+        'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+        'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
+      },
+    ];
+
+    categories = [
+      {'icon': Icons.grid_view, 'title': 'All'},
+      {'icon': Icons.devices, 'title': 'Electronics'},
+      {'icon': Icons.checkroom, 'title': 'Fashion'},
+      {'icon': Icons.home, 'title': 'Home'},
+      {'icon': Icons.sports_soccer, 'title': 'Sports'},
+      {'icon': Icons.local_grocery_store, 'title': 'Groceries'},
+      {'icon': Icons.auto_stories, 'title': 'Books'},
+    ];
+  }
+
+  IconData _getIconFromString(String iconName) {
+    switch (iconName) {
+      case 'devices': return Icons.devices;
+      case 'checkroom': return Icons.checkroom;
+      case 'home': return Icons.home;
+      case 'sports_soccer': return Icons.sports_soccer;
+      case 'local_grocery_store': return Icons.local_grocery_store;
+      case 'auto_stories': return Icons.auto_stories;
+      case 'spa': return Icons.spa;
+      case 'directions_car': return Icons.directions_car;
+      case 'toys': return Icons.toys;
+      case 'business_center': return Icons.business_center;
+      case 'category': return Icons.category;
+      default: return Icons.category;
+    }
   }
 
   void _onWishlistChanged() {
@@ -80,127 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
-  
-  final List<Map<String, dynamic>> categories = [
-    {'icon': Icons.grid_view, 'title': 'All'},
-    {'icon': Icons.devices, 'title': 'Electronics'},
-    {'icon': Icons.checkroom, 'title': 'Fashion'},
-    {'icon': Icons.home, 'title': 'Home'},
-    {'icon': Icons.sports_soccer, 'title': 'Sports'},
-    {'icon': Icons.local_grocery_store, 'title': 'Groceries'},
-    {'icon': Icons.auto_stories, 'title': 'Books'},
-  ];
-
-  final List<Map<String, dynamic>> allProducts = [
-    {
-      'name': 'Wireless Headphones',
-      'price': 'UGX 85,000',
-      'rating': 4.8,
-      'discount': '-20%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
-    },
-    {
-      'name': 'Smart Watch',
-      'price': 'UGX 120,000',
-      'rating': 4.6,
-      'discount': '-15%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-      'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
-    },
-    {
-      'name': 'Designer T-Shirt',
-      'price': 'UGX 45,000',
-      'rating': 4.9,
-      'discount': '-25%',
-      'category': 'Fashion',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
-    },
-    {
-      'name': 'Coffee Maker',
-      'price': 'UGX 95,000',
-      'rating': 4.7,
-      'discount': '-18%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
-    },
-    {
-      'name': 'Running Shoes',
-      'price': 'UGX 75,000',
-      'rating': 4.5,
-      'discount': '-30%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-      'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
-    },
-    {
-      'name': 'Bluetooth Speaker',
-      'price': 'UGX 42,000',
-      'rating': 4.8,
-      'discount': '-22%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-      'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
-    },
-    {
-      'name': 'Table Lamp',
-      'price': 'UGX 35,000',
-      'rating': 4.6,
-      'discount': '-12%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1574025876844-6c9ba8602866?q=80&w=1121&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Modern LED table lamp with adjustable brightness and USB charging port.',
-    },
-    {
-      'name': 'Yoga Mat',
-      'price': 'UGX 25,000',
-      'rating': 4.4,
-      'discount': '-28%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1637157216470-d92cd2edb2e8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Non-slip yoga mat with extra cushioning for comfortable workouts.',
-    },
-    {
-      'name': 'Organic Coffee Beans',
-      'price': 'UGX 32,000',
-      'rating': 4.7,
-      'discount': '-15%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
-      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
-    },
-    {
-      'name': 'Fresh Fruit Basket',
-      'price': 'UGX 45,000',
-      'rating': 4.8,
-      'discount': '-10%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1760113724916-a87ffecd8e22?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
-    },
-    {
-      'name': 'The Great Gatsby',
-      'price': 'UGX 28,000',
-      'rating': 4.9,
-      'discount': '-20%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
-      'description': 'Classic American novel by F. Scott Fitzgerald.',
-    },
-    {
-      'name': 'Programming Guide',
-      'price': 'UGX 55,000',
-      'rating': 4.6,
-      'discount': '-25%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
-      'description': 'Comprehensive guide to modern programming languages and techniques.',
-    },
-  ];
 
   List<Map<String, dynamic>> get filteredProducts {
     var products = allProducts;
@@ -912,7 +898,65 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading products...',
+                    style: TextStyle(
+                      color: AppColors.secondaryText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : _hasError
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Failed to load products',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Using offline data',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.secondaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
         children: [
           // Fixed Search Bar and Categories
           Container(

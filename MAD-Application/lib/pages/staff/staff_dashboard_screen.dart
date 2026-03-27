@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/pages/qr/qr_scanner_screen.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -120,7 +121,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   Widget build(BuildContext context) {
     final staffType = userManager.staffType;
     final isSupport = staffType == 'support';
-    final isDelivery = staffType == 'delivery';
+    final isPickupDelivery = staffType == 'pickup_delivery';
+    final isFinalDelivery = staffType == 'final_delivery';
     final isCoordinator = staffType == 'coordinator' || staffType == null; // Default to coordinator
     
     // Dashboard title and icon based on staff type
@@ -136,10 +138,14 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       dashboardTitle = 'Customer Support Dashboard';
       dashboardIcon = Icons.headset_mic;
       welcomeSubtitle = 'Help customers and resolve issues';
-    } else if (isDelivery) {
-      dashboardTitle = 'Delivery Dashboard';
+    } else if (isPickupDelivery) {
+      dashboardTitle = 'Pickup Delivery Dashboard';
+      dashboardIcon = Icons.shopping_bag;
+      welcomeSubtitle = 'Manage vendor pickups';
+    } else if (isFinalDelivery) {
+      dashboardTitle = 'Final Delivery Dashboard';
       dashboardIcon = Icons.local_shipping;
-      welcomeSubtitle = 'Manage pickups and deliveries';
+      welcomeSubtitle = 'Manage customer deliveries';
     }
     
     return Scaffold(
@@ -263,10 +269,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.2,
                   children: [
-                    _buildSummaryCard('Pending', '12', Icons.pending_actions, AppColors.accent),
-                    _buildSummaryCard('Processing', '8', Icons.sync, AppColors.primary),
-                    _buildSummaryCard('Ready', '5', Icons.check_circle, AppColors.success),
-                    _buildSummaryCard('Assigned', '15', Icons.local_shipping, Colors.blue),
+                    _buildSummaryCard('Vendor Pending', '8', Icons.store, AppColors.accent),
+                    _buildSummaryCard('Unassigned', '12', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('At HQ', '5', Icons.warehouse, AppColors.primary),
+                    _buildSummaryCard('Ready for Delivery', '15', Icons.local_shipping, Colors.blue),
                   ],
                 ),
               ] else if (isSupport) ...[
@@ -285,8 +291,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     _buildSummaryCard('Avg Response', '5 min', Icons.timer, AppColors.primary),
                   ],
                 ),
-              ] else if (isDelivery) ...[
-                // Delivery Personnel Summary Cards
+              ] else if (isPickupDelivery) ...[
+                // Pickup Delivery Summary Cards
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -295,8 +301,24 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.2,
                   children: [
-                    _buildSummaryCard('Pending', '6', Icons.inventory, AppColors.accent),
-                    _buildSummaryCard('In Transit', '4', Icons.local_shipping, Colors.blue),
+                    _buildSummaryCard('Assigned', '6', Icons.assignment, AppColors.accent),
+                    _buildSummaryCard('Picked Up', '4', Icons.check_circle, AppColors.success),
+                    _buildSummaryCard('At HQ', '10', Icons.warehouse, AppColors.primary),
+                    _buildSummaryCard('Total Today', '20', Icons.shopping_bag, Colors.blue),
+                  ],
+                ),
+              ] else if (isFinalDelivery) ...[
+                // Final Delivery Summary Cards
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildSummaryCard('Assigned', '8', Icons.assignment, AppColors.accent),
+                    _buildSummaryCard('Out for Delivery', '5', Icons.local_shipping, Colors.blue),
                     _buildSummaryCard('Delivered', '15', Icons.check_circle, AppColors.success),
                     _buildSummaryCard('Distance', '45 km', Icons.route, AppColors.primary),
                   ],
@@ -326,17 +348,17 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.3,
                   children: [
-                    _buildQuickAction('Process Orders', Icons.assignment, AppColors.primary, () {
-                      Navigator.pushNamed(context, '/staff/orders');
+                    _buildQuickAction('Approved Orders', Icons.check_circle, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/staff/unassigned-orders');
+                    }),
+                    _buildQuickAction('Assign Pickup', Icons.shopping_bag, Colors.orange, () {
+                      Navigator.pushNamed(context, '/staff/assign-pickup');
+                    }),
+                    _buildQuickAction('HQ Management', Icons.warehouse, AppColors.success, () {
+                      Navigator.pushNamed(context, '/staff/hq-management');
                     }),
                     _buildQuickAction('Assign Delivery', Icons.local_shipping, Colors.blue, () {
-                      Navigator.pushNamed(context, '/staff/orders');
-                    }),
-                    _buildQuickAction('View Analytics', Icons.analytics, AppColors.success, () {
-                      // Navigate to analytics
-                    }),
-                    _buildQuickAction('Manage Sellers', Icons.store, Colors.orange, () {
-                      // Navigate to seller management
+                      Navigator.pushNamed(context, '/staff/assign-delivery');
                     }),
                   ],
                 ),
@@ -361,8 +383,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     }),
                   ],
                 ),
-              ] else if (isDelivery) ...[
-                // Delivery Personnel Quick Actions
+              ] else if (isPickupDelivery) ...[
+                // Pickup Delivery Quick Actions
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -371,17 +393,40 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.3,
                   children: [
-                    _buildQuickAction('Route Planner', Icons.map, AppColors.primary, () {
-                      Navigator.pushNamed(context, '/staff/route-planner');
+                    _buildQuickAction('My Pickups', Icons.shopping_bag, Colors.orange, () {
+                      Navigator.pushNamed(context, '/delivery/pickup-orders');
                     }),
-                    _buildQuickAction('My Orders', Icons.assignment, Colors.blue, () {
-                      Navigator.pushNamed(context, '/staff/orders');
+                    _buildQuickAction('Scan QR', Icons.qr_code_scanner, AppColors.primary, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QRScannerScreen(scanType: 'pickup'),
+                        ),
+                      );
                     }),
                     _buildQuickAction('History', Icons.history, AppColors.success, () {
                       Navigator.pushNamed(context, '/staff/delivery-history');
                     }),
-                    _buildQuickAction('Statistics', Icons.analytics, Colors.orange, () {
-                      // Navigate to statistics
+                  ],
+                ),
+              ] else if (isFinalDelivery) ...[
+                // Final Delivery Quick Actions
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildQuickAction('My Deliveries', Icons.local_shipping, AppColors.primary, () {
+                      Navigator.pushNamed(context, '/delivery/final-orders');
+                    }),
+                    _buildQuickAction('Route Planner', Icons.map, Colors.blue, () {
+                      Navigator.pushNamed(context, '/staff/route-planner');
+                    }),
+                    _buildQuickAction('History', Icons.history, AppColors.success, () {
+                      Navigator.pushNamed(context, '/staff/delivery-history');
                     }),
                   ],
                 ),

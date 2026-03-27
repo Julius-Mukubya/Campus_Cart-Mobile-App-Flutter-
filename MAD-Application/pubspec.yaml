@@ -43,6 +43,10 @@ dependencies:
   
   # Image picker
   image_picker: ^1.0.7
+  
+  # QR code
+  qr_flutter: ^4.1.0
+  ai_barcode_scanner: ^5.1.2
 
 dev_dependencies:
   flutter_test:

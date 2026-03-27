@@ -109,6 +109,46 @@ Future<void> main() async {
         'defaultPaymentMethodId': null,
       });
 
+      // Initialize subcollections for customers
+      if (userData['role'] == 'customer') {
+        // Add default address
+        await firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .collection('addresses')
+            .add({
+          'label': 'Default Address',
+          'fullName': userData['name'],
+          'phone': userData['phone'],
+          'addressLine1': 'Sample Address Line 1',
+          'addressLine2': '',
+          'city': 'Kampala',
+          'state': 'Central',
+          'postalCode': '00000',
+          'country': 'Uganda',
+          'latitude': null,
+          'longitude': null,
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        // Add default payment method
+        await firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .collection('paymentMethods')
+            .add({
+          'type': 'mobile_money',
+          'provider': 'MTN',
+          'accountNumber': '0700111111',
+          'accountName': userData['name'],
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
       print('✓ Created: ${userData['email']} (${userData['role']})');
     } catch (e) {
       if (e.toString().contains('email-already-in-use')) {

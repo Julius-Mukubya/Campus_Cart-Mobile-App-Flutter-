@@ -4,6 +4,7 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/product_details.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
@@ -17,17 +18,91 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
+  final ProductService _productService = ProductService();
   String _sortBy = 'Default';
   String _searchQuery = '';
   String _tempSortBy = 'Default';
   
+  // Data from Firebase
+  List<Map<String, dynamic>> categories = [];
+  List<Map<String, dynamic>> allProducts = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  
   @override
   void initState() {
     super.initState();
+    _loadData();
     _wishlistManager.addListener(_onWishlistChanged);
     _cartManager.addListener(_onCartChanged);
   }
 
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      // Test Firebase connection first
+      await _productService.testFirebaseConnection();
+
+      // Load categories and products from Firebase
+      final categoryList = await _productService.getCategories();
+      final products = await _productService.getAllProducts();
+
+      print('Loaded ${categoryList.length} categories');
+      print('Loaded ${products.length} products');
+
+      setState(() {
+        categories = categoryList;
+        allProducts = products;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+        // Use fallback data
+        _loadFallbackData();
+      });
+    }
+  }
+
+  void _loadFallbackData() {
+    categories = [
+      {
+        'title': 'Electronics',
+        'description': 'Phones, Laptops & More',
+        'icon': Icons.devices,
+        'color': const Color(0xFF4285F4),
+        'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
+        'productCount': 3,
+      },
+      {
+        'title': 'Fashion',
+        'description': 'Clothes, Shoes & Style',
+        'icon': Icons.checkroom,
+        'color': const Color(0xFFE91E63),
+        'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
+        'productCount': 1,
+      },
+    ];
+
+    allProducts = [
+      {
+        'name': 'Wireless Headphones',
+        'price': 'UGX 85,000',
+        'rating': 4.8,
+        'discount': '-20%',
+        'category': 'Electronics',
+        'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+        'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
+      },
+    ];
+  }
+  
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
@@ -43,163 +118,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     setState(() {});
   }
 
-  final List<Map<String, dynamic>> categories = [
-    {
-      'icon': Icons.devices,
-      'title': 'Electronics',
-      'description': 'Phones, Laptops & More',
-      'color': const Color(0xFF4285F4),
-      'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
-    },
-    {
-      'icon': Icons.checkroom,
-      'title': 'Fashion',
-      'description': 'Clothes, Shoes & Style',
-      'color': const Color(0xFFE91E63),
-      'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
-    },
-    {
-      'icon': Icons.home,
-      'title': 'Home',
-      'description': 'Furniture & Decor',
-      'color': const Color(0xFF4CAF50),
-      'image': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
-    },
-    {
-      'icon': Icons.sports_soccer,
-      'title': 'Sports',
-      'description': 'Fitness & Outdoor',
-      'color': const Color(0xFFFF9800),
-      'image': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop',
-    },
-    {
-      'icon': Icons.local_grocery_store,
-      'title': 'Groceries',
-      'description': 'Food & Beverages',
-      'color': const Color(0xFF8BC34A),
-      'image': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
-    },
-    {
-      'icon': Icons.auto_stories,
-      'title': 'Books',
-      'description': 'Education & Literature',
-      'color': const Color(0xFF9C27B0),
-      'image': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop',
-    },
-  ];
-
-  final List<Map<String, dynamic>> allProducts = [
-    {
-      'name': 'Wireless Headphones',
-      'price': 'UGX 85,000',
-      'rating': 4.8,
-      'discount': '-20%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
-    },
-    {
-      'name': 'Smart Watch',
-      'price': 'UGX 120,000',
-      'rating': 4.6,
-      'discount': '-15%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-      'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
-    },
-    {
-      'name': 'Designer T-Shirt',
-      'price': 'UGX 45,000',
-      'rating': 4.9,
-      'discount': '-25%',
-      'category': 'Fashion',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
-    },
-    {
-      'name': 'Coffee Maker',
-      'price': 'UGX 95,000',
-      'rating': 4.7,
-      'discount': '-18%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
-    },
-    {
-      'name': 'Running Shoes',
-      'price': 'UGX 75,000',
-      'rating': 4.5,
-      'discount': '-30%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-      'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
-    },
-    {
-      'name': 'Bluetooth Speaker',
-      'price': 'UGX 42,000',
-      'rating': 4.8,
-      'discount': '-22%',
-      'category': 'Electronics',
-      'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-      'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
-    },
-    {
-      'name': 'Table Lamp',
-      'price': 'UGX 35,000',
-      'rating': 4.6,
-      'discount': '-12%',
-      'category': 'Home',
-      'image': 'https://images.unsplash.com/photo-1574025876844-6c9ba8602866?q=80&w=1121&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Modern LED table lamp with adjustable brightness and USB charging port.',
-    },
-    {
-      'name': 'Yoga Mat',
-      'price': 'UGX 25,000',
-      'rating': 4.4,
-      'discount': '-28%',
-      'category': 'Sports',
-      'image': 'https://images.unsplash.com/photo-1637157216470-d92cd2edb2e8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Non-slip yoga mat with extra cushioning for comfortable workouts.',
-    },
-    {
-      'name': 'Organic Coffee Beans',
-      'price': 'UGX 32,000',
-      'rating': 4.7,
-      'discount': '-15%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop',
-      'description': 'Premium organic coffee beans with rich aroma and smooth taste.',
-    },
-    {
-      'name': 'Fresh Fruit Basket',
-      'price': 'UGX 45,000',
-      'rating': 4.8,
-      'discount': '-10%',
-      'category': 'Groceries',
-      'image': 'https://images.unsplash.com/photo-1760113724916-a87ffecd8e22?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      'description': 'Assorted fresh fruits including apples, oranges, and bananas.',
-    },
-    {
-      'name': 'The Great Gatsby',
-      'price': 'UGX 28,000',
-      'rating': 4.9,
-      'discount': '-20%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=400&fit=crop',
-      'description': 'Classic American novel by F. Scott Fitzgerald.',
-    },
-    {
-      'name': 'Programming Guide',
-      'price': 'UGX 55,000',
-      'rating': 4.6,
-      'discount': '-25%',
-      'category': 'Books',
-      'image': 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop',
-      'description': 'Comprehensive guide to modern programming languages and techniques.',
-    },
-  ];
-
   int _getProductCount(String categoryTitle) {
+    // First try to get count from category data (from Firebase)
+    final category = categories.firstWhere(
+      (cat) => cat['title'] == categoryTitle,
+      orElse: () => <String, dynamic>{},
+    );
+    
+    if (category.isNotEmpty && category['productCount'] != null) {
+      return category['productCount'] as int;
+    }
+    
+    // Fallback to counting from allProducts
     return allProducts.where((product) => product['category'] == categoryTitle).length;
   }
 
@@ -641,7 +571,65 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           NotificationIcon(),
         ],
       ),
-      body: SafeArea(
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading categories...',
+                    style: TextStyle(
+                      color: AppColors.secondaryText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : _hasError
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Failed to load categories',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Using offline data',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.secondaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

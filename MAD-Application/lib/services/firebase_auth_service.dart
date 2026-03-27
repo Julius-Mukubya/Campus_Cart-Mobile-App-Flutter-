@@ -39,8 +39,14 @@ class FirebaseAuthService {
         'profileImage': '',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'isActive': true,
+        'isActive': role == 'customer', // Customers are active immediately, sellers need approval
         'isEmailVerified': false,
+        
+        // Seller-specific fields
+        'sellerStatus': role == 'seller' ? 'pending' : null, // pending, approved, rejected
+        'approvedAt': null,
+        'approvedBy': null,
+        'rejectionReason': null,
         
         // Statistics
         'totalOrders': 0,
@@ -54,6 +60,14 @@ class FirebaseAuthService {
         'defaultAddressId': null,
         'defaultPaymentMethodId': null,
       });
+
+      // If user is signing up as seller, create a seller approval request
+      if (role == 'seller') {
+        await _createSellerApprovalRequest(userCredential.user!.uid, name, email);
+      }
+
+      // Initialize user subcollections
+      await _initializeUserSubcollections(userCredential.user!.uid, role);
 
       // Send email verification
       await userCredential.user?.sendEmailVerification();
@@ -106,10 +120,24 @@ class FirebaseAuthService {
       // Check if user is active
       if (userData['isActive'] == false) {
         await signOut();
-        return {
-          'success': false,
-          'message': 'Your account has been deactivated. Please contact support.',
-        };
+        
+        // Check if it's a seller with pending approval
+        if (userData['role'] == 'seller' && userData['sellerStatus'] == 'pending') {
+          return {
+            'success': false,
+            'message': 'Your seller application is still pending admin approval. Please wait for approval.',
+          };
+        } else if (userData['role'] == 'seller' && userData['sellerStatus'] == 'rejected') {
+          return {
+            'success': false,
+            'message': 'Your seller application was rejected. Reason: ${userData['rejectionReason'] ?? 'No reason provided'}',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': 'Your account has been deactivated. Please contact support.',
+          };
+        }
       }
 
       return {
@@ -219,6 +247,271 @@ class FirebaseAuthService {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  // Address management methods
+  Future<String?> addUserAddress({
+    required String userId,
+    required String label,
+    required String fullName,
+    required String phone,
+    required String addressLine1,
+    String? addressLine2,
+    required String city,
+    required String state,
+    required String postalCode,
+    String country = 'Uganda',
+    double? latitude,
+    double? longitude,
+    bool isDefault = false,
+  }) async {
+    try {
+      // If this is set as default, update other addresses to not be default
+      if (isDefault) {
+        await _updateDefaultAddress(userId, null);
+      }
+
+      DocumentReference docRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('addresses')
+          .add({
+        'label': label,
+        'fullName': fullName,
+        'phone': phone,
+        'addressLine1': addressLine1,
+        'addressLine2': addressLine2 ?? '',
+        'city': city,
+        'state': state,
+        'postalCode': postalCode,
+        'country': country,
+        'latitude': latitude,
+        'longitude': longitude,
+        'isDefault': isDefault,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Update user's defaultAddressId if this is the default address
+      if (isDefault) {
+        await _firestore.collection('users').doc(userId).update({
+          'defaultAddressId': docRef.id,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return docRef.id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<bool> _updateDefaultAddress(String userId, String? newDefaultId) async {
+    try {
+      // Get all addresses and update them
+      QuerySnapshot addresses = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('addresses')
+          .get();
+
+      WriteBatch batch = _firestore.batch();
+
+      for (QueryDocumentSnapshot doc in addresses.docs) {
+        batch.update(doc.reference, {
+          'isDefault': doc.id == newDefaultId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Payment method management methods
+  Future<String?> addUserPaymentMethod({
+    required String userId,
+    required String type,
+    required String provider,
+    required String accountNumber,
+    required String accountName,
+    bool isDefault = false,
+  }) async {
+    try {
+      // If this is set as default, update other payment methods to not be default
+      if (isDefault) {
+        await _updateDefaultPaymentMethod(userId, null);
+      }
+
+      DocumentReference docRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('paymentMethods')
+          .add({
+        'type': type,
+        'provider': provider,
+        'accountNumber': accountNumber,
+        'accountName': accountName,
+        'isDefault': isDefault,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Update user's defaultPaymentMethodId if this is the default payment method
+      if (isDefault) {
+        await _firestore.collection('users').doc(userId).update({
+          'defaultPaymentMethodId': docRef.id,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return docRef.id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<bool> _updateDefaultPaymentMethod(String userId, String? newDefaultId) async {
+    try {
+      // Get all payment methods and update them
+      QuerySnapshot paymentMethods = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('paymentMethods')
+          .get();
+
+      WriteBatch batch = _firestore.batch();
+
+      for (QueryDocumentSnapshot doc in paymentMethods.docs) {
+        batch.update(doc.reference, {
+          'isDefault': doc.id == newDefaultId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Get user addresses
+  Future<List<Map<String, dynamic>>> getUserAddresses(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('addresses')
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['addressId'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Get user payment methods
+  Future<List<Map<String, dynamic>>> getUserPaymentMethods(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('paymentMethods')
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['paymentMethodId'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Helper method to create seller approval request
+  Future<void> _createSellerApprovalRequest(String userId, String name, String email) async {
+    try {
+      await _firestore.collection('seller_approval_requests').add({
+        'userId': userId,
+        'name': name,
+        'email': email,
+        'status': 'pending', // pending, approved, rejected
+        'requestedAt': FieldValue.serverTimestamp(),
+        'processedAt': null,
+        'processedBy': null,
+        'adminNotes': '',
+        'businessName': '',
+        'businessDescription': '',
+        'businessCategory': '',
+        'businessPhone': '',
+        'businessAddress': '',
+        'documents': [], // Array of document URLs
+      });
+    } catch (e) {
+      print('Error creating seller approval request: $e');
+    }
+  }
+
+  // Helper method to initialize user subcollections
+  Future<void> _initializeUserSubcollections(String userId, String role) async {
+    try {
+      // Initialize addresses subcollection with a default address for customers
+      if (role == 'customer') {
+        await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('addresses')
+            .add({
+          'label': 'Default Address',
+          'fullName': '',
+          'phone': '',
+          'addressLine1': '',
+          'addressLine2': '',
+          'city': '',
+          'state': '',
+          'postalCode': '',
+          'country': 'Uganda',
+          'latitude': null,
+          'longitude': null,
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        // Initialize payment methods subcollection with default mobile money
+        await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('paymentMethods')
+            .add({
+          'type': 'mobile_money',
+          'provider': 'MTN',
+          'accountNumber': '',
+          'accountName': '',
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Initialize empty wishlist and cart subcollections (these will be populated as needed)
+      // We don't need to add documents here as they'll be created when items are added
+      
+    } catch (e) {
+      // Log error but don't fail the signup process
+      print('Error initializing user subcollections: $e');
     }
   }
 
