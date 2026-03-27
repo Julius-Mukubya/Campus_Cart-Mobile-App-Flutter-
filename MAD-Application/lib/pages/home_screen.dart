@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         categories = [
           {'icon': Icons.grid_view, 'title': 'All'},
           ...categoryList.map((cat) => {
-            'icon': _getIconFromString(cat['icon']),
+            'icon': cat['icon'] is IconData ? cat['icon'] : _getIconFromString(cat['icon'].toString()),
             'title': cat['title'],
           }),
         ];

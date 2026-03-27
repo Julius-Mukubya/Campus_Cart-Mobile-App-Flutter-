@@ -119,16 +119,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   int _getProductCount(String categoryTitle) {
-    // First try to get count from category data (from Firebase)
-    final category = categories.firstWhere(
-      (cat) => cat['title'] == categoryTitle,
-      orElse: () => <String, dynamic>{},
-    );
-    
-    if (category.isNotEmpty && category['productCount'] != null) {
-      return category['productCount'] as int;
+    // Find matching category and return its product count
+    for (final cat in categories) {
+      if (cat['title'] == categoryTitle) {
+        return (cat['productCount'] ?? 0) as int;
+      }
     }
-    
     // Fallback to counting from allProducts
     return allProducts.where((product) => product['category'] == categoryTitle).length;
   }

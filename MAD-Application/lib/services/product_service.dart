@@ -9,32 +9,24 @@ class ProductService {
     try {
       print('Testing Firebase connection...');
       
-      QuerySnapshot snapshot = await _firestore
-          .collection('products')
-          .limit(1)
-          .get();
+      // Log a sample product
+      QuerySnapshot productSnapshot = await _firestore.collection('products').limit(1).get();
+      if (productSnapshot.docs.isNotEmpty) {
+        final data = productSnapshot.docs.first.data() as Map<String, dynamic>;
+        print('=== SAMPLE PRODUCT FIELDS ===');
+        data.forEach((key, value) => print('  "$key": $value'));
+        print('=============================');
+      }
 
-      if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data() as Map<String, dynamic>;
-        print('Firebase connection successful!');
-        print('=== FIREBASE DOCUMENT FIELDS ===');
-        data.forEach((key, value) {
-          print('  "$key": $value');
-        });
-        // Specifically highlight image-related fields
-        print('--- IMAGE FIELDS ---');
-        for (final key in data.keys) {
-          if (key.toLowerCase().contains('image') ||
-              key.toLowerCase().contains('photo') ||
-              key.toLowerCase().contains('picture') ||
-              key.toLowerCase().contains('img') ||
-              key.toLowerCase().contains('url')) {
-            print('  FOUND IMAGE FIELD -> "$key": ${data[key]}');
-          }
-        }
-        print('================================');
+      // Log a sample category
+      QuerySnapshot categorySnapshot = await _firestore.collection('categories').limit(1).get();
+      if (categorySnapshot.docs.isNotEmpty) {
+        final data = categorySnapshot.docs.first.data() as Map<String, dynamic>;
+        print('=== SAMPLE CATEGORY FIELDS ===');
+        data.forEach((key, value) => print('  "$key": $value'));
+        print('==============================');
       } else {
-        print('Firebase connected but no products found');
+        print('No documents found in categories collection');
       }
     } catch (e) {
       print('Firebase connection error: $e');
@@ -74,29 +66,41 @@ class ProductService {
   // Get all products
   Future<List<Map<String, dynamic>>> getAllProducts() async {
     try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('products')
-          .get();
+      // Fetch category lookup and products in parallel
+      final results = await Future.wait([
+        _getCategoryLookup(),
+        _firestore.collection('products').get(),
+      ]);
+
+      final categoryLookup = results[0] as Map<String, String>;
+      final snapshot = results[1] as QuerySnapshot;
 
       print('Found ${snapshot.docs.length} products in Firebase');
 
       return snapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        final data = doc.data() as Map<String, dynamic>;
+
+        // Resolve category: if it's an ID, look up the name; otherwise use as-is
+        final rawCategory = (data['categoryId'] ?? data['category'] ?? '').toString();
+        final categoryName = categoryLookup[rawCategory] ?? (rawCategory.isNotEmpty ? rawCategory : 'Other');
+
         return {
-          'name': data['productName'] ?? data['name'] ?? 'Unknown Product',
+          'name': data['name'] ?? data['productName'] ?? 'Unknown Product',
           'price': 'UGX ${(data['price'] ?? 0).toString()}',
           'rating': (data['rating'] ?? 4.0).toDouble(),
           'discount': data['discount'] != null && data['discount'] > 0
               ? '-${data['discount'].toString()}%'
-              : '',
-          'category': data['category'] ?? 'Other',
+              : (data['discountedPrice'] != null && data['price'] != null && data['discountedPrice'] < data['price']
+                  ? '-${(((data['price'] - data['discountedPrice']) / data['price']) * 100).toStringAsFixed(0)}%'
+                  : ''),
+          'category': categoryName,
           'image': _extractImageUrl(data),
-          'description': data['productDescription'] ?? data['description'] ?? 'No description available',
+          'description': data['description'] ?? data['productDescription'] ?? 'No description available',
           'productId': doc.id,
           'sellerId': data['sellerId'] ?? '',
           'storeId': data['storeId'] ?? '',
-          'stockQuantity': data['stockQuantity'] ?? 0,
-          'originalPrice': data['originalPrice'] ?? data['price'] ?? 0,
+          'stockQuantity': data['stock'] ?? data['stockQuantity'] ?? 0,
+          'originalPrice': data['price'] ?? 0,
         };
       }).toList();
     } catch (e) {
@@ -105,16 +109,27 @@ class ProductService {
     }
   }
 
-  // Get products by category
-  Future<List<Map<String, dynamic>>> getProductsByCategory(String category) async {
+  // Get products by category name (resolves via lookup)
+  Future<List<Map<String, dynamic>>> getProductsByCategory(String categoryName) async {
     try {
+      // Find the category ID for this name
+      final lookup = await _getCategoryLookup();
+      // Find the category ID whose name matches; fall back to using the name itself as the ID
+      String categoryId = categoryName;
+      for (final entry in lookup.entries) {
+        if (entry.value == categoryName) {
+          categoryId = entry.key;
+          break;
+        }
+      }
+
       QuerySnapshot snapshot = await _firestore
           .collection('products')
-          .where('category', isEqualTo: category)
+          .where('categoryId', isEqualTo: categoryId)
           .get();
 
       return snapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        final data = doc.data() as Map<String, dynamic>;
         return {
           'name': data['productName'] ?? data['name'] ?? 'Unknown Product',
           'price': 'UGX ${(data['price'] ?? 0).toString()}',
@@ -122,7 +137,7 @@ class ProductService {
           'discount': data['discount'] != null && data['discount'] > 0
               ? '-${data['discount'].toString()}%'
               : '',
-          'category': data['category'] ?? 'Other',
+          'category': categoryName,
           'image': _extractImageUrl(data),
           'description': data['productDescription'] ?? data['description'] ?? 'No description available',
           'productId': doc.id,
@@ -134,7 +149,7 @@ class ProductService {
       }).toList();
     } catch (e) {
       print('Error fetching products by category: $e');
-      return _getFallbackProducts().where((p) => p['category'] == category).toList();
+      return [];
     }
   }
 
@@ -163,134 +178,112 @@ class ProductService {
   }
 
   // Get available categories with product counts
+  // Fetch categories directly from the categories collection
   Future<List<Map<String, dynamic>>> getCategories() async {
     try {
-      // Get all products to calculate category counts
-      final products = await getAllProducts();
-      
-      // Define category structure with icons and descriptions
-      final categoryDefinitions = {
-        'Electronics': {
-          'icon': 'devices',
-          'description': 'Phones, Laptops & More',
-          'color': '0xFF4285F4',
-          'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
-        },
-        'Fashion': {
-          'icon': 'checkroom',
-          'description': 'Clothes, Shoes & Style',
-          'color': '0xFFE91E63',
-          'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
-        },
-        'Home': {
-          'icon': 'home',
-          'description': 'Furniture & Decor',
-          'color': '0xFF4CAF50',
-          'image': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
-        },
-        'Sports': {
-          'icon': 'sports_soccer',
-          'description': 'Fitness & Outdoor',
-          'color': '0xFFFF9800',
-          'image': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop',
-        },
-        'Groceries': {
-          'icon': 'local_grocery_store',
-          'description': 'Food & Beverages',
-          'color': '0xFF8BC34A',
-          'image': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
-        },
-        'Books': {
-          'icon': 'auto_stories',
-          'description': 'Education & Literature',
-          'color': '0xFF9C27B0',
-          'image': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop',
-        },
-        'Health & Beauty': {
-          'icon': 'spa',
-          'description': 'Beauty & Wellness',
-          'color': '0xFFFF5722',
-          'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
-        },
-        'Automotive': {
-          'icon': 'directions_car',
-          'description': 'Car Parts & Accessories',
-          'color': '0xFF607D8B',
-          'image': 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=400&fit=crop',
-        },
-        'Toys & Games': {
-          'icon': 'toys',
-          'description': 'Fun & Entertainment',
-          'color': '0xFFFF9800',
-          'image': 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=400&h=400&fit=crop',
-        },
-        'Office Supplies': {
-          'icon': 'business_center',
-          'description': 'Work & Study',
-          'color': '0xFF795548',
-          'image': 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400&h=400&fit=crop',
-        },
-        'Other': {
-          'icon': 'category',
-          'description': 'Miscellaneous Items',
-          'color': '0xFF9E9E9E',
-          'image': 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
-        },
-      };
+      // Fetch categories and products in parallel
+      final results = await Future.wait([
+        _firestore.collection('categories').get(),
+        _firestore.collection('products').get(),
+      ]);
 
-      // Count products per category
-      Map<String, int> categoryCounts = {};
-      for (var product in products) {
-        final category = product['category'] as String;
-        categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
-      }
+      final categorySnapshot = results[0] as QuerySnapshot;
+      final productSnapshot = results[1] as QuerySnapshot;
 
-      // Build category list with counts
-      List<Map<String, dynamic>> categories = [];
-      
-      for (var entry in categoryDefinitions.entries) {
-        final categoryName = entry.key;
-        final categoryInfo = entry.value;
-        final productCount = categoryCounts[categoryName] ?? 0;
-        
-        // Only include categories that have products or are essential
-        if (productCount > 0 || ['Electronics', 'Fashion', 'Home', 'Sports', 'Groceries', 'Books'].contains(categoryName)) {
-          categories.add({
-            'title': categoryName,
-            'description': categoryInfo['description'],
-            'icon': _getIconData(categoryInfo['icon'] as String),
-            'color': Color(int.parse(categoryInfo['color'] as String)),
-            'image': categoryInfo['image'],
-            'productCount': productCount,
-          });
+      print('Found ${categorySnapshot.docs.length} categories in Firebase');
+
+      // Count products per category ID
+      final Map<String, int> countById = {};
+      for (final doc in productSnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final catId = (data['categoryId'] ?? data['category'] ?? '').toString();
+        if (catId.isNotEmpty) {
+          countById[catId] = (countById[catId] ?? 0) + 1;
         }
       }
 
-      // Sort by product count (descending)
-      categories.sort((a, b) => (b['productCount'] as int).compareTo(a['productCount'] as int));
+      print('=== PRODUCT COUNTS BY CATEGORY ID ===');
+      countById.forEach((id, count) => print('  categoryId "$id": $count products'));
+      print('=== CATEGORY DOCUMENT IDs ===');
+      for (final doc in categorySnapshot.docs) {
+        print('  doc.id "${doc.id}"');
+      }
+      print('=====================================');
 
-      return categories;
+      final categoryMeta = {
+        'Electronics':     {'icon': 'devices',              'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop'},
+        'Fashion':         {'icon': 'checkroom',            'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop'},
+        'Home':            {'icon': 'home',                 'image': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop'},
+        'Sports':          {'icon': 'sports_soccer',        'image': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop'},
+        'Groceries':       {'icon': 'local_grocery_store',  'image': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop'},
+        'Books':           {'icon': 'auto_stories',         'image': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop'},
+        'Health & Beauty': {'icon': 'spa',                  'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop'},
+        'Automotive':      {'icon': 'directions_car',       'image': 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=400&fit=crop'},
+        'Toys & Games':    {'icon': 'toys',                 'image': 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=400&h=400&fit=crop'},
+        'Office Supplies': {'icon': 'business_center',      'image': 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400&h=400&fit=crop'},
+      };
+
+      return categorySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final name = (data['name'] ?? data['categoryName'] ?? data['title'] ?? 'Unknown').toString();
+        final description = (data['description'] ?? data['desc'] ?? '').toString();
+        final productCount = countById[doc.id] ?? 0;
+        final meta = categoryMeta[name];
+        final iconStr = meta?['icon'] ?? 'category';
+        final image = _extractImageUrl(data).isNotEmpty && _extractImageUrl(data) != 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
+            ? _extractImageUrl(data)
+            : (meta?['image'] ?? 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop');
+
+        print('Category "$name" (${doc.id}): $productCount products');
+
+        return {
+          'categoryId': doc.id,
+          'title': name,
+          'description': description,
+          'icon': _getIconData(iconStr),
+          'image': image,
+          'productCount': productCount,
+          'color': const Color(0xFF1A73E8),
+        };
+      }).toList();
     } catch (e) {
       print('Error fetching categories: $e');
       return _getFallbackCategories();
     }
   }
 
+  // Build a categoryId -> categoryName lookup map
+  Future<Map<String, String>> _getCategoryLookup() async {
+    try {
+      QuerySnapshot snapshot = await _firestore.collection('categories').get();
+      final Map<String, String> lookup = {};
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final name = data['name'] ?? data['categoryName'] ?? data['title'] ?? doc.id;
+        lookup[doc.id] = name.toString();
+      }
+      return lookup;
+    } catch (e) {
+      print('Error building category lookup: $e');
+      return {};
+    }
+  }
+
   // Helper method to convert icon string to IconData
-  dynamic _getIconData(String iconName) {
+  IconData _getIconData(String iconName) {
     switch (iconName) {
-      case 'devices': return 'devices';
-      case 'checkroom': return 'checkroom';
-      case 'home': return 'home';
-      case 'sports_soccer': return 'sports_soccer';
-      case 'local_grocery_store': return 'local_grocery_store';
-      case 'auto_stories': return 'auto_stories';
-      case 'spa': return 'spa';
-      case 'directions_car': return 'directions_car';
-      case 'toys': return 'toys';
-      case 'business_center': return 'business_center';
-      case 'category': return 'category';
-      default: return 'category';
+      case 'devices': return Icons.devices;
+      case 'checkroom': return Icons.checkroom;
+      case 'home': return Icons.home;
+      case 'sports_soccer': return Icons.sports_soccer;
+      case 'local_grocery_store': return Icons.local_grocery_store;
+      case 'auto_stories': return Icons.auto_stories;
+      case 'spa': return Icons.spa;
+      case 'directions_car': return Icons.directions_car;
+      case 'toys': return Icons.toys;
+      case 'business_center': return Icons.business_center;
+      case 'category': return Icons.category;
+      default: return Icons.category;
     }
   }
 
