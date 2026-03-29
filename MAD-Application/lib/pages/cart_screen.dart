@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/pages/order_success.dart';
+import 'package:madpractical/pages/checkout/place_order_screen.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/order_manager.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
@@ -18,7 +17,6 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final WishlistManager _wishlistManager = WishlistManager();
   final CartManager _cartManager = CartManager();
-  final OrderManager _orderManager = OrderManager();
   String selectedDeliveryMethod = 'Standard';
   String selectedAddress = 'Home Address';
   String selectedPaymentMethod = 'Mobile Money';
@@ -43,33 +41,6 @@ class _CartScreenState extends State<CartScreen> {
 
   void _onCartChanged() {
     setState(() {});
-  }
-
-  double _extractPrice(dynamic price) {
-    if (price is double) return price;
-    if (price is int) return price.toDouble();
-    if (price is String) {
-      final numericString = price.replaceAll(RegExp(r'[^0-9]'), '');
-      return double.tryParse(numericString) ?? 0.0;
-    }
-    return 0.0;
-  }
-
-  double _getDiscountedPrice(Map<String, dynamic> item) {
-    final originalPrice = _extractPrice(item['price']);
-    
-    // Check if item has a discount
-    if (item['discount'] != null && item['discount'].toString().isNotEmpty) {
-      final discountStr = item['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
-      final discountPercent = double.tryParse(discountStr) ?? 0.0;
-      
-      if (discountPercent > 0) {
-        final discountAmount = originalPrice * (discountPercent / 100);
-        return originalPrice - discountAmount;
-      }
-    }
-    
-    return originalPrice;
   }
 
   void increaseQuantity(String productName) {
@@ -494,319 +465,6 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _showCheckoutSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Handle Bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.grey.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Checkout Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.text,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 20,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Delivery Method
-                    const Text(
-                      'Delivery Method',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.lightGrey),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: DropdownButtonFormField<String>(
-                        initialValue: selectedDeliveryMethod,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Standard',
-                            child: Text('Standard Delivery (3-5 days)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Express',
-                            child: Text('Express Delivery (1-2 days)'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setModalState(() {
-                            selectedDeliveryMethod = value!;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Shipping Address
-                    const Text(
-                      'Shipping Address',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.lightGrey),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: DropdownButtonFormField<String>(
-                        initialValue: selectedAddress,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Home Address',
-                            child: Text('Home Address - 123 Main St'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Office Address',
-                            child: Text('Office Address - 456 Work Ave'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setModalState(() {
-                            selectedAddress = value!;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Payment Method
-                    const Text(
-                      'Payment Method',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.lightGrey),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: DropdownButtonFormField<String>(
-                        initialValue: selectedPaymentMethod,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Mobile Money',
-                            child: Text('Mobile Money'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Credit Card',
-                            child: Text('Credit Card'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Cash',
-                            child: Text('Cash on Delivery'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setModalState(() {
-                            selectedPaymentMethod = value!;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Order Total
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total Amount',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.text,
-                            ),
-                          ),
-                          Text(
-                            'UGX ${_cartManager.total.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Place Order Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Store order details before clearing cart
-                          final orderSubtotal = _cartManager.subtotal;
-                          final orderDeliveryFee = _cartManager.deliveryFee;
-                          final orderTotal = _cartManager.total;
-                          final orderItems = List<Map<String, dynamic>>.from(
-                            _cartManager.cartItems.map((item) => {
-                              'name': item['name'],
-                              'quantity': item['quantity'],
-                              'price': _getDiscountedPrice(item),
-                              'image': item['image'] ?? '',
-                            })
-                          );
-                          
-                          // Generate order ID
-                          final now = DateTime.now();
-                          final orderId = 'ORD-${now.year}-${now.millisecondsSinceEpoch.toString().substring(7)}';
-                          
-                          // Create order object
-                          final order = {
-                            'id': orderId,
-                            'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-                            'status': 'Processing',
-                            'total': orderTotal,
-                            'items': _cartManager.itemCount,
-                            'products': orderItems,
-                            'deliveryMethod': selectedDeliveryMethod,
-                            'shippingAddress': selectedAddress,
-                            'paymentMethod': selectedPaymentMethod,
-                            'subtotal': orderSubtotal,
-                            'deliveryFee': orderDeliveryFee,
-                          };
-                          
-                          // Add order to OrderManager
-                          _orderManager.addOrder(order);
-                          
-                          // Clear the cart
-                          _cartManager.clearCart();
-                          
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => OrderSuccess(
-                                subtotal: orderSubtotal,
-                                deliveryFee: orderDeliveryFee,
-                                total: orderTotal,
-                                deliveryMethod: selectedDeliveryMethod,
-                                shippingAddress: selectedAddress,
-                                paymentMethod: selectedPaymentMethod,
-                              ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.shopping_bag, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Place Order',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -914,7 +572,12 @@ class _CartScreenState extends State<CartScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _showCheckoutSheet(context),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PlaceOrderScreen(),
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.white,

@@ -903,6 +903,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       },
                                     ),
                                   ),
+                                  if (product['discount'] != null && product['discount'].toString().isNotEmpty)
                                   Positioned(
                                     top: 8,
                                     left: 8,

@@ -467,30 +467,8 @@ class FirebaseAuthService {
   // Helper method to initialize user subcollections
   Future<void> _initializeUserSubcollections(String userId, String role) async {
     try {
-      // Initialize addresses subcollection with a default address for customers
+      // Initialize payment methods subcollection with default mobile money for customers
       if (role == 'customer') {
-        await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('addresses')
-            .add({
-          'label': 'Default Address',
-          'fullName': '',
-          'phone': '',
-          'addressLine1': '',
-          'addressLine2': '',
-          'city': '',
-          'state': '',
-          'postalCode': '',
-          'country': 'Uganda',
-          'latitude': null,
-          'longitude': null,
-          'isDefault': true,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Initialize payment methods subcollection with default mobile money
         await _firestore
             .collection('users')
             .doc(userId)

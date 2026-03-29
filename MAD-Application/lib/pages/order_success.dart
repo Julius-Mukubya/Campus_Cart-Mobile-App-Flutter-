@@ -243,7 +243,7 @@ class _OrderSuccessState extends State<OrderSuccess> {
 
   Widget _buildDetailRow(String label, String value, {bool isTotal = false}) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -253,12 +253,16 @@ class _OrderSuccessState extends State<OrderSuccess> {
             color: isTotal ? AppColors.text : AppColors.secondaryText,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isTotal ? 16 : 15,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-            color: isTotal ? AppColors.primary : AppColors.text,
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: isTotal ? 16 : 15,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+              color: isTotal ? AppColors.primary : AppColors.text,
+            ),
           ),
         ),
       ],
