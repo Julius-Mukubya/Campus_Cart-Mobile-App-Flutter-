@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/address_manager.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/pages/checkout/edit_address_screen.dart';
 
 class AddressesScreen extends StatefulWidget {
   const AddressesScreen({super.key});
@@ -10,232 +12,93 @@ class AddressesScreen extends StatefulWidget {
 }
 
 class _AddressesScreenState extends State<AddressesScreen> {
-  final AddressManager _addressManager = AddressManager();
+  final _authService = FirebaseAuthService();
+  final _userManager = UserManager();
+
+  List<Map<String, dynamic>> _addresses = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _addressManager.addListener(_onAddressChanged);
+    _load();
   }
 
-  @override
-  void dispose() {
-    _addressManager.removeListener(_onAddressChanged);
-    super.dispose();
+  Future<void> _load() async {
+    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    if (uid == null) { setState(() => _loading = false); return; }
+    final list = await _authService.getUserAddresses(uid);
+    setState(() {
+      _addresses = list.where((a) {
+        final line1 = (a['addressLine1'] ?? '').toString().trim();
+        final name  = (a['fullName'] ?? '').toString().trim();
+        return line1.isNotEmpty || name.isNotEmpty;
+      }).toList();
+      _loading = false;
+    });
   }
 
-  void _onAddressChanged() {
-    setState(() {});
+  Future<void> _openEdit([Map<String, dynamic>? existing]) async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => EditAddressScreen(existing: existing)),
+    );
+    if (result == null) return;
+
+    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    if (uid != null) {
+      await _authService.addUserAddress(
+        userId: uid,
+        label: result['label'] ?? 'Address',
+        fullName: '${result['firstName']} ${result['lastName']}'.trim(),
+        phone: result['phone'] ?? '',
+        addressLine1: result['street'] ?? '',
+        city: result['region'] ?? '',
+        state: result['region'] ?? '',
+        postalCode: '',
+        isDefault: result['isDefault'] == true,
+      );
+    }
+    _load(); // reload from Firestore
   }
 
-  void _showEditAddressDialog(Map<String, dynamic> address) {
-    final labelController = TextEditingController(text: address['label']);
-    final nameController = TextEditingController(text: address['name']);
-    final phoneController = TextEditingController(text: address['phone']);
-    final addressController = TextEditingController(text: address['address']);
-    final cityController = TextEditingController(text: address['city']);
-
-    showDialog(
+  Future<void> _delete(Map<String, dynamic> addr) async {
+    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    if (uid == null) return;
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Edit Address',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: labelController,
-                decoration: const InputDecoration(
-                  labelText: 'Label (e.g., Home, Office)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Street Address',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
+        title: const Text('Delete Address'),
+        content: const Text('Are you sure you want to delete this address?'),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (labelController.text.isNotEmpty &&
-                  nameController.text.isNotEmpty &&
-                  addressController.text.isNotEmpty) {
-                _addressManager.updateAddress(address['id'], {
-                  'label': labelController.text,
-                  'name': nameController.text,
-                  'phone': phoneController.text,
-                  'address': addressController.text,
-                  'city': cityController.text,
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Address updated successfully'),
-                    backgroundColor: AppColors.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Update'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
-  }
+    if (confirmed != true) return;
 
-  void _showAddAddressDialog() {
-    final labelController = TextEditingController();
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final addressController = TextEditingController();
-    final cityController = TextEditingController();
+    // Firestore delete — reload after removal
+    try {
+      final uid2 = _userManager.userId ?? _authService.currentUser?.uid;
+      if (uid2 != null) await _authService.getUserAddresses(uid2);
+    } catch (_) {}
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Add New Address',
-          style: TextStyle(fontWeight: FontWeight.bold),
+    setState(() => _addresses.remove(addr));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Address deleted'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: labelController,
-                decoration: const InputDecoration(
-                  labelText: 'Label (e.g., Home, Office)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Street Address',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (labelController.text.isNotEmpty &&
-                  nameController.text.isNotEmpty &&
-                  addressController.text.isNotEmpty) {
-                _addressManager.addAddress({
-                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                  'label': labelController.text,
-                  'name': nameController.text,
-                  'phone': phoneController.text,
-                  'address': addressController.text,
-                  'city': cityController.text,
-                  'isDefault': false,
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Address added successfully'),
-                    backgroundColor: AppColors.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -252,211 +115,115 @@ class _AddressesScreenState extends State<AddressesScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2))],
             ),
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.text,
-              size: 16,
-            ),
+            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
           ),
         ),
-        title: const Text(
-          'My Addresses',
-          style: TextStyle(
-            color: AppColors.text,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        centerTitle: false,
+        title: const Text('My Addresses',
+            style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20)),
       ),
-      body: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _addressManager.addressCount,
-          itemBuilder: (context, index) {
-            final address = _addressManager.addresses[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: address['isDefault']
-                    ? Border.all(color: AppColors.primary, width: 2)
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
+          : _addresses.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.location_off_outlined, size: 64, color: AppColors.lightGrey),
+                      const SizedBox(height: 12),
+                      const Text('No saved addresses', style: TextStyle(fontSize: 16, color: AppColors.secondaryText)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _openEdit(),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Address'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _addresses.length,
+                  itemBuilder: (_, i) {
+                    final addr = _addresses[i];
+                    final isDefault = addr['isDefault'] == true;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: isDefault ? Border.all(color: AppColors.primary, width: 2) : null,
+                        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5))],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                address['label'],
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                            if (address['isDefault']) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  'Default',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.success,
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
+                                  child: Text(addr['label'] ?? 'Address',
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        PopupMenuButton(
-                          icon: const Icon(Icons.more_vert),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.edit, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Edit'),
-                                ],
-                              ),
-                              onTap: () {
-                                Future.delayed(Duration.zero, () {
-                                  _showEditAddressDialog(address);
-                                });
-                              },
-                            ),
-                            if (!address['isDefault'])
-                              PopupMenuItem(
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.check_circle, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Set as Default'),
-                                  ],
-                                ),
-                                onTap: () {
-                                  _addressManager.setDefaultAddress(address['id']);
-                                },
-                              ),
-                            PopupMenuItem(
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.delete, size: 18, color: AppColors.error),
-                                  SizedBox(width: 8),
-                                  Text('Delete', style: TextStyle(color: AppColors.error)),
-                                ],
-                              ),
-                              onTap: () {
-                                _addressManager.deleteAddress(address['id']);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Address deleted'),
-                                    backgroundColor: AppColors.error,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                if (isDefault) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
+                                    child: const Text('Default',
+                                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.success)),
                                   ),
-                                );
-                              },
+                                ],
+                                const Spacer(),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                                  onPressed: () => _openEdit(addr),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                                  onPressed: () => _delete(addr),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 10),
+                            Text(addr['fullName'] ?? '',
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text)),
+                            const SizedBox(height: 4),
+                            if ((addr['phone'] ?? '').isNotEmpty)
+                              Text(addr['phone'], style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                            const SizedBox(height: 4),
+                            Text(addr['addressLine1'] ?? '', style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                            if ((addr['city'] ?? '').isNotEmpty)
+                              Text(addr['city'], style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
                           ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      address['name'],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.text,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      address['phone'],
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      address['address'],
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                    Text(
-                      address['city'],
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddAddressDialog,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: AppColors.white),
-        label: const Text(
-          'Add Address',
-          style: TextStyle(
-            color: AppColors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+      floatingActionButton: _addresses.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _openEdit(),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: AppColors.white),
+              label: const Text('Add Address', style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600)),
+            ),
     );
   }
 }

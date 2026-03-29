@@ -9,7 +9,19 @@ class PaymentMethodsScreen extends StatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
-  String _selectedId = 'mtn'; // default selected
+  String _selectedId = 'mtn';
+
+  // MTN / Airtel details
+  final _mtnNumberCtrl   = TextEditingController();
+  final _mtnNameCtrl     = TextEditingController();
+  final _airtelNumberCtrl = TextEditingController();
+  final _airtelNameCtrl  = TextEditingController();
+
+  // Visa details
+  final _cardNumberCtrl = TextEditingController();
+  final _cardNameCtrl   = TextEditingController();
+  final _cardExpiryCtrl = TextEditingController();
+  final _cardCvvCtrl    = TextEditingController();
 
   final List<Map<String, dynamic>> _methods = [
     {
@@ -18,7 +30,6 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       'subtitle': 'Pay with MTN MoMo',
       'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.jpg/320px-New-mtn-logo.jpg',
       'color': const Color(0xFFFFCC00),
-      'textColor': Colors.black,
     },
     {
       'id': 'airtel',
@@ -26,7 +37,6 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       'subtitle': 'Pay with Airtel Money',
       'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Airtel_logo_2010.svg/320px-Airtel_logo_2010.svg.png',
       'color': const Color(0xFFE40000),
-      'textColor': Colors.white,
     },
     {
       'id': 'visa',
@@ -34,16 +44,147 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       'subtitle': 'Credit or Debit card',
       'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/320px-Visa_Inc._logo.svg.png',
       'color': const Color(0xFF1A1F71),
-      'textColor': Colors.white,
     },
   ];
 
-  void _confirm() {
-    final selected = _methods.firstWhere((m) => m['id'] == _selectedId);
-    Navigator.pop(context, selected);
+  @override
+  void dispose() {
+    _mtnNumberCtrl.dispose(); _mtnNameCtrl.dispose();
+    _airtelNumberCtrl.dispose(); _airtelNameCtrl.dispose();
+    _cardNumberCtrl.dispose(); _cardNameCtrl.dispose();
+    _cardExpiryCtrl.dispose(); _cardCvvCtrl.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _dec(String label, IconData icon) => InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.lightGrey)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.lightGrey)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      );
+
+  Widget _detailsPanel() {
+    if (_selectedId == 'mtn') {
+      return _momoPanel('MTN MoMo', _mtnNumberCtrl, _mtnNameCtrl);
+    } else if (_selectedId == 'airtel') {
+      return _momoPanel('Airtel Money', _airtelNumberCtrl, _airtelNameCtrl);
+    } else if (_selectedId == 'visa') {
+      return _visaPanel();
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _momoPanel(String provider, TextEditingController numCtrl, TextEditingController nameCtrl) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$provider Details',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text)),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: numCtrl,
+            keyboardType: TextInputType.phone,
+            decoration: _dec('$provider Number', Icons.phone_outlined),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: nameCtrl,
+            decoration: _dec('Account Name', Icons.person_outline),
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            const Icon(Icons.info_outline, size: 14, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text('You will receive a payment prompt on this number.',
+                  style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _visaPanel() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Card Details',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text)),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _cardNumberCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 19,
+            decoration: _dec('Card Number', Icons.credit_card),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _cardNameCtrl,
+            decoration: _dec('Cardholder Name', Icons.person_outline),
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: TextFormField(
+                controller: _cardExpiryCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 5,
+                decoration: _dec('MM / YY', Icons.calendar_today),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _cardCvvCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 3,
+                obscureText: true,
+                decoration: _dec('CVV', Icons.lock_outline),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Row(children: [
+            const Icon(Icons.lock_outline, size: 14, color: AppColors.primary),
+            const SizedBox(width: 6),
+            const Expanded(
+              child: Text('Your card details are encrypted and secure.',
+                  style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  void _save() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${selected['name']} selected'),
+        content: Text('${_methods.firstWhere((m) => m['id'] == _selectedId)['name']} saved'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -65,25 +206,13 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2))],
             ),
             child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
           ),
         ),
-        title: const Text(
-          'Payment Methods',
-          style: TextStyle(
-            color: AppColors.text,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
+        title: const Text('Payment Methods',
+            style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20)),
       ),
       body: SafeArea(
         child: Column(
@@ -91,165 +220,112 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                'Choose how you want to pay',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.secondaryText,
-                ),
-              ),
+              child: Text('Select a payment method and enter your details',
+                  style: TextStyle(fontSize: 14, color: AppColors.secondaryText)),
             ),
-
             Expanded(
-              child: ListView.separated(
+              child: ListView(
                 padding: const EdgeInsets.all(20),
-                itemCount: _methods.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final method = _methods[index];
-                  final isSelected = _selectedId == method['id'];
-
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedId = method['id']),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.lightGrey,
-                          width: isSelected ? 2.5 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isSelected
-                                ? AppColors.primary.withValues(alpha: 0.12)
-                                : AppColors.black.withValues(alpha: 0.05),
-                            blurRadius: isSelected ? 20 : 10,
-                            offset: const Offset(0, 6),
+                children: [
+                  ..._methods.map((method) {
+                    final isSelected = _selectedId == method['id'];
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () => setState(() => _selectedId = method['id']),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected ? AppColors.primary : AppColors.lightGrey,
+                                width: isSelected ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isSelected
+                                      ? AppColors.primary.withValues(alpha: 0.12)
+                                      : AppColors.black.withValues(alpha: 0.05),
+                                  blurRadius: isSelected ? 16 : 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(children: [
+                                Container(
+                                  width: 64, height: 44,
+                                  decoration: BoxDecoration(
+                                    color: (method['color'] as Color).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: (method['color'] as Color).withValues(alpha: 0.3)),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Image.network(method['logoUrl'],
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) =>
+                                            Icon(Icons.payment, color: method['color'] as Color)),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(method['name'],
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: isSelected ? AppColors.primary : AppColors.text)),
+                                      Text(method['subtitle'],
+                                          style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                                    ],
+                                  ),
+                                ),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 22, height: 22,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected ? AppColors.primary : Colors.transparent,
+                                    border: Border.all(
+                                        color: isSelected ? AppColors.primary : AppColors.grey, width: 2),
+                                  ),
+                                  child: isSelected
+                                      ? const Icon(Icons.check, color: Colors.white, size: 13)
+                                      : null,
+                                ),
+                              ]),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            // Logo container
-                            Container(
-                              width: 72,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: (method['color'] as Color).withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: (method['color'] as Color).withValues(alpha: 0.35),
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Image.network(
-                                    method['logoUrl'],
-                                    fit: BoxFit.contain,
-                                    loadingBuilder: (_, child, progress) => progress == null
-                                        ? child
-                                        : Center(
-                                            child: SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: method['color'] as Color,
-                                              ),
-                                            ),
-                                          ),
-                                    errorBuilder: (_, __, ___) => Icon(
-                                      Icons.payment,
-                                      color: method['color'] as Color,
-                                      size: 28,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 16),
-
-                            // Name & subtitle
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    method['name'],
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? AppColors.primary : AppColors.text,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    method['subtitle'],
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.secondaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Radio indicator
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isSelected ? AppColors.primary : Colors.transparent,
-                                border: Border.all(
-                                  color: isSelected ? AppColors.primary : AppColors.grey,
-                                  width: 2,
-                                ),
-                              ),
-                              child: isSelected
-                                  ? const Icon(Icons.check, color: Colors.white, size: 14)
-                                  : null,
-                            ),
-                          ],
                         ),
-                      ),
-                    ),
-                  );
-                },
+                        // Inline detail fields when selected
+                        if (isSelected) _detailsPanel(),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }),
+                ],
               ),
             ),
-
-            // Confirm button
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 54,
                 child: ElevatedButton(
-                  onPressed: _confirm,
+                  onPressed: _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Confirm Payment Method',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: const Text('Save Payment Method',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),

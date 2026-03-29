@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/order_manager.dart';
@@ -79,7 +80,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
     }
   }
 
-  void _confirmOrder() {
+  void _confirmOrder() async {
     if (_selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -94,26 +95,39 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
     final subtotal = _cart.subtotal;
     final total = subtotal + _deliveryFee;
     final now = DateTime.now();
-    final orderId = 'ORD-${now.year}-${now.millisecondsSinceEpoch.toString().substring(7)}';
     final address = '${_selectedAddress!['fullName']}, ${_selectedAddress!['addressLine1']}, ${_selectedAddress!['city']}';
+    final uid = _userManager.userId ?? _authService.currentUser?.uid;
 
-    _orderManager.addOrder({
-      'id': orderId,
+    final orderData = {
+      'customerId': uid ?? '',
       'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+      'createdAt': FieldValue.serverTimestamp(),
       'status': 'Processing',
       'total': total,
-      'items': _cart.itemCount,
+      'subtotal': subtotal,
+      'deliveryFee': _deliveryFee,
+      'itemCount': _cart.itemCount,
       'products': List<Map<String, dynamic>>.from(_cart.cartItems.map((item) => {
         'name': item['name'], 'quantity': item['quantity'],
         'price': item['price'], 'image': item['image'] ?? '',
       })),
       'shippingAddress': address,
       'paymentMethod': _paymentLabel,
-      'subtotal': subtotal,
-      'deliveryFee': _deliveryFee,
-    });
+      'deliveryMethod': 'Standard (3–5 days)',
+    };
 
+    // Save to Firestore
+    try {
+      await FirebaseFirestore.instance.collection('orders').add(orderData);
+    } catch (_) {
+      // fallback — still proceed even if Firestore write fails
+    }
+
+    // Also keep in local OrderManager for session
+    _orderManager.addOrder({...orderData, 'id': 'ORD-${now.millisecondsSinceEpoch}'});
     _cart.clearCart();
+
+    if (!mounted) return;
     Navigator.pushReplacement(context, MaterialPageRoute(
       builder: (_) => OrderSuccess(
         subtotal: subtotal, deliveryFee: _deliveryFee, total: total,
