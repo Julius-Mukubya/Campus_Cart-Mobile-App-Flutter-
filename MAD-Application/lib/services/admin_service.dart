@@ -9,14 +9,22 @@ class AdminService {
       QuerySnapshot snapshot = await _firestore
           .collection('seller_approval_requests')
           .where('status', isEqualTo: 'pending')
-          .orderBy('requestedAt', descending: true)
           .get();
 
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         data['requestId'] = doc.id;
         return data;
       }).toList();
+
+      results.sort((a, b) {
+        final aTime = a['requestedAt'];
+        final bTime = b['requestedAt'];
+        if (aTime == null || bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+
+      return results;
     } catch (e) {
       print('Error fetching pending seller requests: $e');
       return [];
@@ -174,14 +182,22 @@ class AdminService {
       QuerySnapshot snapshot = await _firestore
           .collection('store_approval_requests')
           .where('status', isEqualTo: 'pending')
-          .orderBy('requestedAt', descending: true)
           .get();
 
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         data['requestId'] = doc.id;
         return data;
       }).toList();
+
+      results.sort((a, b) {
+        final aTime = a['requestedAt'];
+        final bTime = b['requestedAt'];
+        if (aTime == null || bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+
+      return results;
     } catch (e) {
       print('Error fetching pending store requests: $e');
       return [];

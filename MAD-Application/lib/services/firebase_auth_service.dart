@@ -85,7 +85,7 @@ class FirebaseAuthService {
     } catch (e) {
       return {
         'success': false,
-        'message': 'An error occurred. Please try again.',
+        'message': 'An error occurred: ${e.toString()}',
       };
     }
   }
@@ -108,16 +108,34 @@ class FirebaseAuthService {
           .get();
 
       if (!userDoc.exists) {
-        await signOut();
+        // User exists in Firebase Auth but not in Firestore
+        // Allow login and create a basic profile
+        final basicUserData = {
+          'userId': userCredential.user!.uid,
+          'email': email,
+          'name': userCredential.user!.displayName ?? email.split('@').first,
+          'phone': '',
+          'role': 'customer',
+          'isActive': true,
+          'staffType': null,
+          'storeId': null,
+        };
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          ...basicUserData,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
         return {
-          'success': false,
-          'message': 'User data not found. Please contact support.',
+          'success': true,
+          'message': 'Login successful!',
+          'user': userCredential.user,
+          'userData': basicUserData,
         };
       }
 
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-      // Check if user is active
+      // Check if user is active — treat null/missing as active
       if (userData['isActive'] == false) {
         await signOut();
         
@@ -154,7 +172,7 @@ class FirebaseAuthService {
     } catch (e) {
       return {
         'success': false,
-        'message': 'An error occurred. Please try again.',
+        'message': 'Sign in failed: ${e.toString()}',
       };
     }
   }

@@ -395,7 +395,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                           child: Center(
                             child: Icon(
-                              category['icon'],
+                              category['icon'] is IconData
+                                  ? category['icon'] as IconData
+                                  : Icons.category,
                               size: 50,
                               color: AppColors.primary,
                             ),
@@ -467,7 +469,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      category['icon'],
+                      category['icon'] is IconData
+                          ? category['icon'] as IconData
+                          : Icons.category,
                       size: 20,
                       color: AppColors.primary,
                     ),

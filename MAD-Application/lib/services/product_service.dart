@@ -300,7 +300,7 @@ class ProductService {
         return {
           'name': data['productName'] ?? data['name'] ?? 'Featured Product',
           'price': 'UGX ${(data['price'] ?? 0).toString()}',
-          'image': data['productImage'] ?? data['image'] ?? 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
+          'image': _extractImageUrl(data),
           'productId': doc.id,
         };
       }).toList();
@@ -375,7 +375,7 @@ class ProductService {
       {
         'title': 'Electronics',
         'description': 'Phones, Laptops & More',
-        'icon': 'devices',
+        'icon': Icons.devices,
         'color': const Color(0xFF4285F4),
         'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
         'productCount': 3,
@@ -383,7 +383,7 @@ class ProductService {
       {
         'title': 'Fashion',
         'description': 'Clothes, Shoes & Style',
-        'icon': 'checkroom',
+        'icon': Icons.checkroom,
         'color': const Color(0xFFE91E63),
         'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
         'productCount': 1,
@@ -391,7 +391,7 @@ class ProductService {
       {
         'title': 'Home',
         'description': 'Furniture & Decor',
-        'icon': 'home',
+        'icon': Icons.home,
         'color': const Color(0xFF4CAF50),
         'image': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
         'productCount': 1,
@@ -399,7 +399,7 @@ class ProductService {
       {
         'title': 'Sports',
         'description': 'Fitness & Outdoor',
-        'icon': 'sports_soccer',
+        'icon': Icons.sports_soccer,
         'color': const Color(0xFFFF9800),
         'image': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop',
         'productCount': 1,

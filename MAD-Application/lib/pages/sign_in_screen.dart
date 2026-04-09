@@ -49,11 +49,12 @@ class _SignInScreenState extends State<SignInScreen> {
       // Update user manager with the logged-in user's info
       final userManager = UserManager();
       userManager.updateProfile(
+        userId: result['user']?.uid,
         name: userData['name'] ?? 'User',
         email: userData['email'] ?? email,
         phone: userData['phone'] ?? '',
         role: userData['role'] ?? 'customer',
-        staffType: userData['staffType'], // Will be null for non-staff users
+        staffType: userData['staffType'],
       );
 
       // Show success message
@@ -63,8 +64,17 @@ class _SignInScreenState extends State<SignInScreen> {
       }
       _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
 
-      // Navigate to home
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      // Navigate based on role
+      final role = userData['role'] ?? 'customer';
+      if (role == 'seller') {
+        Navigator.pushNamedAndRemoveUntil(context, '/seller/dashboard', (route) => false);
+      } else if (role == 'staff') {
+        Navigator.pushNamedAndRemoveUntil(context, '/staff/dashboard', (route) => false);
+      } else if (role == 'admin') {
+        Navigator.pushNamedAndRemoveUntil(context, '/admin/dashboard', (route) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
     } else {
       _showErrorMessage(result['message']);
     }

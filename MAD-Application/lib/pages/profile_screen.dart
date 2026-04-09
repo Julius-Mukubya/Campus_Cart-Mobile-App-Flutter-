@@ -5,6 +5,7 @@ import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/order_manager.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
 import 'package:madpractical/pages/my_orders_screen.dart';
 import 'package:madpractical/pages/addresses_screen.dart';
 import 'package:madpractical/pages/edit_profile_screen.dart';
@@ -756,10 +757,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               Navigator.pop(context); // Close dialog
-                              // Clear user data and navigate to sign in screen
+                              // Sign out from Firebase Auth and clear local state
+                              await FirebaseAuthService().signOut();
                               _userManager.logout();
+                              if (!context.mounted) return;
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
                                 '/signin',

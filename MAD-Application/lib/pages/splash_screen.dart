@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/user_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,9 +18,38 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Wait then navigate to sign in
-    Timer(const Duration(milliseconds: 1800), () {
-      // Replace splash with sign in screen
-      Navigator.pushReplacementNamed(context, '/signin');
+    Timer(const Duration(milliseconds: 1800), () async {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final authService = FirebaseAuthService();
+        final userData = await authService.getUserData(user.uid);
+        if (!mounted) return;
+        if (userData != null) {
+          UserManager().updateProfile(
+            userId: user.uid,
+            name: userData['name'] ?? '',
+            email: userData['email'] ?? '',
+            phone: userData['phone'] ?? '',
+            role: userData['role'] ?? 'customer',
+            staffType: userData['staffType'],
+            storeId: userData['storeId'],
+          );
+          final role = userData['role'] ?? 'customer';
+          if (role == 'admin') {
+            Navigator.pushReplacementNamed(context, '/admin/dashboard');
+          } else if (role == 'seller') {
+            Navigator.pushReplacementNamed(context, '/seller/dashboard');
+          } else if (role == 'staff') {
+            Navigator.pushReplacementNamed(context, '/staff/dashboard');
+          } else {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        } else {
+          Navigator.pushReplacementNamed(context, '/signin');
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, '/signin');
+      }
     });
   }
 

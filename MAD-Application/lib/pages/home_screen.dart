@@ -657,40 +657,41 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               
               // Discount Badge
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.accent,
-                        AppColors.accent.withValues(alpha: 0.8),
+              if (product['discount'] != null && product['discount'].toString().isNotEmpty)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.accent,
+                          AppColors.accent.withValues(alpha: 0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                    child: Text(
+                      product['discount'],
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    product['discount'],
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ),
               
               // Favorite Button
               Positioned(
@@ -1057,7 +1058,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             child: Icon(
-                              category['icon'],
+                              category['icon'] is IconData
+                                  ? category['icon'] as IconData
+                                  : _getIconFromString(category['icon'].toString()),
                               color: isSelected 
                                   ? AppColors.primary
                                   : AppColors.text,

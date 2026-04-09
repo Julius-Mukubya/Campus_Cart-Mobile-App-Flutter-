@@ -506,7 +506,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         // Unlock the corresponding delivery stop
                         final deliveryStop = _deliveryStops.firstWhere(
                           (s) => s['orderId'] == stop['orderId'] && s['type'] == 'delivery',
-                          orElse: () => {},
+                          orElse: () => <String, dynamic>{},
                         );
                         if (deliveryStop.isNotEmpty) {
                           deliveryStop['status'] = 'pending';

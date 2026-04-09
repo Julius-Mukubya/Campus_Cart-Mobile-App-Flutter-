@@ -39,7 +39,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
       _addresses = valid;
       _loading = false;
       final def = valid.firstWhere((a) => a['isDefault'] == true,
-          orElse: () => valid.isNotEmpty ? valid.first : {});
+          orElse: () => valid.isNotEmpty ? valid.first : <String, dynamic>{});
       if (def.isNotEmpty) _selectedId = def['addressId'];
     });
   }

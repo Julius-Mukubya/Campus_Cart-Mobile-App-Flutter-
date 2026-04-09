@@ -90,7 +90,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // Auto-select default address and prefill
     final defaultAddr = addresses.firstWhere(
       (a) => a['isDefault'] == true,
-      orElse: () => addresses.isNotEmpty ? addresses.first : {},
+      orElse: () => addresses.isNotEmpty ? addresses.first : <String, dynamic>{},
     );
     if (defaultAddr.isNotEmpty) {
       _selectAddress(defaultAddr);

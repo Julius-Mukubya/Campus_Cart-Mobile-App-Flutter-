@@ -63,6 +63,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // Update user manager
       final userManager = UserManager();
       userManager.updateProfile(
+        userId: result['user']?.uid,
         name: name,
         email: email,
         phone: '',
