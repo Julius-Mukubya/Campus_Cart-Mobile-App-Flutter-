@@ -19,14 +19,14 @@ class ProductService {
       }
 
       // Log a sample category
-      QuerySnapshot categorySnapshot = await _firestore.collection('categories').limit(1).get();
-      if (categorySnapshot.docs.isNotEmpty) {
-        final data = categorySnapshot.docs.first.data() as Map<String, dynamic>;
-        print('=== SAMPLE CATEGORY FIELDS ===');
-        data.forEach((key, value) => print('  "$key": $value'));
-        print('==============================');
-      } else {
-        print('No documents found in categories collection');
+      QuerySnapshot categorySnapshot = await _firestore.collection('categories').get();
+      print('=== CATEGORIES: ${categorySnapshot.docs.length} docs ===');
+      for (final doc in categorySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        print('  doc.id="${doc.id}" keys=${data.keys.toList()} name=${data['name'] ?? data['categoryName'] ?? data['title'] ?? 'NO NAME FIELD'}');
+      }
+      if (categorySnapshot.docs.isEmpty) {
+        print('*** categories collection is empty or permission denied ***');
       }
     } catch (e) {
       print('Firebase connection error: $e');
@@ -192,23 +192,16 @@ class ProductService {
 
       print('Found ${categorySnapshot.docs.length} categories in Firebase');
 
-      // Count products per category ID
+      // Count products per category
+      final Map<String, int> countByName = {};
       final Map<String, int> countById = {};
       for (final doc in productSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final catId = (data['categoryId'] ?? data['category'] ?? '').toString();
-        if (catId.isNotEmpty) {
-          countById[catId] = (countById[catId] ?? 0) + 1;
-        }
+        final catId = (data['categoryId'] ?? '').toString();
+        final catName = (data['category'] ?? '').toString();
+        if (catId.isNotEmpty) countById[catId] = (countById[catId] ?? 0) + 1;
+        if (catName.isNotEmpty) countByName[catName] = (countByName[catName] ?? 0) + 1;
       }
-
-      print('=== PRODUCT COUNTS BY CATEGORY ID ===');
-      countById.forEach((id, count) => print('  categoryId "$id": $count products'));
-      print('=== CATEGORY DOCUMENT IDs ===');
-      for (final doc in categorySnapshot.docs) {
-        print('  doc.id "${doc.id}"');
-      }
-      print('=====================================');
 
       final categoryMeta = {
         'Electronics':     {'icon': 'devices',              'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop'},
@@ -223,26 +216,44 @@ class ProductService {
         'Office Supplies': {'icon': 'business_center',      'image': 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400&h=400&fit=crop'},
       };
 
-      return categorySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        final name = (data['name'] ?? data['categoryName'] ?? data['title'] ?? 'Unknown').toString();
-        final description = (data['description'] ?? data['desc'] ?? '').toString();
-        final productCount = countById[doc.id] ?? 0;
+      // If categories collection has documents, use them
+      if (categorySnapshot.docs.isNotEmpty) {
+        return categorySnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final name = (data['name'] ?? data['categoryName'] ?? data['title'] ?? 'Unknown').toString();
+          final description = (data['description'] ?? data['desc'] ?? '').toString();
+          final productCount = countById[doc.id] ?? countByName[name] ?? 0;
+          final meta = categoryMeta[name];
+          final iconStr = meta?['icon'] ?? 'category';
+          final image = _extractImageUrl(data) != 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
+              ? _extractImageUrl(data)
+              : (meta?['image'] ?? 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop');
+
+          return {
+            'categoryId': doc.id,
+            'title': name,
+            'description': description,
+            'icon': _getIconData(iconStr),
+            'image': image,
+            'productCount': productCount,
+            'color': const Color(0xFF1A73E8),
+          };
+        }).toList();
+      }
+
+      // categories collection is empty — derive from products
+      print('No categories collection found, deriving from products...');
+      return countByName.entries.map((entry) {
+        final name = entry.key;
         final meta = categoryMeta[name];
         final iconStr = meta?['icon'] ?? 'category';
-        final image = _extractImageUrl(data).isNotEmpty && _extractImageUrl(data) != 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
-            ? _extractImageUrl(data)
-            : (meta?['image'] ?? 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop');
-
-        print('Category "$name" (${doc.id}): $productCount products');
-
         return {
-          'categoryId': doc.id,
+          'categoryId': name.toLowerCase().replaceAll(' ', '_'),
           'title': name,
-          'description': description,
+          'description': meta != null ? '' : 'Browse $name',
           'icon': _getIconData(iconStr),
-          'image': image,
-          'productCount': productCount,
+          'image': meta?['image'] ?? 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
+          'productCount': entry.value,
           'color': const Color(0xFF1A73E8),
         };
       }).toList();

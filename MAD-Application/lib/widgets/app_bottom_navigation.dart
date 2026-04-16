@@ -22,12 +22,14 @@ class AppBottomNavigation extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.grey,
+        unselectedItemColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSecondaryText
+            : AppColors.grey,
         selectedFontSize: 13,
         unselectedFontSize: 13,
         iconSize: 26,
         elevation: 8,
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.getCards(context),
         selectedLabelStyle: const TextStyle(height: 1.6),
         unselectedLabelStyle: const TextStyle(height: 1.6),
         onTap: (index) {

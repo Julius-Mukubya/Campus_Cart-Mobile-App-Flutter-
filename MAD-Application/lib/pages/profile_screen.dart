@@ -6,6 +6,8 @@ import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/order_manager.dart';
 import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/pages/my_orders_screen.dart';
 import 'package:madpractical/pages/addresses_screen.dart';
 import 'package:madpractical/pages/edit_profile_screen.dart';
@@ -303,6 +305,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAppearanceSection() {
+    final settings = AppSettings();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.getSurface(context),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.getText(context))),
+          ),
+
+          // Dark mode toggle
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.indigo.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.dark_mode_outlined, color: Colors.indigo, size: 20),
+            ),
+            title: Text('Dark Mode', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.getText(context))),
+            subtitle: Text(settings.isDark ? 'Dark theme enabled' : 'Light theme enabled',
+                style: TextStyle(fontSize: 12, color: AppColors.getSecondaryText(context))),
+            trailing: Switch(
+              value: settings.isDark,
+              activeColor: AppColors.primary,
+              onChanged: (_) async {
+                await settings.toggleTheme();
+                setState(() {});
+              },
+            ),
+          ),
+
+          Divider(height: 1, color: isDark ? AppColors.darkSecondaryText.withValues(alpha: 0.2) : AppColors.lightGrey),
+
+          // Language selector
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.teal.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.language, color: Colors.teal, size: 20),
+            ),
+            title: Text('Language', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.getText(context))),
+            subtitle: Text(
+              AppSettings.supportedLanguages
+                  .firstWhere((l) => l['code'] == settings.locale.languageCode,
+                      orElse: () => {'name': 'English'})['name']!,
+              style: TextStyle(fontSize: 12, color: AppColors.getSecondaryText(context)),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: isDark ? AppColors.darkSurface : AppColors.secondary, borderRadius: BorderRadius.circular(8)),
+              child: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.getText(context)),
+            ),
+            onTap: () => _showLanguagePicker(settings),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguagePicker(AppSettings settings) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 40, height: 4,
+                decoration: BoxDecoration(color: AppColors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 20),
+            const Text('Select Language', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.text)),
+            const SizedBox(height: 16),
+            ...AppSettings.supportedLanguages.map((lang) {
+              final isSelected = settings.locale.languageCode == lang['code'];
+              return ListTile(
+                leading: Icon(Icons.language, color: isSelected ? AppColors.primary : AppColors.grey),
+                title: Text(lang['name']!, style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? AppColors.primary : AppColors.text,
+                )),
+                trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+                onTap: () async {
+                  await settings.setLanguage(lang['code']!);
+                  setState(() {});
+                  if (mounted) Navigator.pop(context);
+                },
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 
@@ -718,9 +831,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               // Settings Section
               _buildMenuSection('Settings', settingsItems),
-              
+
               const SizedBox(height: 20),
-              
+
+              // Appearance Section
+              _buildAppearanceSection(),
+
+              const SizedBox(height: 20),
+
               // Help & Support Section
               _buildMenuSection('Help & Support', helpSupportItems),
               
@@ -761,6 +879,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.pop(context); // Close dialog
                               // Sign out from Firebase Auth and clear local state
                               await FirebaseAuthService().signOut();
+                              await PreferencesService.clearUser();
                               _userManager.logout();
                               if (!context.mounted) return;
                               Navigator.pushNamedAndRemoveUntil(

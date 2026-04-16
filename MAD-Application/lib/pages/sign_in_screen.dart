@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/firebase_auth_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -57,6 +58,18 @@ class _SignInScreenState extends State<SignInScreen> {
         staffType: userData['staffType'],
       );
 
+      // Persist session to SharedPreferences
+      await PreferencesService.saveUser(
+        userId: result['user']?.uid ?? '',
+        name: userData['name'] ?? 'User',
+        email: userData['email'] ?? email,
+        phone: userData['phone'] ?? '',
+        role: userData['role'] ?? 'customer',
+        staffType: userData['staffType'],
+        storeId: userData['storeId'],
+        profileImage: userData['profileImage'] ?? '',
+      );
+
       // Show success message
       String roleDisplay = userData['role'] ?? 'customer';
       if (userData['role'] == 'staff' && userData['staffType'] != null) {
@@ -64,17 +77,8 @@ class _SignInScreenState extends State<SignInScreen> {
       }
       _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
 
-      // Navigate based on role
-      final role = userData['role'] ?? 'customer';
-      if (role == 'seller') {
-        Navigator.pushNamedAndRemoveUntil(context, '/seller/dashboard', (route) => false);
-      } else if (role == 'staff') {
-        Navigator.pushNamedAndRemoveUntil(context, '/staff/dashboard', (route) => false);
-      } else if (role == 'admin') {
-        Navigator.pushNamedAndRemoveUntil(context, '/admin/dashboard', (route) => false);
-      } else {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      }
+      // Always navigate to home screen after login
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } else {
       _showErrorMessage(result['message']);
     }
@@ -106,7 +110,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(

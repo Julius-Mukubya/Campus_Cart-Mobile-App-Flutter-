@@ -42,16 +42,43 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       if (sellerId != null) {
         final storeData = await _sellerService.getSellerStore(sellerId);
         if (storeData != null) {
+          // Debug: log all fields to find the address field name
+          print('=== STORE DATA FIELDS ===');
+          storeData.forEach((key, value) => print('  "$key": $value (${value.runtimeType})'));
+          print('=========================');
+          // Handle both field name variants (storeXxx vs plain xxx)
+          String address = '';
+          final rawAddress = storeData['storeAddress'] ?? storeData['address'];
+          if (rawAddress is String) {
+            address = rawAddress;
+          } else if (rawAddress is Map) {
+            // address is a map — join the parts into a readable string
+            final parts = [
+              rawAddress['addressLine1'],
+              rawAddress['addressLine2'],
+              rawAddress['city'],
+              rawAddress['state'],
+              rawAddress['postalCode'],
+            ].where((p) => p != null && p.toString().isNotEmpty).toList();
+            address = parts.join(', ');
+          }
+
           setState(() {
             _storeId = storeData['storeId'];
-            _storeNameController.text = storeData['storeName'] ?? '';
-            _descriptionController.text = storeData['storeDescription'] ?? '';
-            _phoneController.text = storeData['storePhone'] ?? '';
-            _emailController.text = storeData['storeEmail'] ?? '';
-            _addressController.text = storeData['storeAddress'] ?? '';
-            _selectedCategory = storeData['storeCategory'] ?? 'General Store';
-            _isOpen = storeData['isActive'] ?? true;
-            _isStoreVerified = storeData['isVerified'] ?? false;
+            _storeNameController.text =
+                storeData['storeName'] ?? storeData['name'] ?? '';
+            _descriptionController.text =
+                storeData['storeDescription'] ?? storeData['description'] ?? '';
+            _phoneController.text =
+                storeData['storePhone'] ?? storeData['phone'] ?? '';
+            _emailController.text =
+                storeData['storeEmail'] ?? storeData['email'] ?? '';
+            _addressController.text = address.toString();
+            _selectedCategory =
+                storeData['storeCategory'] ?? storeData['category'] ?? 'General Store';
+            _isOpen = storeData['isActive'] ?? storeData['isOpen'] ?? true;
+            _isStoreVerified = storeData['isVerified'] == true ||
+                (storeData['status'] ?? '').toString().toLowerCase() == 'approved';
           });
         }
       }

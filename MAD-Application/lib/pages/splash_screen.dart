@@ -34,16 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
             staffType: userData['staffType'],
             storeId: userData['storeId'],
           );
-          final role = userData['role'] ?? 'customer';
-          if (role == 'admin') {
-            Navigator.pushReplacementNamed(context, '/admin/dashboard');
-          } else if (role == 'seller') {
-            Navigator.pushReplacementNamed(context, '/seller/dashboard');
-          } else if (role == 'staff') {
-            Navigator.pushReplacementNamed(context, '/staff/dashboard');
-          } else {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
+          Navigator.pushReplacementNamed(context, '/home');
         } else {
           Navigator.pushReplacementNamed(context, '/signin');
         }

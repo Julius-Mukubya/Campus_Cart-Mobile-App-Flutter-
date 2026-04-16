@@ -8,6 +8,7 @@ class SellerService {
   // Get seller's store information
   Future<Map<String, dynamic>?> getSellerStore(String sellerId) async {
     try {
+      // First try querying by sellerId field
       QuerySnapshot snapshot = await _firestore
           .collection('stores')
           .where('sellerId', isEqualTo: sellerId)
@@ -19,6 +20,21 @@ class SellerService {
         data['storeId'] = snapshot.docs.first.id;
         return data;
       }
+
+      // Fallback: check if user document has a storeId and fetch directly
+      final userDoc = await _firestore.collection('users').doc(sellerId).get();
+      if (userDoc.exists) {
+        final storeId = (userDoc.data() as Map<String, dynamic>)['storeId'];
+        if (storeId != null && storeId.toString().isNotEmpty) {
+          final storeDoc = await _firestore.collection('stores').doc(storeId).get();
+          if (storeDoc.exists) {
+            Map<String, dynamic> data = storeDoc.data() as Map<String, dynamic>;
+            data['storeId'] = storeDoc.id;
+            return data;
+          }
+        }
+      }
+
       return null;
     } catch (e) {
       print('Error fetching seller store: $e');
@@ -271,7 +287,85 @@ class SellerService {
     }
   }
 
-  // Get available product categories
+  // Get seller earnings summary and payout history
+  Future<Map<String, dynamic>> getSellerEarnings(String sellerId) async {
+    try {
+      // Get all delivered orders for this seller
+      final ordersSnap = await _firestore
+          .collection('orders')
+          .where('sellerId', isEqualTo: sellerId)
+          .get();
+
+      double totalEarnings = 0;
+      double availableBalance = 0;
+      final List<Map<String, dynamic>> recentOrders = [];
+
+      for (final doc in ordersSnap.docs) {
+        final data = doc.data();
+        final status = (data['status'] ?? '').toString().toLowerCase();
+        final amount = (data['totalAmount'] ?? data['total'] ?? 0).toDouble();
+        totalEarnings += amount;
+        if (status == 'delivered') availableBalance += amount;
+        recentOrders.add({...data, 'orderId': doc.id});
+      }
+
+      // Get payout history from payouts subcollection or top-level collection
+      final payoutsSnap = await _firestore
+          .collection('payouts')
+          .where('sellerId', isEqualTo: sellerId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      double totalPayouts = 0;
+      final List<Map<String, dynamic>> payouts = payoutsSnap.docs.map((doc) {
+        final data = doc.data();
+        totalPayouts += (data['amount'] ?? 0).toDouble();
+        return {...data, 'payoutId': doc.id};
+      }).toList();
+
+      return {
+        'totalEarnings': totalEarnings,
+        'totalPayouts': totalPayouts,
+        'availableBalance': availableBalance - totalPayouts,
+        'payouts': payouts,
+        'orderCount': ordersSnap.docs.length,
+      };
+    } catch (e) {
+      print('Error fetching seller earnings: $e');
+      return {
+        'totalEarnings': 0.0,
+        'totalPayouts': 0.0,
+        'availableBalance': 0.0,
+        'payouts': <Map<String, dynamic>>[],
+        'orderCount': 0,
+      };
+    }
+  }
+
+  // Submit a payout request
+  Future<Map<String, dynamic>> requestPayout({
+    required String sellerId,
+    required double amount,
+    required String method,
+    required String accountNumber,
+    required String accountName,
+  }) async {
+    try {
+      await _firestore.collection('payouts').add({
+        'sellerId': sellerId,
+        'amount': amount,
+        'method': method,
+        'accountNumber': accountNumber,
+        'accountName': accountName,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return {'success': true, 'message': 'Payout request submitted!'};
+    } catch (e) {
+      print('Error requesting payout: $e');
+      return {'success': false, 'message': 'Failed to submit payout request.'};
+    }
+  }
   List<String> getProductCategories() {
     return [
       'Electronics',

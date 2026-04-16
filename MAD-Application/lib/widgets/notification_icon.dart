@@ -31,7 +31,7 @@ class NotificationIcon extends StatelessWidget {
         margin: const EdgeInsets.only(right: 16),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -47,13 +47,13 @@ class NotificationIcon extends StatelessWidget {
                 backgroundColor: AppColors.error,
                 child: Icon(
                   Icons.notifications_outlined,
-                  color: AppColors.text,
+                  color: Theme.of(context).iconTheme.color,
                   size: size,
                 ),
               )
             : Icon(
                 Icons.notifications_outlined,
-                color: AppColors.text,
+                color: Theme.of(context).iconTheme.color,
                 size: size,
               ),
       ),

@@ -173,9 +173,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
           height: MediaQuery.of(context).size.height * 0.5,
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: AppColors.getCards(context),
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
@@ -335,9 +335,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getBackground(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        border: Theme.of(context).brightness == Brightness.dark
+            ? Border.all(color: const Color(0xFF2A2A2A))
+            : null,
+        boxShadow: Theme.of(context).brightness == Brightness.dark ? [] : [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 20,
@@ -491,10 +494,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   // Category Name
                   Text(
                     category['title'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: AppColors.text,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       height: 1.2,
                     ),
                     maxLines: 1,
@@ -508,7 +511,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     category['description'],
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.secondaryText,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                       height: 1.3,
                     ),
                     maxLines: 2,
@@ -654,9 +657,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: AppColors.getCards(context),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.lightGrey),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                         ),
                         child: Row(
                           children: [
@@ -688,11 +691,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: AppColors.getCards(context),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.lightGrey),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                         ),
-                        child: const Icon(Icons.tune, color: AppColors.text),
+                        child: Icon(Icons.tune, color: Theme.of(context).iconTheme.color),
                       ),
                     ),
                   ],
@@ -917,7 +920,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     return Container(
       height: 240,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getCards(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -1110,7 +1113,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: AppColors.text.withValues(alpha: 0.9),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -1131,9 +1134,9 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       const SizedBox(width: 4),
                       Text(
                         '${product['rating']}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const Spacer(),

@@ -263,9 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Flexible(
             child: Text(
               product['price'],
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 8,
-                color: AppColors.secondaryText,
+                color: AppColors.getSecondaryText(context),
                 decoration: TextDecoration.lineThrough,
               ),
               maxLines: 1,
@@ -309,9 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
           height: MediaQuery.of(context).size.height * 0.75,
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: AppColors.getSurface(context),
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
@@ -564,12 +564,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 260, // Increased from 240 to accommodate content
+      height: 260,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getBackground(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        border: isDark ? Border.all(color: const Color(0xFF2A2A2A), width: 1) : null,
+        boxShadow: isDark ? [] : [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 20,
@@ -719,7 +721,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.9),
+                      color: AppColors.getSurface(context).withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -760,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: AppColors.text.withValues(alpha: 0.9),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       height: 1.2,
                     ),
                     maxLines: 2,
@@ -768,7 +770,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 4), // Reduced spacing
+                const SizedBox(height: 4),
                 
                 // Rating and Cart Icon Row
                 Row(
@@ -781,9 +783,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 4),
                     Text(
                       '${product['rating']}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.text,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const Spacer(),
@@ -836,9 +838,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.getBackground(context),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text.rich(
@@ -868,9 +870,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(context, '/customer/orders');
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.shopping_bag_outlined,
-              color: AppColors.text,
+              color: Theme.of(context).iconTheme.color,
             ),
             tooltip: 'My Orders',
           ),
@@ -887,14 +889,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? Badge(
                     label: Text('${_notificationManager.unreadCount}'),
                     backgroundColor: AppColors.error,
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_outlined,
-                      color: AppColors.text,
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.notifications_outlined,
-                    color: AppColors.text,
+                    color: Theme.of(context).iconTheme.color,
                   ),
           ),
         ],
@@ -961,7 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Fixed Search Bar and Categories
           Container(
-            color: AppColors.background,
+            color: AppColors.getBackground(context),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,21 +974,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: AppColors.getCards(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.lightGrey),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Padding(
-                          padding: EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(12),
                           child: Icon(Icons.search, color: AppColors.grey),
                         ),
                         Expanded(
                           child: TextField(
                             decoration: InputDecoration(
                               hintText: 'Search for Product',
-                              hintStyle: TextStyle(color: AppColors.grey),
+                              hintStyle: const TextStyle(color: AppColors.grey),
                               border: InputBorder.none,
                             ),
                           ),
@@ -1001,11 +1003,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: AppColors.getCards(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.lightGrey),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
-                    child: const Icon(Icons.tune, color: AppColors.text),
+                    child: Icon(Icons.tune, color: Theme.of(context).iconTheme.color),
                   ),
                 ),
               ],
@@ -1047,13 +1049,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 50,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isSelected 
-                                  ? AppColors.primary.withValues(alpha: 0.1)
-                                  : Colors.transparent,
+                              color: isSelected
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : AppColors.getCards(context),
                               border: Border.all(
-                                color: isSelected 
+                                color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.lightGrey,
+                                    : Theme.of(context).dividerColor,
                                 width: 2,
                               ),
                             ),
@@ -1061,9 +1063,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               category['icon'] is IconData
                                   ? category['icon'] as IconData
                                   : _getIconFromString(category['icon'].toString()),
-                              color: isSelected 
+                              color: isSelected
                                   ? AppColors.primary
-                                  : AppColors.text,
+                                  : Theme.of(context).iconTheme.color,
                               size: 24,
                             ),
                           ),
@@ -1072,10 +1074,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             category['title'],
                             style: TextStyle(
                               fontSize: 12,
-                              color: isSelected 
+                              color: isSelected
                                   ? AppColors.primary
-                                  : AppColors.text,
-                              fontWeight: isSelected 
+                                  : Theme.of(context).textTheme.bodyLarge?.color,
+                              fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.normal,
                             ),

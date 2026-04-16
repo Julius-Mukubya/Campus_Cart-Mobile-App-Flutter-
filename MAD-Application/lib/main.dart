@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -53,12 +54,33 @@ import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/pages/debug_firebase_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/app_settings.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize SharedPreferences
+  await PreferencesService.init();
+
+  // Load saved theme and language
+  AppSettings().loadFromPrefs();
+
+  // Restore user session from SharedPreferences into UserManager
+  if (PreferencesService.isLoggedIn) {
+    UserManager().updateProfile(
+      userId: PreferencesService.userId,
+      name: PreferencesService.userName,
+      email: PreferencesService.userEmail,
+      phone: PreferencesService.userPhone,
+      role: PreferencesService.userRole,
+      staffType: PreferencesService.staffType,
+      storeId: PreferencesService.storeId,
+    );
+  }
 
   // Initialize App Check — uses debug provider in debug builds
   await FirebaseAppCheck.instance.activate(
@@ -76,28 +98,58 @@ void main() async{
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Campus Cart',
-      debugShowCheckedModeBanner: false,
-      // Theme Configuration
-      theme: ThemeData(
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final AppSettings _settings = AppSettings();
+
+  @override
+  void initState() {
+    super.initState();
+    _settings.addListener(_onSettingsChanged);
+  }
+
+  @override
+  void dispose() {
+    _settings.removeListener(_onSettingsChanged);
+    super.dispose();
+  }
+
+  void _onSettingsChanged() => setState(() {});
+
+  ThemeData _buildLightTheme() => ThemeData(
         brightness: Brightness.light,
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         cardColor: AppColors.cards,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.text),
-          bodyMedium: TextStyle(color: AppColors.secondaryText),
+        colorScheme: ColorScheme.light(
+          primary: AppColors.primary,
+          secondary: AppColors.accent,
+          surface: AppColors.cards,
+          error: AppColors.error,
         ),
-        appBarTheme: const AppBarTheme(
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color(0xFF212121)),
+          bodyMedium: TextStyle(color: Color(0xFF616161)),
+          titleLarge: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.bold),
+          titleMedium: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.w600),
+          titleSmall: TextStyle(color: Color(0xFF616161)),
+          labelLarge: TextStyle(color: Color(0xFF212121)),
+        ),
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.background,
-          foregroundColor: AppColors.text,
+          foregroundColor: const Color(0xFF212121),
           elevation: 0,
+          titleTextStyle: const TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -105,8 +157,150 @@ class MyApp extends StatelessWidget {
             foregroundColor: AppColors.white,
           ),
         ),
-      ),
-      themeMode: ThemeMode.light, // Use light theme for now
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? AppColors.primary : AppColors.grey),
+        ),
+      );
+
+  ThemeData _buildDarkTheme() => ThemeData(
+        brightness: Brightness.dark,
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.darkBackground,
+        cardColor: AppColors.darkCards,
+        dialogBackgroundColor: AppColors.darkCards,
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.primary,
+          secondary: AppColors.accent,
+          surface: AppColors.darkCards,
+          error: AppColors.error,
+          onSurface: AppColors.darkText,
+          onBackground: AppColors.darkText,
+          onPrimary: AppColors.white,
+          outline: Color(0xFF3A3A3A),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: AppColors.darkText),
+          bodyMedium: TextStyle(color: AppColors.darkSecondaryText),
+          titleLarge: TextStyle(color: AppColors.darkText, fontWeight: FontWeight.bold),
+          titleMedium: TextStyle(color: AppColors.darkText, fontWeight: FontWeight.w600),
+          titleSmall: TextStyle(color: AppColors.darkSecondaryText),
+          labelLarge: TextStyle(color: AppColors.darkText),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.darkBackground,
+          foregroundColor: AppColors.darkText,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.darkText),
+          titleTextStyle: TextStyle(
+            color: AppColors.darkText,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: AppColors.darkCards,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.darkSecondaryText,
+          elevation: 8,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.darkSurface,
+          labelStyle: const TextStyle(color: AppColors.darkSecondaryText),
+          hintStyle: const TextStyle(color: AppColors.darkSecondaryText),
+          prefixIconColor: AppColors.darkSecondaryText,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF3A3A3A)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.white,
+            elevation: 0,
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.primary),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColors.darkText),
+        dividerColor: const Color(0xFF2A2A2A),
+        dividerTheme: const DividerThemeData(color: Color(0xFF2A2A2A), thickness: 1),
+        cardTheme: CardThemeData(
+          color: AppColors.darkCards,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF2A2A2A)),
+          ),
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? AppColors.primary : AppColors.darkSecondaryText),
+          trackColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected)
+                  ? AppColors.primary.withOpacity(0.4)
+                  : const Color(0xFF3A3A3A)),
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? AppColors.primary : Colors.transparent),
+          side: const BorderSide(color: AppColors.darkSecondaryText),
+        ),
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: AppColors.darkSurface,
+          contentTextStyle: TextStyle(color: AppColors.darkText),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: AppColors.primary,
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Campus Cart',
+      debugShowCheckedModeBanner: false,
+      theme: _buildLightTheme(),
+      darkTheme: _buildDarkTheme(),
+      themeMode: _settings.themeMode,
+      locale: _settings.locale,
+      supportedLocales: AppSettings.supportedLanguages
+          .map((l) => Locale(l['code']!))
+          .toList(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (context, child) {
+        // Wrap entire app so all Text widgets inherit the correct color for the theme
+        final isDark = _settings.isDark;
+        return DefaultTextStyle(
+          style: TextStyle(
+            color: isDark ? AppColors.darkText : const Color(0xFF212121),
+            fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
+          ),
+          child: child!,
+        );
+      },
       // Start on a splash screen which will redirect to sign in
       initialRoute: '/splash',
       onGenerateRoute: (settings) {
@@ -124,6 +318,7 @@ class MyApp extends StatelessWidget {
         if (settings.name?.startsWith('/admin/') == true && userRole != 'admin') {
           return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
         }
+        
         
         // Handle product details route
         if (settings.name == '/product_details' || settings.name == '/product-details') {
