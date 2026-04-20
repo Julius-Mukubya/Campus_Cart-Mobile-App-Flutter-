@@ -79,7 +79,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -100,10 +100,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 Expanded(
                   child: Text(
                     '#${order['id'].toString().substring(0, 8).toUpperCase()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.text),
+                        color: Theme.of(context).textTheme.bodyLarge?.color),
                   ),
                 ),
                 Container(
@@ -131,15 +131,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     size: 15, color: AppColors.grey),
                 const SizedBox(width: 6),
                 Text('${order['items']} item(s)',
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.secondaryText)),
+                    style: TextStyle(
+                        fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
                 const SizedBox(width: 16),
                 const Icon(Icons.calendar_today_outlined,
                     size: 15, color: AppColors.grey),
                 const SizedBox(width: 6),
                 Text(order['date'],
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.secondaryText)),
+                    style: TextStyle(
+                        fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
               ],
             ),
 
@@ -155,8 +155,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(order['shippingAddress'],
-                        style: const TextStyle(
-                            fontSize: 13, color: AppColors.secondaryText),
+                        style: TextStyle(
+                            fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ),
@@ -230,10 +230,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         height: MediaQuery.of(context).size.height * 0.65,
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: AppColors.getSurface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           children: [
@@ -253,10 +252,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   Expanded(
                     child: Text(
                       'Order #${order['id'].toString().substring(0, 8).toUpperCase()}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text),
+                          color: Theme.of(context).textTheme.bodyLarge?.color),
                     ),
                   ),
                   IconButton(
@@ -348,15 +347,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             SizedBox(
               width: 100,
               child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.secondaryText)),
+                  style: TextStyle(
+                      fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
             ),
             Expanded(
               child: Text(value,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.text)),
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
             ),
           ],
         ),
@@ -374,7 +373,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -412,13 +411,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     label: Text(f),
                     selected: sel,
                     onSelected: (_) => setState(() => _selectedFilter = f),
-                    backgroundColor: AppColors.white,
+                    backgroundColor: AppColors.getCards(context),
                     selectedColor: AppColors.primary.withValues(alpha: 0.1),
                     labelStyle: TextStyle(
-                        color: sel ? AppColors.primary : AppColors.text,
+                        color: sel ? AppColors.primary : Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: sel ? FontWeight.w600 : FontWeight.normal),
                     side: BorderSide(
-                        color: sel ? AppColors.primary : AppColors.lightGrey),
+                        color: sel ? AppColors.primary : Theme.of(context).dividerColor),
                   ),
                 );
               },
@@ -456,17 +455,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                           all.isEmpty
                               ? 'No orders yet'
                               : 'No $_selectedFilter orders',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.secondaryText),
+                              color: Theme.of(context).textTheme.bodyMedium?.color),
                         ),
                         if (all.isEmpty) ...[
                           const SizedBox(height: 8),
-                          const Text('Your orders will appear here',
+                          Text('Your orders will appear here',
                               style: TextStyle(
                                   fontSize: 14,
-                                  color: AppColors.secondaryText)),
+                                  color: Theme.of(context).textTheme.bodyMedium?.color)),
                         ],
                       ],
                     ),

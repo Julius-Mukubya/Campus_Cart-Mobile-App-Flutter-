@@ -242,7 +242,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -262,8 +262,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         title: Text(
           widget.product['name'] ?? 'Product Name',
-          style: const TextStyle(
-            color: AppColors.text,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -278,9 +278,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.lightGrey),
+                border: Border.all(color: Theme.of(context).dividerColor),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black.withValues(alpha: 0.05),
@@ -617,14 +617,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: AppColors.getSurface(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.lightGrey),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
                           'No reviews yet. Be the first to review!',
-                          style: TextStyle(color: AppColors.secondaryText),
+                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                         ),
                       ),
                     )
@@ -633,9 +633,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.white,
+                            color: AppColors.getSurface(context),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.lightGrey),
+                            border: Border.all(color: Theme.of(context).dividerColor),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,7 +697,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -854,9 +854,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             width: 160,
                             margin: const EdgeInsets.only(right: 12),
                             decoration: BoxDecoration(
-                            color: AppColors.white,
+                            color: AppColors.getSurface(context),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.lightGrey),
+                            border: Border.all(color: Theme.of(context).dividerColor),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.black.withValues(alpha: 0.05),

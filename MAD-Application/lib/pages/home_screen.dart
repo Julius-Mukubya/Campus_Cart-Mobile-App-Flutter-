@@ -335,12 +335,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Filter & Sort',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.text,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     TextButton(
@@ -369,12 +369,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Sort By Section
-                      const Text(
+                      Text(
                         'Sort By',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -404,12 +404,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.lightGrey.withValues(alpha: 0.3),
+                                    : Theme.of(context).dividerColor.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.primary
-                                      : AppColors.lightGrey,
+                                      : Theme.of(context).dividerColor,
                                 ),
                               ),
                               child: Text(
@@ -417,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(
                                   color: isSelected
                                       ? AppColors.white
-                                      : AppColors.text,
+                                      : Theme.of(context).textTheme.bodyLarge?.color,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
                                       : FontWeight.normal,
@@ -431,12 +431,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 24),
                       
                       // Price Range Section
-                      const Text(
+                      Text(
                         'Price Range',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -445,15 +445,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             'UGX ${_minPrice.toInt()}',
-                            style: const TextStyle(
-                              color: AppColors.secondaryText,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                               fontSize: 14,
                             ),
                           ),
                           Text(
                             'UGX ${_maxPrice.toInt()}',
-                            style: const TextStyle(
-                              color: AppColors.secondaryText,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                               fontSize: 14,
                             ),
                           ),
@@ -478,12 +478,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 24),
                       
                       // Rating Section
-                      const Text(
+                      Text(
                         'Minimum Rating',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -502,9 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.only(right: 8),
                               child: Icon(
                                 isSelected ? Icons.star : Icons.star_border,
-                                color: isSelected
-                                    ? Colors.amber
-                                    : AppColors.grey,
+                                color: isSelected ? Colors.amber : AppColors.grey,
                                 size: 32,
                               ),
                             ),
@@ -516,8 +514,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             '${_minRating.toInt()} stars and above',
-                            style: const TextStyle(
-                              color: AppColors.secondaryText,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                               fontSize: 14,
                             ),
                           ),
@@ -843,14 +841,14 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.getBackground(context),
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text.rich(
+        title: Text.rich(
           TextSpan(
             children: [
               TextSpan(
                 text: 'Welcome, ',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.secondaryText,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                   fontWeight: FontWeight.normal,
                 ),
               ),
@@ -858,7 +856,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 text: 'User',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.text,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -931,20 +929,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppColors.error,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Failed to load products',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Using offline data',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.secondaryText,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -1015,12 +1013,12 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 20),
 
             // Popular Categories
-            const Text(
+            Text(
               'Popular Categories',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 12),
@@ -1232,10 +1230,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   selectedCategory == 'All' 
                       ? 'Our Products' 
                       : '$selectedCategory Products',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
-                    color: AppColors.black,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],

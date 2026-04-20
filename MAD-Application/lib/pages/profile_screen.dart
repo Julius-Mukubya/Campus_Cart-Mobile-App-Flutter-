@@ -65,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(50),
               boxShadow: [
                 BoxShadow(
@@ -104,10 +104,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   _userManager.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -133,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -162,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -189,17 +189,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 Text(
                   '${_orderManager.orderCount}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   'Orders',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.secondaryText,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
               ],
@@ -211,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -238,17 +238,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 Text(
                   '${WishlistManager().itemCount}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   'Wishlist',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.secondaryText,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
               ],
@@ -260,7 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -285,19 +285,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   '4.8',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   'Rating',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.secondaryText,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
               ],
@@ -382,9 +382,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: AppColors.getSurface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -394,7 +394,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Center(child: Container(width: 40, height: 4,
                 decoration: BoxDecoration(color: AppColors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 20),
-            const Text('Select Language', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.text)),
+            Text('Select Language', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
             const SizedBox(height: 16),
             ...AppSettings.supportedLanguages.map((lang) {
               final isSelected = settings.locale.languageCode == lang['code'];
@@ -402,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 leading: Icon(Icons.language, color: isSelected ? AppColors.primary : AppColors.grey),
                 title: Text(lang['name']!, style: TextStyle(
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : AppColors.text,
+                  color: isSelected ? AppColors.primary : Theme.of(context).textTheme.bodyLarge?.color,
                 )),
                 trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
                 onTap: () async {
@@ -422,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuSection(String title, List<Map<String, dynamic>> items) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -439,10 +439,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(20),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
@@ -451,7 +451,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final item = entry.value;
             return Column(
               children: [
-                if (index > 0) const Divider(height: 1, color: AppColors.lightGrey),
+                if (index > 0) Divider(height: 1, color: Theme.of(context).dividerColor),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   leading: Container(
@@ -468,10 +468,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   title: Text(
                     item['title'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.text,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   subtitle: item['subtitle'] != null
@@ -479,20 +479,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           item['subtitle'],
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.secondaryText,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         )
                       : null,
                   trailing: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary,
+                      color: AppColors.getCards(context),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
-                      color: AppColors.text,
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                   onTap: item['onTap'],

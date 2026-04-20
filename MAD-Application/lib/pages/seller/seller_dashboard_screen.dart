@@ -14,7 +14,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -42,19 +42,19 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppColors.secondaryText,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -70,7 +70,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -98,10 +98,10 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               child: Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -125,7 +125,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -135,9 +135,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios,
-              color: AppColors.text,
+              color: Theme.of(context).iconTheme.color,
               size: 16,
             ),
           ),
