@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/firebase_auth_service.dart';
 import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/database_service.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 import 'package:madpractical/pages/live_order_tracking_screen.dart';
 import 'package:madpractical/pages/customer_support_chat_screen.dart';
@@ -17,9 +18,28 @@ class MyOrdersScreen extends StatefulWidget {
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   final _authService = FirebaseAuthService();
   final _userManager = UserManager();
+  final _db = DatabaseService();
 
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Active', 'Delivered', 'Cancelled'];
+
+  List<Map<String, dynamic>> _cachedOrders = [];
+  bool _loadingCache = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedOrders();
+  }
+
+  Future<void> _loadCachedOrders() async {
+    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    if (uid == null) { setState(() => _loadingCache = false); return; }
+    final cached = await _db.getCachedOrders(uid);
+    if (mounted) {
+      setState(() { _cachedOrders = cached; _loadingCache = false; });
+    }
+  }
 
   // ── status helpers ────────────────────────────────────────────────────────
   Color _statusColor(String status) {
@@ -53,21 +73,26 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         .where('customerId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
-              final d = doc.data();
-              return {
-                'id': doc.id,
-                'date': d['date'] ?? '',
-                'status': d['status'] ?? 'Processing',
-                'items': d['itemCount'] ?? 0,
-                'total': 'UGX ${(d['total'] ?? 0).toStringAsFixed(0)}',
-                'shippingAddress': d['shippingAddress'] ?? '',
-                'paymentMethod': d['paymentMethod'] ?? '',
-                'products': d['products'] ?? [],
-                'subtotal': d['subtotal'] ?? 0,
-                'deliveryFee': d['deliveryFee'] ?? 0,
-              };
-            }).toList());
+        .asyncMap((snap) async {
+          final orders = snap.docs.map((doc) {
+            final d = doc.data();
+            return {
+              'id': doc.id,
+              'date': d['date'] ?? '',
+              'status': d['status'] ?? 'Processing',
+              'items': d['itemCount'] ?? 0,
+              'total': 'UGX ${(d['total'] ?? 0).toStringAsFixed(0)}',
+              'shippingAddress': d['shippingAddress'] ?? '',
+              'paymentMethod': d['paymentMethod'] ?? '',
+              'products': d['products'] ?? [],
+              'subtotal': d['subtotal'] ?? 0,
+              'deliveryFee': d['deliveryFee'] ?? 0,
+            };
+          }).toList();
+          // Write-through cache
+          await _db.cacheOrders(orders, uid);
+          return orders;
+        });
   }
 
   // ── Order card ────────────────────────────────────────────────────────────
@@ -361,6 +386,41 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         ),
       );
 
+  Widget _buildOrdersList(List<Map<String, dynamic>> orders,
+      List<Map<String, dynamic>> all, {bool isFromCache = false}) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_bag_outlined,
+                size: 72, color: AppColors.grey.withValues(alpha: 0.4)),
+            const SizedBox(height: 16),
+            Text(
+              all.isEmpty ? 'No orders yet' : 'No $_selectedFilter orders',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyMedium?.color),
+            ),
+            if (all.isEmpty) ...[
+              const SizedBox(height: 8),
+              Text('Your orders will appear here',
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).textTheme.bodyMedium?.color)),
+            ],
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: orders.length,
+      itemBuilder: (_, i) => _buildOrderCard(orders[i]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -429,6 +489,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: _ordersStream(),
               builder: (context, snapshot) {
+                // Show SQLite cache immediately while stream is loading
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    _loadingCache == false && _cachedOrders.isNotEmpty) {
+                  final orders = _cachedOrders
+                      .where((o) => _matchesFilter(o['status'] as String))
+                      .toList();
+                  return _buildOrdersList(orders, _cachedOrders, isFromCache: true);
+                }
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(
@@ -441,42 +510,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 final orders = all
                     .where((o) => _matchesFilter(o['status'] as String))
                     .toList();
-
-                if (orders.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.shopping_bag_outlined,
-                            size: 72,
-                            color: AppColors.grey.withValues(alpha: 0.4)),
-                        const SizedBox(height: 16),
-                        Text(
-                          all.isEmpty
-                              ? 'No orders yet'
-                              : 'No $_selectedFilter orders',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).textTheme.bodyMedium?.color),
-                        ),
-                        if (all.isEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text('Your orders will appear here',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Theme.of(context).textTheme.bodyMedium?.color)),
-                        ],
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: orders.length,
-                  itemBuilder: (_, i) => _buildOrderCard(orders[i]),
-                );
+                return _buildOrdersList(orders, all);
               },
             ),
           ),

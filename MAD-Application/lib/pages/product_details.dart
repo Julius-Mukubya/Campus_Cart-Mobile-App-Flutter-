@@ -152,9 +152,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           Text(
             widget.product['price'] ?? 'UGX 0',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: AppColors.secondaryText,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
               decoration: TextDecoration.lineThrough,
             ),
           ),
@@ -172,10 +172,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } else {
       return Text(
         widget.product['price'] ?? 'UGX 0',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: AppColors.text,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
       );
     }
@@ -252,9 +252,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios_new,
-              color: AppColors.text,
+              color: Theme.of(context).iconTheme.color,
               size: 18,
             ),
           ),
@@ -426,10 +426,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(width: 4),
                             Text(
                               '${widget.product['rating'] ?? 0} (${_reviews.length} ${_reviews.length == 1 ? 'Review' : 'Reviews'})',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.text,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ],
@@ -440,21 +440,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 20),
 
                   // Description
-                  const Text(
+                  Text(
                     'Description',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: AppColors.text,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     widget.product['description'] ??
                         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labo',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.secondaryText,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                       height: 1.5,
                     ),
                   ),
@@ -543,12 +543,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Reviews',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -568,16 +568,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             children: [
                               Text(
                                 '${avgRating.toStringAsFixed(1)}/5',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.text,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '($total ${total == 1 ? 'review' : 'reviews'})',
-                                style: const TextStyle(fontSize: 12, color: AppColors.secondaryText),
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                               ),
                               const SizedBox(height: 8),
                               Row(
@@ -655,15 +655,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       children: [
                                         Text(
                                           review['userName'] ?? review['user'] ?? 'Anonymous',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
-                                            color: AppColors.text,
+                                            color: Theme.of(context).textTheme.bodyLarge?.color,
                                           ),
                                         ),
                                         Text(
                                           review['createdAt'] ?? review['time'] ?? '',
-                                          style: const TextStyle(fontSize: 12, color: AppColors.secondaryText),
+                                          style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
                                         ),
                                       ],
                                     ),
@@ -678,9 +678,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     const SizedBox(height: 6),
                                     Text(
                                       review['comment'] ?? '',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
-                                        color: AppColors.secondaryText,
+                                        color: Theme.of(context).textTheme.bodyMedium?.color,
                                         height: 1.4,
                                       ),
                                     ),
@@ -710,23 +710,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Write a Review',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.text,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
                         const SizedBox(height: 16),
                         // Rating Stars
                         Row(
                           children: [
-                            const Text(
+                            Text(
                               'Your Rating:',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.text,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -755,7 +755,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             hintText: 'Share your experience with this product...',
                             hintStyle: const TextStyle(color: AppColors.grey, fontSize: 14),
                             filled: true,
-                            fillColor: AppColors.background,
+                            fillColor: AppColors.getCards(context),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -811,12 +811,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Relevant Products',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       TextButton(
@@ -978,10 +978,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   children: [
                                     Text(
                                       product['name'],
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
-                                        color: AppColors.text,
+                                        color: Theme.of(context).textTheme.bodyLarge?.color,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -997,10 +997,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         const SizedBox(width: 4),
                                         Text(
                                           '${product['rating']}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: AppColors.text,
+                                            color: Theme.of(context).textTheme.bodyLarge?.color,
                                           ),
                                         ),
                                         const Spacer(),
@@ -1063,9 +1063,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           '$stars',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppColors.text,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.w500,
           ),
         ),

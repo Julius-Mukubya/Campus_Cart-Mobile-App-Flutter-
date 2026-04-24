@@ -286,10 +286,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-                    SizedBox(width: 8),
+                    const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
                     Text('No saved addresses yet. Add one below.',
                         style: TextStyle(fontSize: 13, color: AppColors.secondaryText)),
                   ],
@@ -420,7 +420,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   if (line1.isNotEmpty || city.isNotEmpty)
                     Text(
                       [line1, city].where((s) => s.isNotEmpty).join(', '),
-                      style: const TextStyle(fontSize: 12, color: AppColors.secondaryText),
+                      style: TextStyle(fontSize: 12, color: AppColors.secondaryText),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -489,7 +489,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ),
                     ),
-                    const Text('New Address',
+                    Text('New Address',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -521,7 +521,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           activeColor: AppColors.primary,
                         ),
                         const SizedBox(width: 8),
-                        const Text('Set as default address',
+                        Text('Set as default address',
                             style: TextStyle(fontSize: 14, color: AppColors.text)),
                       ],
                     ),
@@ -708,7 +708,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       fontWeight: FontWeight.bold, fontSize: 14,
                                       color: selected ? AppColors.primary : AppColors.text)),
                               Text(method['subtitle'],
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 12, color: AppColors.secondaryText)),
                             ],
                           ),
@@ -892,7 +892,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                                 maxLines: 1, overflow: TextOverflow.ellipsis),
                             Text('Qty: $qty',
-                                style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                                style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
                           ],
                         ),
                       ),
@@ -918,10 +918,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 4),
                 Text(_phoneController.text,
-                    style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                    style: TextStyle(fontSize: 13, color: AppColors.secondaryText)),
                 const SizedBox(height: 4),
                 Text('${_addressController.text}, ${_cityController.text}',
-                    style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                    style: TextStyle(fontSize: 13, color: AppColors.secondaryText)),
               ],
             ),
           ),
@@ -985,7 +985,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Icon(icon, size: 18, color: AppColors.primary),
             const SizedBox(width: 8),
             Text(title,
-                style: const TextStyle(
+                style: TextStyle(
                     fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text)),
           ]),
           const Divider(height: 20),
@@ -1026,7 +1026,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         const SizedBox(width: 12),
         Text(title,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text)),
       ],
     );
@@ -1084,11 +1084,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     blurRadius: 6, offset: const Offset(0, 2))
               ],
             ),
-            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
+            child: Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
           ),
         ),
         title: Text(stepLabels[_currentStep],
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20)),
       ),
       body: Column(
@@ -1121,7 +1121,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total',
+                    Text('Total',
                         style: TextStyle(fontSize: 14, color: AppColors.secondaryText)),
                     Text('UGX ${_total.toStringAsFixed(0)}',
                         style: const TextStyle(

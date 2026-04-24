@@ -97,7 +97,7 @@ class _SelectPaymentScreenState extends State<SelectPaymentScreen> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle:
-              const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+              TextStyle(fontSize: 13, color: AppColors.secondaryText),
           prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

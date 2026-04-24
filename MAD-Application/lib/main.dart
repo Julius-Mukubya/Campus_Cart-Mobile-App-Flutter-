@@ -56,6 +56,10 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/services/app_settings.dart';
+import 'package:madpractical/services/cart_manager.dart';
+import 'package:madpractical/services/wishlist_manager.dart';
+import 'package:madpractical/services/database_service.dart';
+import 'package:madpractical/services/notification_manager.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,6 +85,14 @@ void main() async{
       storeId: PreferencesService.storeId,
     );
   }
+
+  // Restore cart and wishlist from SharedPreferences
+  CartManager().loadFromPrefs();
+  WishlistManager().loadFromPrefs();
+
+  // Initialize SQLite and load persisted notifications
+  await DatabaseService().database; // opens/creates the DB
+  await NotificationManager().loadFromDb();
 
   // Initialize App Check — uses debug provider in debug builds
   await FirebaseAppCheck.instance.activate(
@@ -293,12 +305,18 @@ class _MyAppState extends State<MyApp> {
       builder: (context, child) {
         // Wrap entire app so all Text widgets inherit the correct color for the theme
         final isDark = _settings.isDark;
+        final textColor = isDark ? AppColors.darkText : const Color(0xFF212121);
         return DefaultTextStyle(
           style: TextStyle(
-            color: isDark ? AppColors.darkText : const Color(0xFF212121),
+            color: textColor,
             fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
+            fontSize: 14,
+            decoration: TextDecoration.none,
           ),
-          child: child!,
+          child: IconTheme(
+            data: IconThemeData(color: textColor),
+            child: child!,
+          ),
         );
       },
       // Start on a splash screen which will redirect to sign in

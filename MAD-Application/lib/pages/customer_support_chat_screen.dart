@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/database_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 class CustomerSupportChatScreen extends StatefulWidget {
   const CustomerSupportChatScreen({super.key});
@@ -11,61 +13,48 @@ class CustomerSupportChatScreen extends StatefulWidget {
 class _CustomerSupportChatScreenState extends State<CustomerSupportChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text': 'Hello! How can I help you today?',
-      'isSupport': true,
-      'time': '10:30 AM',
-      'agentName': 'Jane Support',
-    },
-    {
-      'text': 'Hi, I have a question about my order #ORD001',
-      'isSupport': false,
-      'time': '10:31 AM',
-    },
-    {
-      'text': 'Of course! Let me check that for you.',
-      'isSupport': true,
-      'time': '10:31 AM',
-      'agentName': 'Jane Support',
-    },
-  ];
+  final _db = DatabaseService();
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
-    
-    setState(() {
-      _messages.add({
-        'text': _messageController.text.trim(),
-        'isSupport': false,
-        'time': TimeOfDay.now().format(context),
-      });
-    });
-    
-    _messageController.clear();
-    
-    // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+  // Session ID is per-user so messages are scoped correctly
+  late final String _sessionId;
+  final List<Map<String, dynamic>> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = PreferencesService.userId ?? 'guest';
+    _sessionId = 'support_$uid';
+    _loadMessages();
+  }
+
+  Future<void> _loadMessages() async {
+    final cached = await _db.getChatMessages(_sessionId);
+    if (cached.isEmpty) {
+      // Seed the welcome message for new sessions
+      final welcome = {
+        'text': 'Hello! How can I help you today?',
+        'isSupport': true,
+        'time': '10:30 AM',
+        'agentName': 'Jane Support',
+      };
+      await _db.saveChatMessage(
+        sessionId: _sessionId,
+        userId: PreferencesService.userId ?? 'guest',
+        text: welcome['text'] as String,
+        isSupport: true,
+        agentName: welcome['agentName'] as String,
+        time: welcome['time'] as String,
       );
-    });
-    
-    // Simulate support response
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _messages.add({
-            'text': 'Thank you for your message. Let me assist you with that.',
-            'isSupport': true,
-            'time': TimeOfDay.now().format(context),
-            'agentName': 'Jane Support',
-          });
-        });
-        
+      if (mounted) setState(() => _messages.add(welcome));
+    } else {
+      if (mounted) setState(() { _messages.addAll(cached); });
+    }
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
@@ -73,6 +62,50 @@ class _CustomerSupportChatScreenState extends State<CustomerSupportChatScreen> {
         );
       }
     });
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+    final time = TimeOfDay.now().format(context);
+    final uid = PreferencesService.userId ?? 'guest';
+
+    final msg = {'text': text, 'isSupport': false, 'time': time};
+    setState(() => _messages.add(msg));
+    _messageController.clear();
+    _scrollToBottom();
+
+    // Persist user message
+    await _db.saveChatMessage(
+      sessionId: _sessionId,
+      userId: uid,
+      text: text,
+      isSupport: false,
+      time: time,
+    );
+
+    // Simulate support response
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    final replyTime = TimeOfDay.now().format(context);
+    const replyText = 'Thank you for your message. Let me assist you with that.';
+    final reply = {
+      'text': replyText,
+      'isSupport': true,
+      'time': replyTime,
+      'agentName': 'Jane Support',
+    };
+    setState(() => _messages.add(reply));
+    _scrollToBottom();
+
+    await _db.saveChatMessage(
+      sessionId: _sessionId,
+      userId: uid,
+      text: replyText,
+      isSupport: true,
+      agentName: 'Jane Support',
+      time: replyTime,
+    );
   }
 
   Widget _buildMessage(Map<String, dynamic> message) {

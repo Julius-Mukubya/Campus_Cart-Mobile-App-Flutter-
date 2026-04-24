@@ -392,7 +392,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       });
                     },
                     dropdownColor: AppColors.white,
-                    style: const TextStyle(color: AppColors.text),
+                    style: TextStyle(color: AppColors.text),
                   ),
                 ),
 

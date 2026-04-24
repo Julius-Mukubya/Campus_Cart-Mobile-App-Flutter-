@@ -59,7 +59,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
 
   InputDecoration _dec(String label) => InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+        labelStyle: TextStyle(fontSize: 13, color: AppColors.secondaryText),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         border: OutlineInputBorder(
@@ -106,7 +106,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
               DropdownMenuItem(value: '+255', child: Text('+255')),
             ],
             onChanged: (_) {},
-            style: const TextStyle(color: AppColors.text, fontSize: 14),
+            style: TextStyle(color: AppColors.text, fontSize: 14),
             icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
           ),
         ),

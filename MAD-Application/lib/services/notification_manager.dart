@@ -1,92 +1,63 @@
 import 'package:flutter/foundation.dart';
+import 'package:madpractical/services/database_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 class NotificationManager extends ChangeNotifier {
   static final NotificationManager _instance = NotificationManager._internal();
-  
-  factory NotificationManager() {
-    return _instance;
-  }
-  
+  factory NotificationManager() => _instance;
   NotificationManager._internal();
 
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'id': '1',
-      'title': 'Order Delivered',
-      'message': 'Your order #ORD-2024-001 has been delivered successfully',
-      'type': 'order',
-      'time': '2 hours ago',
-      'isRead': false,
-      'icon': 'check_circle',
-      'color': 'success',
-    },
-    {
-      'id': '2',
-      'title': 'Special Offer',
-      'message': 'Get 30% off on all electronics! Limited time offer.',
-      'type': 'promotion',
-      'time': '5 hours ago',
-      'isRead': false,
-      'icon': 'local_offer',
-      'color': 'accent',
-    },
-    {
-      'id': '3',
-      'title': 'Order Shipped',
-      'message': 'Your order #ORD-2024-002 is on the way',
-      'type': 'order',
-      'time': '1 day ago',
-      'isRead': true,
-      'icon': 'local_shipping',
-      'color': 'primary',
-    },
-    {
-      'id': '4',
-      'title': 'Price Drop Alert',
-      'message': 'Smart Watch in your wishlist is now 15% off!',
-      'type': 'price_drop',
-      'time': '2 days ago',
-      'isRead': true,
-      'icon': 'trending_down',
-      'color': 'success',
-    },
-    {
-      'id': '5',
-      'title': 'New Arrival',
-      'message': 'Check out the latest collection of designer t-shirts',
-      'type': 'new_arrival',
-      'time': '3 days ago',
-      'isRead': true,
-      'icon': 'new_releases',
-      'color': 'primary',
-    },
-  ];
+  final _db = DatabaseService();
+  final List<Map<String, dynamic>> _notifications = [];
 
   List<Map<String, dynamic>> get notifications => List.unmodifiable(_notifications);
-  
-  int get unreadCount => _notifications.where((n) => !n['isRead']).length;
-  
-  void markAsRead(String id) {
+  int get unreadCount => _notifications.where((n) => n['isRead'] == false).length;
+
+  /// Load persisted notifications from SQLite. Call after DB init in main.dart.
+  Future<void> loadFromDb() async {
+    final userId = PreferencesService.userId;
+    if (userId == null || userId.isEmpty) return;
+    final rows = await _db.getNotifications(userId);
+    _notifications
+      ..clear()
+      ..addAll(rows);
+    notifyListeners();
+  }
+
+  /// Persist and display a new notification.
+  Future<void> addNotification(Map<String, dynamic> notification) async {
+    final userId = PreferencesService.userId ?? '';
+    await _db.insertNotification(notification, userId);
+    await loadFromDb();
+  }
+
+  Future<void> markAsRead(String id) async {
+    await _db.markNotificationRead(id);
     final index = _notifications.indexWhere((n) => n['id'] == id);
     if (index != -1) {
-      _notifications[index]['isRead'] = true;
+      _notifications[index] = {..._notifications[index], 'isRead': true};
       notifyListeners();
     }
   }
-  
-  void markAllAsRead() {
-    for (var notification in _notifications) {
-      notification['isRead'] = true;
+
+  Future<void> markAllAsRead() async {
+    final userId = PreferencesService.userId ?? '';
+    await _db.markAllNotificationsRead(userId);
+    for (var i = 0; i < _notifications.length; i++) {
+      _notifications[i] = {..._notifications[i], 'isRead': true};
     }
     notifyListeners();
   }
-  
-  void deleteNotification(String id) {
+
+  Future<void> deleteNotification(String id) async {
+    await _db.deleteNotification(id);
     _notifications.removeWhere((n) => n['id'] == id);
     notifyListeners();
   }
-  
-  void clearAll() {
+
+  Future<void> clearAll() async {
+    final userId = PreferencesService.userId ?? '';
+    await _db.clearNotifications(userId);
     _notifications.clear();
     notifyListeners();
   }

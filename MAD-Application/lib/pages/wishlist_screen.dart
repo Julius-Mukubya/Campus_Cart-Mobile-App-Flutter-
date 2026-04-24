@@ -113,9 +113,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
           Flexible(
             child: Text(
               item['price'],
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 8,
-                color: AppColors.secondaryText,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 decoration: TextDecoration.lineThrough,
               ),
               maxLines: 1,
@@ -162,9 +162,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
         children: [
           Text(
             item['price'],
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.secondaryText,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
               decoration: TextDecoration.lineThrough,
             ),
             maxLines: 1,
@@ -212,7 +212,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return Container(
       height: 240,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -384,7 +384,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: AppColors.text.withValues(alpha: 0.9),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -405,9 +405,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       const SizedBox(width: 4),
                       Text(
                         '${item['rating']}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.text,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const Spacer(),
@@ -450,7 +450,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -510,10 +510,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       Expanded(
                         child: Text(
                           item['name'],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: AppColors.text,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -678,12 +678,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Your Wishlist is Empty',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const SizedBox(height: 12),
@@ -735,10 +735,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        title: const Text(
+        title: Text(
           'My Wishlist',
           style: TextStyle(
-            color: AppColors.text,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -778,7 +778,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: AppColors.white,
+                                    color: AppColors.getSurface(context),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: AppColors.lightGrey),
                                   ),
@@ -813,13 +813,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: AppColors.white,
+                                    color: AppColors.getSurface(context),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: AppColors.lightGrey),
                                   ),
                                   child: Icon(
                                     isGridView ? Icons.view_list : Icons.grid_view,
-                                    color: AppColors.text,
+                                    color: Theme.of(context).iconTheme.color,
                                   ),
                                 ),
                               ),
@@ -850,10 +850,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                   children: [
                                     Text(
                                       '${_filteredItems.length} ${_filteredItems.length == 1 ? 'Item' : 'Items'}${_searchQuery.isNotEmpty ? ' Found' : ' Saved'}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.text,
+                                        color: Theme.of(context).textTheme.bodyLarge?.color,
                                       ),
                                     ),
                                     const SizedBox(height: 4),

@@ -6,8 +6,11 @@ import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/notification_manager.dart';
 import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/database_service.dart';
 import 'package:madpractical/pages/notifications_list_screen.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
+import 'package:madpractical/widgets/dark_mode_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
   double _minPrice = 0;
   double _maxPrice = 200000;
   double _minRating = 0;
+
+  // Search
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+  List<String> _searchHistory = [];
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
   
   // Data from Firebase
   List<Map<String, dynamic>> allProducts = [];
@@ -57,48 +68,196 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _searchHistory = PreferencesService.searchHistory;
     // Auto-scroll banner every 3 seconds
     Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
     _wishlistManager.addListener(_onWishlistChanged);
     _cartManager.addListener(_onCartChanged);
+    _searchFocusNode.addListener(_onSearchFocusChanged);
+  }
+
+  void _onSearchFocusChanged() {
+    if (_searchFocusNode.hasFocus) {
+      _showOverlay();
+    } else {
+      _removeOverlay();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value.trim();
+    });
+    _updateOverlay();
+  }
+
+  void _submitSearch(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+    PreferencesService.addSearchQuery(trimmed).then((_) {
+      setState(() {
+        _searchHistory = PreferencesService.searchHistory;
+      });
+    });
+    _searchFocusNode.unfocus();
+    _removeOverlay();
+  }
+
+  void _selectSuggestion(String suggestion) {
+    _searchController.text = suggestion;
+    _onSearchChanged(suggestion);
+    _submitSearch(suggestion);
+  }
+
+  // ── Overlay (suggestions dropdown) ───────────────────────────────────────
+
+  void _showOverlay() {
+    _removeOverlay();
+    _overlayEntry = _buildOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _updateOverlay() {
+    if (_overlayEntry != null) {
+      _overlayEntry!.markNeedsBuild();
+    }
+  }
+
+  OverlayEntry _buildOverlayEntry() {
+    return OverlayEntry(
+      builder: (context) {
+        final suggestions = _getSuggestions();
+        if (suggestions.isEmpty) return const SizedBox.shrink();
+        return Positioned(
+          width: MediaQuery.of(context).size.width - 32 - 12 - 48, // match search field width
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: const Offset(0, 52),
+            child: _SuggestionsDropdown(
+              suggestions: suggestions,
+              searchQuery: _searchQuery,
+              onSelect: _selectSuggestion,
+              onDeleteHistory: (q) {
+                PreferencesService.removeSearchQuery(q).then((_) {
+                  setState(() {
+                    _searchHistory = PreferencesService.searchHistory;
+                  });
+                  _updateOverlay();
+                });
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<String> _getSuggestions() {
+    if (_searchQuery.isEmpty) {
+      // Show search history when field is focused but empty
+      return _searchHistory.take(6).toList();
+    }
+    final q = _searchQuery.toLowerCase();
+    // Product name matches
+    final productMatches = allProducts
+        .map((p) => p['name'].toString())
+        .where((name) => name.toLowerCase().contains(q))
+        .toSet()
+        .take(5)
+        .toList();
+    // Category matches
+    final categoryMatches = allProducts
+        .map((p) => p['category'].toString())
+        .where((cat) => cat.toLowerCase().contains(q))
+        .toSet()
+        .take(3)
+        .toList();
+    // History matches
+    final historyMatches = _searchHistory
+        .where((h) => h.toLowerCase().contains(q))
+        .take(3)
+        .toList();
+
+    final combined = <String>{...historyMatches, ...productMatches, ...categoryMatches}.toList();
+    return combined.take(8).toList();
   }
 
   Future<void> _loadData() async {
+    final db = DatabaseService();
     try {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-      });
+      setState(() { _isLoading = true; _hasError = false; });
 
-      // Test Firebase connection first
+      // ── Cache-first: show SQLite data immediately ──────────────────────
+      final isFresh = await db.isProductCacheFresh(maxAgeMinutes: 30);
+      if (isFresh) {
+        final cached = await db.getCachedProducts();
+        if (cached.isNotEmpty) {
+          _applyProducts(cached);
+          setState(() => _isLoading = false);
+          // Refresh in background without showing loader
+          _refreshFromFirestore(db);
+          return;
+        }
+      }
+
+      // ── No fresh cache: fetch from Firestore ───────────────────────────
+      await _refreshFromFirestore(db);
+    } catch (e) {
+      // Try stale cache as last resort
+      final stale = await db.getCachedProducts();
+      if (stale.isNotEmpty) {
+        _applyProducts(stale);
+        setState(() => _isLoading = false);
+      } else {
+        setState(() { _hasError = true; _isLoading = false; _loadFallbackData(); });
+      }
+    }
+  }
+
+  Future<void> _refreshFromFirestore(DatabaseService db) async {
+    try {
       await _productService.testFirebaseConnection();
-
-      // Load products and categories from Firebase
       final products = await _productService.getAllProducts();
       final categoryList = await _productService.getCategories();
+      // Persist to SQLite
+      await db.cacheProducts(products);
+      if (mounted) {
+        _applyProducts(products, categoryList: categoryList);
+        setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted && _isLoading) {
+        setState(() { _hasError = true; _isLoading = false; _loadFallbackData(); });
+      }
+    }
+  }
 
-      print('Loaded ${products.length} products');
-      print('Loaded ${categoryList.length} categories');
-
-      setState(() {
-        allProducts = products;
-        categories = [
-          {'icon': Icons.grid_view, 'title': 'All'},
-          ...categoryList.map((cat) => {
-            'icon': cat['icon'] is IconData ? cat['icon'] : _getIconFromString(cat['icon'].toString()),
-            'title': cat['title'],
-          }),
-        ];
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading data: $e');
-      setState(() {
-        _hasError = true;
-        _isLoading = false;
-        // Use fallback data
-        _loadFallbackData();
-      });
+  void _applyProducts(List<Map<String, dynamic>> products,
+      {List<Map<String, dynamic>>? categoryList}) {
+    allProducts = products;
+    if (categoryList != null) {
+      categories = [
+        {'icon': Icons.grid_view, 'title': 'All'},
+        ...categoryList.map((cat) => {
+          'icon': cat['icon'] is IconData
+              ? cat['icon']
+              : _getIconFromString(cat['icon'].toString()),
+          'title': cat['title'],
+        }),
+      ];
+    } else if (categories.isEmpty) {
+      // Build categories from cached product data
+      final cats = products.map((p) => p['category'].toString()).toSet();
+      categories = [
+        {'icon': Icons.grid_view, 'title': 'All'},
+        ...cats.map((c) => {'icon': _getIconFromString(c.toLowerCase()), 'title': c}),
+      ];
     }
   }
 
@@ -183,6 +342,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _bannerController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.removeListener(_onSearchFocusChanged);
+    _searchFocusNode.dispose();
+    _removeOverlay();
     _wishlistManager.removeListener(_onWishlistChanged);
     _cartManager.removeListener(_onCartChanged);
     super.dispose();
@@ -190,7 +353,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Map<String, dynamic>> get filteredProducts {
     var products = allProducts;
-    
+
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      products = products.where((product) {
+        final name = product['name'].toString().toLowerCase();
+        final category = product['category'].toString().toLowerCase();
+        final description = product['description']?.toString().toLowerCase() ?? '';
+        return name.contains(q) || category.contains(q) || description.contains(q);
+      }).toList();
+    }
+
     // Filter by category
     if (selectedCategory != 'All') {
       products = products.where((product) => product['category'] == selectedCategory).toList();
@@ -718,16 +892,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.getSurface(context).withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(
                       _wishlistManager.isInWishlist(product['name'])
@@ -864,6 +1031,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          const DarkModeToggle(),
           IconButton(
             onPressed: () {
               Navigator.pushNamed(context, '/customer/orders');
@@ -970,28 +1138,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
               children: [
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.getCards(context),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Theme.of(context).dividerColor),
-                    ),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(Icons.search, color: AppColors.grey),
+                  child: CompositedTransformTarget(
+                    link: _layerLink,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.getCards(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _searchFocusNode.hasFocus
+                              ? AppColors.primary
+                              : Theme.of(context).dividerColor,
                         ),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search for Product',
-                              hintStyle: const TextStyle(color: AppColors.grey),
-                              border: InputBorder.none,
+                      ),
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(Icons.search, color: AppColors.grey),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              onChanged: _onSearchChanged,
+                              onSubmitted: _submitSearch,
+                              textInputAction: TextInputAction.search,
+                              decoration: const InputDecoration(
+                                hintText: 'Search for Product',
+                                hintStyle: TextStyle(color: AppColors.grey),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(vertical: 14),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          if (_searchQuery.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Icon(Icons.close, color: AppColors.grey, size: 18),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1227,9 +1419,11 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  selectedCategory == 'All' 
-                      ? 'Our Products' 
-                      : '$selectedCategory Products',
+                  _searchQuery.isNotEmpty
+                      ? 'Results for "$_searchQuery" (${filteredProducts.length})'
+                      : selectedCategory == 'All'
+                          ? 'Our Products'
+                          : '$selectedCategory Products',
                   style: TextStyle(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
@@ -1298,6 +1492,139 @@ class _HomeScreenState extends State<HomeScreen> {
         wishlistCount: _wishlistManager.itemCount,
         cartCount: _cartManager.itemCount,
       ),
+    );
+  }
+}
+
+// ── Suggestions dropdown widget ───────────────────────────────────────────────
+
+class _SuggestionsDropdown extends StatelessWidget {
+  final List<String> suggestions;
+  final String searchQuery;
+  final ValueChanged<String> onSelect;
+  final ValueChanged<String> onDeleteHistory;
+
+  const _SuggestionsDropdown({
+    required this.suggestions,
+    required this.searchQuery,
+    required this.onSelect,
+    required this.onDeleteHistory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(12),
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (searchQuery.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recent Searches',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        await PreferencesService.clearSearchHistory();
+                      },
+                      child: Text(
+                        'Clear all',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ...suggestions.map((s) {
+              final isHistory = searchQuery.isEmpty;
+              return InkWell(
+                onTap: () => onSelect(s),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isHistory ? Icons.history : Icons.search,
+                        size: 18,
+                        color: AppColors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _HighlightedText(
+                          text: s,
+                          query: searchQuery,
+                          baseStyle: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                          highlightStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      if (isHistory)
+                        GestureDetector(
+                          onTap: () => onDeleteHistory(s),
+                          child: const Icon(Icons.close, size: 16, color: AppColors.grey),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HighlightedText extends StatelessWidget {
+  final String text;
+  final String query;
+  final TextStyle baseStyle;
+  final TextStyle highlightStyle;
+
+  const _HighlightedText({
+    required this.text,
+    required this.query,
+    required this.baseStyle,
+    required this.highlightStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (query.isEmpty) return Text(text, style: baseStyle);
+    final lower = text.toLowerCase();
+    final q = query.toLowerCase();
+    final start = lower.indexOf(q);
+    if (start == -1) return Text(text, style: baseStyle);
+    final end = start + q.length;
+    return Text.rich(
+      TextSpan(children: [
+        if (start > 0) TextSpan(text: text.substring(0, start), style: baseStyle),
+        TextSpan(text: text.substring(start, end), style: highlightStyle),
+        if (end < text.length) TextSpan(text: text.substring(end), style: baseStyle),
+      ]),
     );
   }
 }

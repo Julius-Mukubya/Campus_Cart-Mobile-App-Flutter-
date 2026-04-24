@@ -18,6 +18,7 @@ import 'package:madpractical/pages/faq_screen.dart';
 import 'package:madpractical/pages/contact_us_screen.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/widgets/dark_mode_toggle.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -799,6 +800,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         centerTitle: false,
         actions: const [
+          DarkModeToggle(),
           NotificationIcon(),
         ],
       ),
@@ -880,6 +882,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               // Sign out from Firebase Auth and clear local state
                               await FirebaseAuthService().signOut();
                               await PreferencesService.clearUser();
+                              await PreferencesService.clearCartItems();
+                              await PreferencesService.clearWishlistItems();
+                              CartManager().clearCart();
+                              WishlistManager().clearWishlist();
                               _userManager.logout();
                               if (!context.mounted) return;
                               Navigator.pushNamedAndRemoveUntil(

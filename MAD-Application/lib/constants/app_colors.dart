@@ -18,7 +18,7 @@ class AppColors {
   static const Color _lightCards = Color(0xFFF8F9FA);
   static const Color _lightSecondary = Color(0xFFF5F7FA);
 
-  // Text colors — const values, dark mode handled via DefaultTextStyle in main.dart
+  // Text colors — const, dark mode text handled via ThemeData and DefaultTextStyle
   static const Color text = Color(0xFF212121);
   static const Color secondaryText = Color(0xFF616161);
 

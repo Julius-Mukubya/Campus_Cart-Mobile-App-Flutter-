@@ -282,7 +282,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         content: Text(
           'Are you sure you want to delete "${widget.product['name']}"? This action cannot be undone.',
-          style: const TextStyle(color: AppColors.text),
+          style: TextStyle(color: AppColors.text),
         ),
         actions: [
           TextButton(

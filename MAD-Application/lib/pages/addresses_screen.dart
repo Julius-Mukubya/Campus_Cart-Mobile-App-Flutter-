@@ -113,15 +113,15 @@ class _AddressesScreenState extends State<AddressesScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2))],
             ),
-            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
+            child: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color, size: 16),
           ),
         ),
-        title: const Text('My Addresses',
-            style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text('My Addresses',
+            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold, fontSize: 20)),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
@@ -156,7 +156,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: AppColors.getSurface(context),
                         borderRadius: BorderRadius.circular(16),
                         border: isDefault ? Border.all(color: AppColors.primary, width: 2) : null,
                         boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5))],
@@ -202,14 +202,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(addr['fullName'] ?? '',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text)),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                             const SizedBox(height: 4),
                             if ((addr['phone'] ?? '').isNotEmpty)
-                              Text(addr['phone'], style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                              Text(addr['phone'], style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
                             const SizedBox(height: 4),
-                            Text(addr['addressLine1'] ?? '', style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                            Text(addr['addressLine1'] ?? '', style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
                             if ((addr['city'] ?? '').isNotEmpty)
-                              Text(addr['city'], style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                              Text(addr['city'], style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color)),
                           ],
                         ),
                       ),

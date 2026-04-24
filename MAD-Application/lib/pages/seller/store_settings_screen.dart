@@ -394,7 +394,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                         });
                       },
                       dropdownColor: AppColors.white,
-                      style: const TextStyle(color: AppColors.text),
+                      style: TextStyle(color: AppColors.text),
                     ),
                   ),
                 ],

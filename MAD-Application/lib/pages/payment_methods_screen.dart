@@ -56,30 +56,30 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     super.dispose();
   }
 
-  InputDecoration _dec(String label, IconData icon) => InputDecoration(
+  InputDecoration _dec(String label, IconData icon, BuildContext context) => InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+        labelStyle: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
         prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.lightGrey)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.lightGrey)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
         filled: true,
-        fillColor: AppColors.white,
+        fillColor: AppColors.getSurface(context),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       );
 
   Widget _detailsPanel() {
     if (_selectedId == 'mtn') {
-      return _momoPanel('MTN MoMo', _mtnNumberCtrl, _mtnNameCtrl);
+      return _momoPanel('MTN MoMo', _mtnNumberCtrl, _mtnNameCtrl, context);
     } else if (_selectedId == 'airtel') {
-      return _momoPanel('Airtel Money', _airtelNumberCtrl, _airtelNameCtrl);
+      return _momoPanel('Airtel Money', _airtelNumberCtrl, _airtelNameCtrl, context);
     } else if (_selectedId == 'visa') {
-      return _visaPanel();
+      return _visaPanel(context);
     }
     return const SizedBox.shrink();
   }
 
-  Widget _momoPanel(String provider, TextEditingController numCtrl, TextEditingController nameCtrl) {
+  Widget _momoPanel(String provider, TextEditingController numCtrl, TextEditingController nameCtrl, BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(top: 12),
@@ -93,17 +93,17 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$provider Details',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
           const SizedBox(height: 12),
           TextFormField(
             controller: numCtrl,
             keyboardType: TextInputType.phone,
-            decoration: _dec('$provider Number', Icons.phone_outlined),
+            decoration: _dec('$provider Number', Icons.phone_outlined, context),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: nameCtrl,
-            decoration: _dec('Account Name', Icons.person_outline),
+            decoration: _dec('Account Name', Icons.person_outline, context),
           ),
           const SizedBox(height: 8),
           Row(children: [
@@ -111,7 +111,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             const SizedBox(width: 6),
             Expanded(
               child: Text('You will receive a payment prompt on this number.',
-                  style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
             ),
           ]),
         ],
@@ -119,7 +119,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     );
   }
 
-  Widget _visaPanel() {
+  Widget _visaPanel(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(top: 12),
@@ -132,19 +132,19 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Card Details',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text)),
+          Text('Card Details',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
           const SizedBox(height: 12),
           TextFormField(
             controller: _cardNumberCtrl,
             keyboardType: TextInputType.number,
             maxLength: 19,
-            decoration: _dec('Card Number', Icons.credit_card),
+            decoration: _dec('Card Number', Icons.credit_card, context),
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _cardNameCtrl,
-            decoration: _dec('Cardholder Name', Icons.person_outline),
+            decoration: _dec('Cardholder Name', Icons.person_outline, context),
           ),
           const SizedBox(height: 12),
           Row(children: [
@@ -153,7 +153,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 controller: _cardExpiryCtrl,
                 keyboardType: TextInputType.number,
                 maxLength: 5,
-                decoration: _dec('MM / YY', Icons.calendar_today),
+                decoration: _dec('MM / YY', Icons.calendar_today, context),
               ),
             ),
             const SizedBox(width: 12),
@@ -163,7 +163,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 3,
                 obscureText: true,
-                decoration: _dec('CVV', Icons.lock_outline),
+                decoration: _dec('CVV', Icons.lock_outline, context),
               ),
             ),
           ]),
@@ -171,9 +171,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           Row(children: [
             const Icon(Icons.lock_outline, size: 14, color: AppColors.primary),
             const SizedBox(width: 6),
-            const Expanded(
+            Expanded(
               child: Text('Your card details are encrypted and secure.',
-                  style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
             ),
           ]),
         ],
@@ -204,15 +204,15 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2))],
             ),
-            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
+            child: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color, size: 16),
           ),
         ),
-        title: const Text('Payment Methods',
-            style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text('Payment Methods',
+            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold, fontSize: 20)),
       ),
       body: SafeArea(
         child: Column(
@@ -281,7 +281,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                               fontSize: 15,
                                               color: isSelected ? AppColors.primary : AppColors.text)),
                                       Text(method['subtitle'],
-                                          style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                                          style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
                                     ],
                                   ),
                                 ),

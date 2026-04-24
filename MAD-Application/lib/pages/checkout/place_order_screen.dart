@@ -142,7 +142,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Expanded(
-        child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondaryText, letterSpacing: 0.4)),
+        child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondaryText, letterSpacing: 0.4)),
       ),
       if (action != null)
         GestureDetector(
@@ -168,20 +168,20 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
     return Scaffold(
       backgroundColor: AppColors.secondary,
       appBar: AppBar(
-        backgroundColor: AppColors.white, elevation: 0.5,
+        backgroundColor: AppColors.getSurface(context), elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 18),
+          icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Place your order', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Place your order', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: ListView(children: [
         // Terms
         Container(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: RichText(text: TextSpan(
-            style: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+            style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
             children: [
               const TextSpan(text: 'If you proceed, you are automatically accepting our '),
               TextSpan(text: 'Terms & Conditions', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500)),
@@ -193,7 +193,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
         // Order summary
         _sectionHeader('Order summary'),
         Container(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Column(children: [
             _summaryRow("Item's total (${_cart.itemCount})", 'UGX ${subtotal.toStringAsFixed(0)}'),
@@ -205,7 +205,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
 
         // Promo
         Container(
-          color: AppColors.white, margin: const EdgeInsets.only(top: 1),
+          color: AppColors.getSurface(context), margin: const EdgeInsets.only(top: 1),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(children: [
             Icon(Icons.confirmation_number_outlined, color: AppColors.primary.withValues(alpha: 0.7), size: 20),
@@ -219,7 +219,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
         // Payment method
         _sectionHeader('Payment Method', action: 'Change', onAction: _changePayment),
         Container(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(children: [
             Container(
@@ -231,12 +231,12 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_paymentLabel, style: const TextStyle(fontSize: 14, color: AppColors.text)),
+                Text(_paymentLabel, style: TextStyle(fontSize: 14, color: AppColors.text)),
                 if (_paymentDetails['number'] != null && (_paymentDetails['number'] as String).isNotEmpty)
-                  Text(_paymentDetails['number'], style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                  Text(_paymentDetails['number'], style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
                 if (_paymentDetails['cardNumber'] != null && (_paymentDetails['cardNumber'] as String).isNotEmpty)
                   Text('**** **** **** ${(_paymentDetails['cardNumber'] as String).replaceAll(' ', '').substring((_paymentDetails['cardNumber'] as String).replaceAll(' ', '').length.clamp(4, 999) - 4)}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                      style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
               ],
             )),
           ]),
@@ -246,7 +246,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
         // Address
         _sectionHeader('Address', action: 'Change Your Address', onAction: _changeAddress),
         Container(
-          color: AppColors.white,
+          color: AppColors.getSurface(context),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: _selectedAddress == null
               ? GestureDetector(
@@ -272,11 +272,11 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(_selectedAddress!['fullName'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
+                    Text(_selectedAddress!['fullName'] ?? '', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
                     const SizedBox(height: 2),
-                    Text(_selectedAddress!['addressLine1'] ?? '', style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                    Text(_selectedAddress!['addressLine1'] ?? '', style: TextStyle(fontSize: 13, color: AppColors.secondaryText)),
                     if ((_selectedAddress!['city'] ?? '').isNotEmpty)
-                      Text(_selectedAddress!['city'], style: const TextStyle(fontSize: 13, color: AppColors.secondaryText)),
+                      Text(_selectedAddress!['city'], style: TextStyle(fontSize: 13, color: AppColors.secondaryText)),
                   ])),
                 ]),
         ),

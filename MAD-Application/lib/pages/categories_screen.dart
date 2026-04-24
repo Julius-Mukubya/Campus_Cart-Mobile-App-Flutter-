@@ -6,6 +6,7 @@ import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/widgets/dark_mode_toggle.dart';
 import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -571,6 +572,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ),
         centerTitle: false,
         actions: const [
+          DarkModeToggle(),
           NotificationIcon(),
         ],
       ),

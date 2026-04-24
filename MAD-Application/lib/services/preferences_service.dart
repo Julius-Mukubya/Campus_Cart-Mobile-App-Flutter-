@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
@@ -15,6 +16,12 @@ class PreferencesService {
   static const _keyNotificationsEnabled = 'notifications_enabled';
   static const _keyThemeMode = 'theme_mode';
   static const _keyLanguage = 'language';
+  static const _keyCartItems = 'cart_items';
+  static const _keyWishlistItems = 'wishlist_items';
+  static const _keySearchHistory = 'search_history';
+  static const _keyRecentlyViewed = 'recently_viewed';
+  static const int _maxSearchHistory = 10;
+  static const int _maxRecentlyViewed = 20;
 
   static SharedPreferences? _prefs;
 
@@ -109,4 +116,101 @@ class PreferencesService {
       _instance.setString(_keyLanguage, langCode);
   static String get language =>
       _instance.getString(_keyLanguage) ?? 'en';
+
+  // ── Cart persistence ──────────────────────────────────────────────────────
+
+  static Future<void> saveCartItems(List<Map<String, dynamic>> items) async {
+    final encoded = jsonEncode(items);
+    await _instance.setString(_keyCartItems, encoded);
+  }
+
+  static List<Map<String, dynamic>> get cartItems {
+    final raw = _instance.getString(_keyCartItems);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> clearCartItems() async =>
+      _instance.remove(_keyCartItems);
+
+  // ── Wishlist persistence ──────────────────────────────────────────────────
+
+  static Future<void> saveWishlistItems(List<Map<String, dynamic>> items) async {
+    final encoded = jsonEncode(items);
+    await _instance.setString(_keyWishlistItems, encoded);
+  }
+
+  static List<Map<String, dynamic>> get wishlistItems {
+    final raw = _instance.getString(_keyWishlistItems);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> clearWishlistItems() async =>
+      _instance.remove(_keyWishlistItems);
+
+  // ── Search history ────────────────────────────────────────────────────────
+
+  static List<String> get searchHistory {
+    return _instance.getStringList(_keySearchHistory) ?? [];
+  }
+
+  static Future<void> addSearchQuery(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+    final history = searchHistory;
+    history.remove(trimmed); // remove duplicate if exists
+    history.insert(0, trimmed); // most recent first
+    if (history.length > _maxSearchHistory) {
+      history.removeRange(_maxSearchHistory, history.length);
+    }
+    await _instance.setStringList(_keySearchHistory, history);
+  }
+
+  static Future<void> removeSearchQuery(String query) async {
+    final history = searchHistory;
+    history.remove(query);
+    await _instance.setStringList(_keySearchHistory, history);
+  }
+
+  static Future<void> clearSearchHistory() async =>
+      _instance.remove(_keySearchHistory);
+
+  // ── Recently viewed products ──────────────────────────────────────────────
+
+  static List<Map<String, dynamic>> get recentlyViewed {
+    final raw = _instance.getString(_keyRecentlyViewed);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> addRecentlyViewed(Map<String, dynamic> product) async {
+    final items = recentlyViewed;
+    // Remove if already present (by name or id)
+    final id = product['id'] ?? product['name'];
+    items.removeWhere((p) => (p['id'] ?? p['name']) == id);
+    items.insert(0, product);
+    if (items.length > _maxRecentlyViewed) {
+      items.removeRange(_maxRecentlyViewed, items.length);
+    }
+    await _instance.setString(_keyRecentlyViewed, jsonEncode(items));
+  }
+
+  static Future<void> clearRecentlyViewed() async =>
+      _instance.remove(_keyRecentlyViewed);
 }

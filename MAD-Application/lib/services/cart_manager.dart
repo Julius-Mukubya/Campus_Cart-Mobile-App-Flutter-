@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 class CartManager extends ChangeNotifier {
   static final CartManager _instance = CartManager._internal();
@@ -10,6 +11,18 @@ class CartManager extends ChangeNotifier {
   CartManager._internal();
 
   final List<Map<String, dynamic>> _cartItems = [];
+
+  /// Call once at startup (after PreferencesService.init()) to restore cart.
+  void loadFromPrefs() {
+    _cartItems
+      ..clear()
+      ..addAll(PreferencesService.cartItems);
+    notifyListeners();
+  }
+
+  Future<void> _persist() async {
+    await PreferencesService.saveCartItems(List<Map<String, dynamic>>.from(_cartItems));
+  }
 
   List<Map<String, dynamic>> get cartItems => List.unmodifiable(_cartItems);
   
@@ -69,11 +82,13 @@ class CartManager extends ChangeNotifier {
       _cartItems.add(cartItem);
     }
     
+    _persist();
     notifyListeners();
   }
 
   void removeFromCart(String productName) {
     _cartItems.removeWhere((item) => item['name'] == productName);
+    _persist();
     notifyListeners();
   }
 
@@ -85,12 +100,14 @@ class CartManager extends ChangeNotifier {
       } else {
         _cartItems[index]['quantity'] = quantity;
       }
+      _persist();
       notifyListeners();
     }
   }
 
   void clearCart() {
     _cartItems.clear();
+    _persist();
     notifyListeners();
   }
 
