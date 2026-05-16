@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/firebase_auth_service.dart';
-import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/managers/user_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -106,3 +106,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+

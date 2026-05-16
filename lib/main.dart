@@ -5,20 +5,24 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
-import 'package:madpractical/pages/cart_screen.dart';
-import 'package:madpractical/pages/home_screen.dart';
-import 'package:madpractical/pages/product_details.dart';
-import 'package:madpractical/pages/sign_in_screen.dart';
-import 'package:madpractical/pages/sign_up_screen.dart';
-import 'package:madpractical/pages/forgot_password_screen.dart';
-import 'package:madpractical/pages/otp_verification_screen.dart';
-import 'package:madpractical/pages/reset_password_screen.dart';
-import 'package:madpractical/pages/categories_screen.dart';
-import 'package:madpractical/pages/wishlist_screen.dart';
-import 'package:madpractical/pages/profile_screen.dart';
+// Auth screens
+import 'package:madpractical/pages/auth/sign_in_screen.dart';
+import 'package:madpractical/pages/auth/sign_up_screen.dart';
+import 'package:madpractical/pages/auth/forgot_password_screen.dart';
+import 'package:madpractical/pages/auth/otp_verification_screen.dart';
+import 'package:madpractical/pages/auth/reset_password_screen.dart';
+import 'package:madpractical/pages/auth/access_denied_screen.dart';
+// Customer screens
+import 'package:madpractical/pages/customer/cart_screen.dart';
+import 'package:madpractical/pages/customer/home_screen.dart';
+import 'package:madpractical/pages/customer/product_details.dart';
+import 'package:madpractical/pages/customer/categories_screen.dart';
+import 'package:madpractical/pages/customer/wishlist_screen.dart';
+import 'package:madpractical/pages/customer/my_orders_screen.dart';
+// Profile screens
+import 'package:madpractical/pages/profile/profile_screen.dart';
+// Splash
 import 'package:madpractical/pages/splash_screen.dart';
-import 'package:madpractical/pages/my_orders_screen.dart';
-import 'package:madpractical/pages/access_denied_screen.dart';
 // Seller screens
 import 'package:madpractical/pages/seller/seller_dashboard_screen.dart';
 import 'package:madpractical/pages/seller/my_products_screen.dart';
@@ -26,14 +30,20 @@ import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/order_details_screen.dart';
+// Admin screens
+import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
+import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/user_manager.dart';
-import 'package:madpractical/services/preferences_service.dart';
-import 'package:madpractical/services/app_settings.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/database_service.dart';
-import 'package:madpractical/services/notification_manager.dart';
+// Services - Managers
+import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/notification_manager.dart';
+// Services - Business
+import 'package:madpractical/services/business/app_settings.dart';
+// Services - Database
+import 'package:madpractical/services/database/database_service.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();

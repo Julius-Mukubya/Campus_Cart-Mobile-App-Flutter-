@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/widgets/common/notification_icon.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});

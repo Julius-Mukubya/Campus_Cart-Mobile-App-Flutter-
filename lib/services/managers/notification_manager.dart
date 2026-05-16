@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:madpractical/services/database_service.dart';
-import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/database/database_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
 
 class NotificationManager extends ChangeNotifier {
   static final NotificationManager _instance = NotificationManager._internal();
@@ -62,3 +62,4 @@ class NotificationManager extends ChangeNotifier {
     notifyListeners();
   }
 }
+

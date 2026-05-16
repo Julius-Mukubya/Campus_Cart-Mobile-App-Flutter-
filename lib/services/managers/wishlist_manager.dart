@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
 
 class WishlistManager extends ChangeNotifier {
   static final WishlistManager _instance = WishlistManager._internal();
@@ -61,3 +61,4 @@ class WishlistManager extends ChangeNotifier {
 
   int get itemCount => _wishlistItems.length;
 }
+

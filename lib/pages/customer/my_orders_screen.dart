@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/firebase_auth_service.dart';
-import 'package:madpractical/services/user_manager.dart';
-import 'package:madpractical/services/database_service.dart';
-import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/services/database/database_service.dart';
+import 'package:madpractical/widgets/common/notification_icon.dart';
 
 
 class MyOrdersScreen extends StatefulWidget {
@@ -514,3 +514,5 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     );
   }
 }
+
+

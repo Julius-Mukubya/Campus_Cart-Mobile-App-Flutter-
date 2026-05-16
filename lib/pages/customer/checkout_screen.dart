@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/order_manager.dart';
-import 'package:madpractical/services/firebase_auth_service.dart';
-import 'package:madpractical/services/user_manager.dart';
-import 'package:madpractical/pages/order_success.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/managers/order_manager.dart';
+import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/pages/customer/order_success.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -850,3 +850,5 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
+
+

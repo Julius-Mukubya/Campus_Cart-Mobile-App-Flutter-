@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/app_bottom_navigation.dart';
+import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/product_details.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/product_service.dart';
-import 'package:madpractical/widgets/notification_icon.dart';
-import 'package:madpractical/widgets/dark_mode_toggle.dart';
+import 'package:madpractical/pages/customer/product_details.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/business/product_service.dart';
+import 'package:madpractical/widgets/common/notification_icon.dart';
+import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
 
 class CategoriesScreen extends StatefulWidget {
@@ -1348,4 +1348,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     );
   }
 }
+
+
+
 

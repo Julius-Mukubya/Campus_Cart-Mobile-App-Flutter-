@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/notification_manager.dart';
-import 'package:madpractical/pages/notifications_list_screen.dart';
+import 'package:madpractical/services/managers/notification_manager.dart';
+import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 
 class NotificationIcon extends StatelessWidget {
   final double size;
@@ -60,3 +60,5 @@ class NotificationIcon extends StatelessWidget {
     );
   }
 }
+
+

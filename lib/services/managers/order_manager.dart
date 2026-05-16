@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:madpractical/services/notification_manager.dart';
+import 'package:madpractical/services/managers/notification_manager.dart';
 
 class OrderManager extends ChangeNotifier {
   static final OrderManager _instance = OrderManager._internal();
@@ -83,3 +83,4 @@ class OrderManager extends ChangeNotifier {
     }
   }
 }
+

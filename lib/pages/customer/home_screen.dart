@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/app_bottom_navigation.dart';
+import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/product_details.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/notification_manager.dart';
-import 'package:madpractical/services/product_service.dart';
-import 'package:madpractical/services/preferences_service.dart';
-import 'package:madpractical/services/database_service.dart';
-import 'package:madpractical/pages/notifications_list_screen.dart';
+import 'package:madpractical/pages/customer/product_details.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/managers/notification_manager.dart';
+import 'package:madpractical/services/business/product_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
+import 'package:madpractical/services/database/database_service.dart';
+import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 
-import 'package:madpractical/widgets/dark_mode_toggle.dart';
+import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1613,4 +1613,7 @@ class _HighlightedText extends StatelessWidget {
     );
   }
 }
+
+
+
 

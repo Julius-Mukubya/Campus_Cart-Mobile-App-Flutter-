@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'admin_service.dart';
+import 'package:madpractical/services/business/admin_service.dart';
 
 class SellerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

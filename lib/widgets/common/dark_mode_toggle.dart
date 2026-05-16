@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/services/app_settings.dart';
+import 'package:madpractical/services/business/app_settings.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class DarkModeToggle extends StatelessWidget {
@@ -36,3 +36,4 @@ class DarkModeToggle extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/business/product_service.dart';
 
 class SampleDataHelper {
   static final ProductService _productService = ProductService();

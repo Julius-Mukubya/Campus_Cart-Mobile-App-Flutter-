@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/app_bottom_navigation.dart';
+import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/user_manager.dart';
-import 'package:madpractical/services/order_manager.dart';
-import 'package:madpractical/services/firebase_auth_service.dart';
-import 'package:madpractical/services/preferences_service.dart';
-import 'package:madpractical/services/app_settings.dart';
-import 'package:madpractical/pages/my_orders_screen.dart';
-import 'package:madpractical/pages/addresses_screen.dart';
-import 'package:madpractical/pages/edit_profile_screen.dart';
-import 'package:madpractical/pages/notifications_screen.dart';
-import 'package:madpractical/pages/privacy_security_screen.dart';
-import 'package:madpractical/widgets/notification_icon.dart';
-import 'package:madpractical/widgets/dark_mode_toggle.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/services/managers/order_manager.dart';
+import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
+import 'package:madpractical/services/business/app_settings.dart';
+import 'package:madpractical/pages/customer/my_orders_screen.dart';
+import 'package:madpractical/pages/customer/addresses_screen.dart';
+import 'package:madpractical/pages/profile/edit_profile_screen.dart';
+import 'package:madpractical/pages/customer/notifications_screen.dart';
+import 'package:madpractical/pages/profile/privacy_security_screen.dart';
+import 'package:madpractical/widgets/common/notification_icon.dart';
+import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -941,3 +941,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+

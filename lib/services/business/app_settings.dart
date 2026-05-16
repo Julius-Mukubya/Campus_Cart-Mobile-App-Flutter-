@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'preferences_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
 
 class AppSettings extends ChangeNotifier {
   static final AppSettings _instance = AppSettings._internal();

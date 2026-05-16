@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/app_bottom_navigation.dart';
+import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/widgets/notification_icon.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/widgets/common/notification_icon.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -606,3 +606,5 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 }
+
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/firebase_auth_service.dart';
-import 'package:madpractical/services/user_manager.dart';
+import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/managers/user_manager.dart';
 
 
 class AddressesScreen extends StatefulWidget {
@@ -209,3 +209,4 @@ class _AddressesScreenState extends State<AddressesScreen> {
     );
   }
 }
+

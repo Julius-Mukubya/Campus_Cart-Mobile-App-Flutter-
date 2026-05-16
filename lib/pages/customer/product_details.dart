@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/wishlist_manager.dart';
-import 'package:madpractical/services/cart_manager.dart';
-import 'package:madpractical/services/review_service.dart';
-import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/managers/wishlist_manager.dart';
+import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/services/business/review_service.dart';
+import 'package:madpractical/services/business/product_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -1093,3 +1093,4 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 }
+

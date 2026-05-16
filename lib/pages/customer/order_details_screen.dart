@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/order_manager.dart';
+import 'package:madpractical/services/managers/order_manager.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -504,3 +504,4 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     }
   }
 }
+

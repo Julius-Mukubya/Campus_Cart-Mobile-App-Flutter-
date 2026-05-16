@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/managers/preferences_service.dart';
 
 class CartManager extends ChangeNotifier {
   static final CartManager _instance = CartManager._internal();
@@ -115,3 +115,4 @@ class CartManager extends ChangeNotifier {
     return _cartItems.any((item) => item['name'] == productName);
   }
 }
+
