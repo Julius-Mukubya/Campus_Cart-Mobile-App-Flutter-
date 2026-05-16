@@ -18,7 +18,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final OrderManager _orderManager = OrderManager();
   final PageController _pageController = PageController();
 
-  int _currentStep = 0; // 0=Address, 1=Payment, 2=Review
+  int _currentStep = 0; // 0=Address, 1=Review
 
   // Step 1 – Address
   final _nameController    = TextEditingController();
@@ -30,42 +30,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   List<Map<String, dynamic>> _savedAddresses = [];
   String? _selectedAddressId;
   bool _loadingAddresses = true;
-  // Step 2 – Payment
-  String _paymentMethod = 'mtn';
-  final _paymentFormKey = GlobalKey<FormState>();
-
-  // Payment detail controllers
-  final _momoPhoneController  = TextEditingController(); // MTN / Airtel
-  final _cardNumberController = TextEditingController(); // Visa
-  final _cardNameController   = TextEditingController();
-  final _cardExpiryController = TextEditingController();
-  final _cardCvvController    = TextEditingController();
-
-  static const double _deliveryFee = 5000;
-
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'id': 'mtn',
-      'name': 'MTN Mobile Money',
-      'subtitle': 'Pay with MTN MoMo',
-      'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.jpg/320px-New-mtn-logo.jpg',
-      'color': const Color(0xFFFFCC00),
-    },
-    {
-      'id': 'airtel',
-      'name': 'Airtel Money',
-      'subtitle': 'Pay with Airtel Money',
-      'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Airtel_logo_2010.svg/320px-Airtel_logo_2010.svg.png',
-      'color': const Color(0xFFE40000),
-    },
-    {
-      'id': 'visa',
-      'name': 'Bank / Visa Card',
-      'subtitle': 'Credit or Debit card',
-      'logoUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/320px-Visa_Inc._logo.svg.png',
-      'color': const Color(0xFF1A1F71),
-    },
-  ];
 
   final FirebaseAuthService _authService = FirebaseAuthService();
   final UserManager _userManager = UserManager();
@@ -112,26 +76,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _cityController.dispose();
-    _momoPhoneController.dispose();
-    _cardNumberController.dispose();
-    _cardNameController.dispose();
-    _cardExpiryController.dispose();
-    _cardCvvController.dispose();
     super.dispose();
   }
 
-  double get _total => _cartManager.subtotal + _deliveryFee;
-
-  String get _paymentLabel =>
-      _paymentMethods.firstWhere((m) => m['id'] == _paymentMethod)['name'];
-
-  String get _paymentDetail {
-    if (_paymentMethod == 'visa') {
-      final num = _cardNumberController.text;
-      return num.length >= 4 ? '**** **** **** ${num.substring(num.length - 4)}' : '';
-    }
-    return _momoPhoneController.text;
-  }
+  double get _total => _cartManager.subtotal;
 
   void _goTo(int step) {
     setState(() => _currentStep = step);
@@ -146,11 +94,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         return;
       }
     }
-    if (_currentStep == 1 && !_paymentFormKey.currentState!.validate()) return;
-    if (_currentStep < 2) _goTo(_currentStep + 1);
+    if (_currentStep < 1) _goTo(_currentStep + 1);
   }
 
-  void _placeOrder() {
+  void _placeOrder() async {
     final subtotal = _cartManager.subtotal;
     final now = DateTime.now();
     final orderId = 'ORD-${now.year}-${now.millisecondsSinceEpoch.toString().substring(7)}';
@@ -158,8 +105,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final order = {
       'id': orderId,
       'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-      'status': 'Processing',
-      'total': _total,
+      'status': 'Pending',
+      'total': subtotal,
       'items': _cartManager.itemCount,
       'products': List<Map<String, dynamic>>.from(
         _cartManager.cartItems.map((item) => {
@@ -170,32 +117,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         }),
       ),
       'shippingAddress': '${_addressController.text}, ${_cityController.text}',
-      'paymentMethod': _paymentLabel,
+      'customerName': _nameController.text,
+      'customerPhone': _phoneController.text,
       'subtotal': subtotal,
-      'deliveryFee': _deliveryFee,
     };
 
-    _orderManager.addOrder(order);
+    await _orderManager.addOrder(order);
     _cartManager.clearCart();
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OrderSuccess(
-          subtotal: subtotal,
-          deliveryFee: _deliveryFee,
-          total: _total,
-          deliveryMethod: 'Standard (3–5 days)',
-          shippingAddress: '${_addressController.text}, ${_cityController.text}',
-          paymentMethod: _paymentLabel,
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderSuccess(
+            subtotal: subtotal,
+            deliveryFee: 0,
+            total: subtotal,
+            deliveryMethod: 'Standard',
+            shippingAddress: '${_addressController.text}, ${_cityController.text}',
+            paymentMethod: 'To be arranged',
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   // ─── Stepper ─────────────────────────────────────────────────────────────────
   Widget _buildStepper() {
-    const steps = ['Address', 'Payment', 'Review'];
+    const steps = ['Address', 'Review'];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -640,216 +589,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   // ─── Step 2: Payment ─────────────────────────────────────────────────────────
-  Widget _buildPaymentStep() {
-    final isMomo = _paymentMethod == 'mtn' || _paymentMethod == 'airtel';
-    final isVisa = _paymentMethod == 'visa';
+  // REMOVED: Payment step no longer needed for simplified checkout
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _paymentFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionTitle('Payment Method', Icons.payment_outlined),
-            const SizedBox(height: 20),
-
-            // Method selector cards
-            ..._paymentMethods.map((method) {
-              final selected = _paymentMethod == method['id'];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: GestureDetector(
-                  onTap: () => setState(() => _paymentMethod = method['id']),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: selected ? AppColors.primary : AppColors.lightGrey,
-                        width: selected ? 2 : 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: selected
-                              ? AppColors.primary.withValues(alpha: 0.1)
-                              : AppColors.black.withValues(alpha: 0.04),
-                          blurRadius: 10, offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60, height: 40,
-                          decoration: BoxDecoration(
-                            color: (method['color'] as Color).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: (method['color'] as Color).withValues(alpha: 0.3)),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Image.network(method['logoUrl'],
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) =>
-                                    Icon(Icons.payment, color: method['color'] as Color)),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(method['name'],
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 14,
-                                      color: selected ? AppColors.primary : AppColors.text)),
-                              Text(method['subtitle'],
-                                  style: TextStyle(
-                                      fontSize: 12, color: AppColors.secondaryText)),
-                            ],
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 22, height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: selected ? AppColors.primary : Colors.transparent,
-                            border: Border.all(
-                                color: selected ? AppColors.primary : AppColors.grey,
-                                width: 2),
-                          ),
-                          child: selected
-                              ? const Icon(Icons.check, color: Colors.white, size: 13)
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 8),
-
-            // ── Payment detail fields ──────────────────────────────────────────
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: isMomo
-                  ? _momoFields()
-                  : isVisa
-                      ? _visaFields()
-                      : const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _momoFields() {
-    final label = _paymentMethod == 'mtn' ? 'MTN MoMo Number' : 'Airtel Money Number';
-    return Column(
-      key: ValueKey(_paymentMethod),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Mobile Money Details', Icons.phone_android),
-        const SizedBox(height: 16),
-        _inputField(_momoPhoneController, label, Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Enter your mobile money number';
-              if (v.length < 10) return 'Enter a valid phone number';
-              return null;
-            }),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'You will receive a payment prompt on this number to confirm.',
-                  style: TextStyle(fontSize: 12, color: AppColors.secondaryText),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _visaFields() {
-    return Column(
-      key: const ValueKey('visa'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Card Details', Icons.credit_card),
-        const SizedBox(height: 16),
-        _inputField(_cardNumberController, 'Card Number', Icons.credit_card,
-            keyboardType: TextInputType.number,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Enter card number';
-              if (v.replaceAll(' ', '').length < 16) return 'Enter a valid 16-digit card number';
-              return null;
-            }),
-        const SizedBox(height: 16),
-        _inputField(_cardNameController, 'Cardholder Name', Icons.person_outline,
-            validator: (v) => v == null || v.isEmpty ? 'Enter cardholder name' : null),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _inputField(_cardExpiryController, 'MM / YY', Icons.calendar_today,
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v == null || v.isEmpty ? 'Enter expiry' : null),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _inputField(_cardCvvController, 'CVV', Icons.lock_outline,
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter CVV';
-                    if (v.length < 3) return 'Invalid CVV';
-                    return null;
-                  }),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.lock_outline, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Your card details are encrypted and secure.',
-                  style: TextStyle(fontSize: 12, color: AppColors.secondaryText),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   // ─── Step 3: Review ───────────────────────────────────────────────────────────
   Widget _buildReviewStep() {
@@ -927,25 +668,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Payment
-          _reviewCard(
-            title: 'Payment',
-            icon: Icons.payment_outlined,
-            child: Column(
-              children: [
-                _reviewRow('Method', _paymentLabel),
-                if (_paymentDetail.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  _reviewRow(
-                    _paymentMethod == 'visa' ? 'Card' : 'Number',
-                    _paymentDetail,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Price
           _reviewCard(
             title: 'Price Summary',
@@ -953,10 +675,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               children: [
                 _reviewRow('Subtotal', 'UGX ${_cartManager.subtotal.toStringAsFixed(0)}'),
-                const SizedBox(height: 8),
-                _reviewRow('Delivery Fee', 'UGX ${_deliveryFee.toStringAsFixed(0)}'),
                 const Divider(height: 20),
-                _reviewRow('Total', 'UGX ${_total.toStringAsFixed(0)}', bold: true),
+                _reviewRow('Total', 'UGX ${_cartManager.subtotal.toStringAsFixed(0)}', bold: true),
               ],
             ),
           ),
@@ -1032,40 +752,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _inputField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.primary),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.lightGrey)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.lightGrey)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2)),
-        filled: true,
-        fillColor: AppColors.white,
-      ),
-    );
-  }
-
   // ─── Build ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    const stepLabels = ['Address', 'Payment', 'Review'];
-    final isLastStep = _currentStep == 2;
+    const stepLabels = ['Address', 'Review'];
+    final isLastStep = _currentStep == 1;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -1100,7 +791,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildAddressStep(),
-                _buildPaymentStep(),
                 _buildReviewStep(),
               ],
             ),

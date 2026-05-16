@@ -5,8 +5,7 @@ import 'package:madpractical/services/firebase_auth_service.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/database_service.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
-import 'package:madpractical/pages/live_order_tracking_screen.dart';
-import 'package:madpractical/pages/customer_support_chat_screen.dart';
+
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -205,12 +204,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 if (active)
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => LiveOrderTrackingScreen(
-                              orderId: order['id']),
-                        ),
+                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Order tracking coming soon')),
                       ),
                       icon: const Icon(Icons.location_on, size: 15),
                       label: const Text('Track'),
@@ -515,18 +510,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => const CustomerSupportChatScreen()),
-        ),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.chat, color: AppColors.white),
-        label: const Text('Support',
-            style: TextStyle(
-                color: AppColors.white, fontWeight: FontWeight.w600)),
       ),
     );
   }

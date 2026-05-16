@@ -11,12 +11,8 @@ import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/pages/my_orders_screen.dart';
 import 'package:madpractical/pages/addresses_screen.dart';
 import 'package:madpractical/pages/edit_profile_screen.dart';
-import 'package:madpractical/pages/payment_methods_screen.dart';
 import 'package:madpractical/pages/notifications_screen.dart';
 import 'package:madpractical/pages/privacy_security_screen.dart';
-import 'package:madpractical/pages/faq_screen.dart';
-import 'package:madpractical/pages/contact_us_screen.dart';
-import 'package:madpractical/pages/ai_chat_support_screen.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
 import 'package:madpractical/widgets/dark_mode_toggle.dart';
 
@@ -732,9 +728,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Payment Methods',
         'subtitle': 'Manage payment options',
         'color': AppColors.success,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment methods not available in this version')),
         ),
       },
     ];
@@ -768,9 +763,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'FAQ',
         'subtitle': 'Frequently asked questions',
         'color': AppColors.success,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const FaqScreen()),
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('FAQ not available in this version')),
         ),
       },
       {
@@ -778,9 +772,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': 'Contact Us',
         'subtitle': 'Get in touch with support',
         'color': Colors.blue,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ContactUsScreen()),
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Contact us feature not available in this version')),
         ),
       },
     ];
@@ -939,21 +932,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AiChatSupportScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(
-          Icons.support_agent,
-          color: AppColors.white,
-        ),
-      ),
+
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 4,
         wishlistCount: wishlistManager.itemCount,

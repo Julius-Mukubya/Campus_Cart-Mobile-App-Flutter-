@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/pages/checkout/place_order_screen.dart';
 import 'package:madpractical/widgets/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/wishlist_manager.dart';
 import 'package:madpractical/services/cart_manager.dart';
 import 'package:madpractical/widgets/notification_icon.dart';
-import 'package:madpractical/pages/ai_chat_support_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -569,12 +567,7 @@ class _CartScreenState extends State<CartScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PlaceOrderScreen(),
-                          ),
-                        ),
+                        onPressed: () => Navigator.pushNamed(context, '/checkout'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.white,
@@ -604,21 +597,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AiChatSupportScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(
-          Icons.support_agent,
-          color: AppColors.white,
-        ),
-      ),
+
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 3,
         wishlistCount: _wishlistManager.itemCount,

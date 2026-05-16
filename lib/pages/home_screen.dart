@@ -9,7 +9,7 @@ import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/services/database_service.dart';
 import 'package:madpractical/pages/notifications_list_screen.dart';
-import 'package:madpractical/pages/ai_chat_support_screen.dart';
+
 import 'package:madpractical/widgets/dark_mode_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -1469,22 +1469,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Floating Action Button for Customer Support Chat
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AiChatSupportScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(
-          Icons.support_agent,
-          color: AppColors.white,
-        ),
-      ),
+
 
       // Bottom Navigation Bar
       bottomNavigationBar: AppBottomNavigation(

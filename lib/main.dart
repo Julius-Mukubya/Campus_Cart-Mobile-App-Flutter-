@@ -26,32 +26,6 @@ import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/order_details_screen.dart';
-import 'package:madpractical/pages/seller/earnings_screen.dart';
-import 'package:madpractical/pages/seller/store_settings_screen.dart';
-// Staff screens
-import 'package:madpractical/pages/staff/staff_dashboard_screen.dart';
-import 'package:madpractical/pages/staff/orders_to_process_screen.dart';
-// Coordinator screens
-import 'package:madpractical/pages/staff/coordinator/unassigned_orders_screen.dart';
-import 'package:madpractical/pages/staff/coordinator/assign_pickup_screen.dart';
-import 'package:madpractical/pages/staff/coordinator/hq_management_screen.dart';
-import 'package:madpractical/pages/staff/coordinator/assign_delivery_screen.dart';
-// Support screens
-import 'package:madpractical/pages/staff/support/support_tickets_screen.dart';
-import 'package:madpractical/pages/staff/support/live_chat_screen.dart';
-import 'package:madpractical/pages/help_center_screen.dart';
-// Deliverer screens
-import 'package:madpractical/pages/staff/deliverer/pickup_orders_screen.dart';
-import 'package:madpractical/pages/staff/deliverer/final_delivery_orders_screen.dart';
-import 'package:madpractical/pages/staff/deliverer/route_planner_screen.dart';
-import 'package:madpractical/pages/staff/deliverer/active_deliveries_screen.dart';
-import 'package:madpractical/pages/staff/deliverer/delivery_history_screen.dart';
-// Seller screens (vendor)
-import 'package:madpractical/pages/seller/vendor_order_approval_screen.dart';
-// Admin screens
-import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
-import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
-import 'package:madpractical/pages/debug_firebase_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/user_manager.dart';
 import 'package:madpractical/services/preferences_service.dart';
@@ -326,17 +300,10 @@ class _MyAppState extends State<MyApp> {
         final userManager = UserManager();
         final userRole = userManager.role;
         
-        // Role-based route protection
-        if (settings.name?.startsWith('/seller/') == true && userRole != 'seller') {
+        // Role-based route protection - only allow sellers and admins to access seller/admin routes
+        if (settings.name?.startsWith('/seller/') == true && userRole != 'seller' && userRole != 'admin') {
           return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
         }
-        if (settings.name?.startsWith('/staff/') == true && userRole != 'staff') {
-          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
-        }
-        if (settings.name?.startsWith('/admin/') == true && userRole != 'admin') {
-          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
-        }
-        
         
         // Handle product details route
         if (settings.name == '/product_details' || settings.name == '/product-details') {
@@ -378,40 +345,12 @@ class _MyAppState extends State<MyApp> {
         '/wishlist': (context) => const WishlistScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/my-orders': (context) => const MyOrdersScreen(),
-        '/help-center': (context) => const HelpCenterScreen(),
         '/access-denied': (context) => const AccessDeniedScreen(),
         // Seller routes
         '/seller/dashboard': (context) => const SellerDashboardScreen(),
         '/seller/products': (context) => const MyProductsScreen(),
         '/seller/add-product': (context) => const AddProductScreen(),
         '/seller/orders': (context) => const SellerOrdersScreen(),
-        '/seller/earnings': (context) => const EarningsScreen(),
-        '/seller/settings': (context) => const StoreSettingsScreen(),
-        // Staff routes
-        '/staff/dashboard': (context) => const StaffDashboardScreen(),
-        '/staff/orders': (context) => const OrdersToProcessScreen(),
-        '/staff/tickets': (context) => const SupportTicketsScreen(),
-        '/staff/chat': (context) => const LiveChatScreen(),
-        '/staff/help-center': (context) => const HelpCenterScreen(),
-        '/staff/route-planner': (context) => const RoutePlannerScreen(),
-        '/staff/active-deliveries': (context) => const ActiveDeliveriesScreen(),
-        '/staff/delivery-history': (context) => const DeliveryHistoryScreen(),
-        // Coordinator routes
-        '/staff/unassigned-orders': (context) => const UnassignedOrdersScreen(),
-        '/staff/assign-pickup': (context) => const AssignPickupScreen(),
-        '/staff/hq-management': (context) => const HQManagementScreen(),
-        '/staff/assign-delivery': (context) => const AssignDeliveryScreen(),
-        // Seller order approval route
-        '/seller/order-approvals': (context) => const VendorOrderApprovalScreen(),
-        // Delivery routes
-        '/delivery/pickup-orders': (context) => const PickupOrdersScreen(),
-        '/delivery/final-orders': (context) => const FinalDeliveryOrdersScreen(),
-        // Admin routes
-        '/admin/dashboard': (context) => const AdminDashboardScreen(),
-        '/admin/sellers': (context) => const ManageSellersScreen(),
-        
-        // Debug route
-        '/debug/firebase': (context) => const DebugFirebaseScreen(),
       },
     );
   }

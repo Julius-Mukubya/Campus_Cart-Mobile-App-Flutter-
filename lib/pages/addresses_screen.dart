@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/firebase_auth_service.dart';
 import 'package:madpractical/services/user_manager.dart';
-import 'package:madpractical/pages/checkout/edit_address_screen.dart';
+
 
 class AddressesScreen extends StatefulWidget {
   const AddressesScreen({super.key});
@@ -39,27 +39,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
 
   Future<void> _openEdit([Map<String, dynamic>? existing]) async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(builder: (_) => EditAddressScreen(existing: existing)),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Address editing feature coming soon')),
     );
-    if (result == null) return;
-
-    final uid = _userManager.userId ?? _authService.currentUser?.uid;
-    if (uid != null) {
-      await _authService.addUserAddress(
-        userId: uid,
-        label: result['label'] ?? 'Address',
-        fullName: '${result['firstName']} ${result['lastName']}'.trim(),
-        phone: result['phone'] ?? '',
-        addressLine1: result['street'] ?? '',
-        city: result['region'] ?? '',
-        state: result['region'] ?? '',
-        postalCode: '',
-        isDefault: result['isDefault'] == true,
-      );
-    }
-    _load(); // reload from Firestore
   }
 
   Future<void> _delete(Map<String, dynamic> addr) async {

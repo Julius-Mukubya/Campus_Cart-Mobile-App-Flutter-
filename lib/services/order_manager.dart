@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:madpractical/services/notification_manager.dart';
 
 class OrderManager extends ChangeNotifier {
   static final OrderManager _instance = OrderManager._internal();
@@ -15,9 +16,47 @@ class OrderManager extends ChangeNotifier {
   
   int get orderCount => _orders.length;
   
-  void addOrder(Map<String, dynamic> order) {
+  /// Add a new order and send notification to seller
+  /// The order should contain: customerName, customerPhone, shippingAddress, products, total
+  Future<void> addOrder(Map<String, dynamic> order) async {
     _orders.insert(0, order);
+    
+    // Send notification to seller about new order
+    await _notifySeller(order);
+    
     notifyListeners();
+  }
+  
+  /// Send a notification to the seller about a new order
+  Future<void> _notifySeller(Map<String, dynamic> order) async {
+    try {
+      final notificationManager = NotificationManager();
+      
+      // Extract product seller info (in simplified version, products come from same seller)
+      final products = order['products'] as List<Map<String, dynamic>>? ?? [];
+      final totalItems = products.fold<int>(0, (sum, product) => sum + (product['quantity'] as int? ?? 0));
+      
+      final notification = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'type': 'new_order',
+        'title': 'New Order Received',
+        'message': 'Customer ${order['customerName']} placed an order for $totalItems item(s)',
+        'orderId': order['id'],
+        'customerName': order['customerName'],
+        'customerPhone': order['customerPhone'],
+        'shippingAddress': order['shippingAddress'],
+        'total': order['total'],
+        'itemCount': totalItems,
+        'timestamp': DateTime.now().toIso8601String(),
+        'isRead': false,
+      };
+      
+      // For now, save to local notifications (in full implementation, this would go to Firebase)
+      // and be fetched by the seller's device
+      await notificationManager.addNotification(notification);
+    } catch (e) {
+      print('Error notifying seller: $e');
+    }
   }
   
   Map<String, dynamic>? getOrderById(String id) {
