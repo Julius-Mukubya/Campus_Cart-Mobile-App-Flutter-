@@ -123,8 +123,15 @@ lib/
 │   │   └── user_subcollection_service.dart
 │   └── storage/
 │       └── firebase_storage_service.dart
+├── repositories/                       ← NEW (created)
+│   ├── user_repository.dart
+│   ├── product_repository.dart
+│   ├── order_repository.dart
+│   ├── cart_repository.dart
+│   └── seller_repository.dart
 ├── utils/
-│   ├── app_logger.dart                 ← NEW (created)
+│   ├── app_logger.dart
+│   ├── exceptions.dart                 ← NEW (created)
 │   └── helpers/
 │       ├── sample_data_helper.dart
 │       ├── sample_orders_helper.dart
@@ -132,43 +139,6 @@ lib/
 └── widgets/
     ├── common/
     └── navigation/
-
----
-
-## Target Folder Structure
-lib/
-├── main.dart
-├── firebase_options.dart
-├── router.dart                         ← NEW (pending)
-├── constants/
-│   └── app_colors.dart
-├── models/                             ← MOVED from utils/models/
-│   ├── product_model.dart
-│   ├── order_model.dart
-│   ├── user_model.dart
-│   ├── cart_item_model.dart
-│   └── review_model.dart
-├── repositories/                       ← NEW (pending)
-│   ├── user_repository.dart
-│   ├── product_repository.dart
-│   ├── order_repository.dart
-│   ├── cart_repository.dart
-│   └── seller_repository.dart
-├── providers/                          ← DONE (created)
-│   ├── user_provider.dart
-│   ├── cart_provider.dart
-│   ├── wishlist_provider.dart
-│   ├── order_provider.dart
-│   └── notification_provider.dart
-├── services/
-│   ├── auth/
-│   └── business/
-├── pages/
-├── widgets/
-└── utils/
-    ├── exceptions.dart                 ← NEW (pending)
-    ├── app_logger.dart                 ← DONE (created)
-    └── helpers/
 
 ---
 
@@ -213,50 +183,15 @@ logger: ^2.3.0               ← DONE
 - [x] Replace print() in categories_screen.dart (3 calls)
 - [x] Run flutter analyze (0 avoid_print warnings in lib/; 36 total issues, all pre-existing)
 
-### ⏳ TASK 3 — Create Repository Layer (PENDING)
-Create lib/repositories/ with these files and methods:
-
-user_repository.dart
-  getUser(String userId) → Future<UserModel>
-  updateUser(UserModel user) → Future<void>
-  watchUser(String userId) → Stream<UserModel>
-
-product_repository.dart
-  getProducts() → Future<List<ProductModel>>
-  getProductById(String id) → Future<ProductModel>
-  getProductsByCategory(String categoryId) → Future<List<ProductModel>>
-  addProduct(ProductModel p) → Future<void>
-  updateProduct(ProductModel p) → Future<void>
-  deleteProduct(String id) → Future<void>
-  searchProducts(String query) → Future<List<ProductModel>>
-  getCachedProducts() → Future<List<ProductModel>>     ← from SQLite
-  cacheProducts(List<ProductModel> p) → Future<void>   ← to SQLite
-
-order_repository.dart
-  createOrder(OrderModel o) → Future<String>
-  getOrdersByUser(String userId) → Future<List<OrderModel>>
-  getOrdersBySeller(String sellerId) → Future<List<OrderModel>>
-  updateOrderStatus(String orderId, String status) → Future<void>
-  watchOrder(String orderId) → Stream<OrderModel>
-  watchOrdersByUser(String userId) → Stream<List<OrderModel>>
-
-cart_repository.dart
-  saveCart(String userId, List<CartItemModel> items) → Future<void>
-  loadCart(String userId) → Future<List<CartItemModel>>
-  clearCart(String userId) → Future<void>
-
-seller_repository.dart
-  getSeller(String sellerId) → Future<SellerModel>
-  updateSeller(SellerModel s) → Future<void>
-  getSellerProducts(String sellerId) → Future<List<ProductModel>>
-  getSellerOrders(String sellerId) → Future<List<OrderModel>>
-  watchSellerOrders(String sellerId) → Stream<List<OrderModel>>
-
-Repository rules:
-  - Constructor injection for FirebaseFirestore + Database
-  - All Firestore calls wrapped in try/catch
-  - Rethrow as RepositoryException (create in utils/exceptions.dart)
-  - No Flutter UI imports
+### ✅ TASK 3 — Create Repository Layer (COMPLETED)
+- [x] Create lib/utils/exceptions.dart with RepositoryException
+- [x] Create lib/repositories/user_repository.dart (getUser, updateUser, watchUser)
+- [x] Create lib/repositories/product_repository.dart (getProducts, getProductById, getProductsByCategory, addProduct, updateProduct, deleteProduct, searchProducts, getCachedProducts, cacheProducts)
+- [x] Create lib/repositories/order_repository.dart (createOrder, getOrdersByUser, getOrdersBySeller, updateOrderStatus, watchOrder, watchOrdersByUser)
+- [x] Create lib/repositories/cart_repository.dart (saveCart, loadCart, clearCart)
+- [x] Create lib/repositories/seller_repository.dart (getSeller, updateSeller, getSellerProducts, getSellerOrders, watchSellerOrders)
+- [x] Constructor injection for FirebaseFirestore, all calls wrapped in try/catch, rethrow as RepositoryException, no Flutter UI imports
+- [x] Run flutter analyze (36 issues, 0 new from repository code)
 
 ### ⏳ TASK 4 — Update Services (PENDING)
 - product_service.dart → inject + use ProductRepository
@@ -310,4 +245,4 @@ Implement SQLite caching in repositories
 ---
 
 ## Last Updated
-2026-05-17 - Updated progress: TASK 1 complete, TASK 2 complete (0 avoid_print warnings), TASK 5 complete
+2026-05-17 - Updated progress: TASK 1 complete, TASK 2 complete, TASK 3 complete (repository layer), TASK 5 complete
