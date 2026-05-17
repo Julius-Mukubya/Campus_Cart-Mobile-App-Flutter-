@@ -53,11 +53,6 @@ class SellerRequestService extends ChangeNotifier {
     required String userName,
     required String userEmail,
     required String userPhone,
-    required String storeName,
-    required String storeDescription,
-    required String businessPhone,
-    required String address,
-    required String city,
     List<String>? categories,
   }) async {
     try {
@@ -81,12 +76,6 @@ class SellerRequestService extends ChangeNotifier {
         'userName': userName,
         'userEmail': userEmail,
         'userPhone': userPhone,
-        'storeName': storeName,
-        'storeDescription': storeDescription,
-        'businessPhone': businessPhone,
-        'address': address,
-        'city': city,
-        'categories': categories ?? [],
         'status': 'pending', // pending, approved, rejected
         'adminNotes': '',
         'createdAt': DateTime.now().toIso8601String(),

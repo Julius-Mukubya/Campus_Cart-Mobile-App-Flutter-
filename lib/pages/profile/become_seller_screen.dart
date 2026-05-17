@@ -11,14 +11,8 @@ class BecomeSellersScreen extends StatefulWidget {
 }
 
 class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _userManager = UserManager();
   final _sellerRequestService = SellerRequestService();
-
-  late TextEditingController _storeNameController;
-  late TextEditingController _storeDescriptionController;
-  late TextEditingController _phoneController;
-  late TextEditingController _addressController;
 
   bool _isLoading = false;
   bool _hasActiveRequest = false;
@@ -27,19 +21,11 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
   @override
   void initState() {
     super.initState();
-    _storeNameController = TextEditingController();
-    _storeDescriptionController = TextEditingController();
-    _phoneController = TextEditingController();
-    _addressController = TextEditingController();
     _checkExistingRequest();
   }
 
   @override
   void dispose() {
-    _storeNameController.dispose();
-    _storeDescriptionController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -69,8 +55,6 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
   }
 
   Future<void> _submitSellerRequest() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
@@ -79,12 +63,6 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
         userName: _userManager.name,
         userEmail: _userManager.email,
         userPhone: _userManager.phone,
-        city: 'Campus', // Default to Campus as this is Campus Cart
-        storeName: _storeNameController.text,
-        storeDescription: _storeDescriptionController.text,
-        businessPhone: _phoneController.text,
-        address: _addressController.text,
-        categories: [], // User can select categories later
       );
 
       if (!mounted) return;
@@ -100,12 +78,6 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
           backgroundColor: AppColors.success,
         ),
       );
-
-      // Clear form
-      _storeNameController.clear();
-      _storeDescriptionController.clear();
-      _phoneController.clear();
-      _addressController.clear();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -267,165 +239,81 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
 
               const SizedBox(height: 32),
 
-              // Form Section (only if no active request)
+              // Application Section (only if no active request)
               if (!_hasActiveRequest) ...[
                 const Text(
-                  'Store Information',
+                  'Ready to Get Started?',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Store Name
-                      TextFormField(
-                        controller: _storeNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Store Name',
-                          prefixIcon: const Icon(Icons.store, color: AppColors.primary),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Please enter store name';
-                          }
-                          if (value!.length < 3) {
-                            return 'Store name must be at least 3 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Once your application is approved by our admin team, you\'ll be able to create your store and add products. This typically takes 24-48 hours.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.text,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-                      // Store Description
-                      TextFormField(
-                        controller: _storeDescriptionController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'Store Description',
-                          prefixIcon: const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: Icon(Icons.description, color: AppColors.primary),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Please enter store description';
-                          }
-                          if (value!.length < 10) {
-                            return 'Description must be at least 10 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                // Terms and conditions
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'By clicking "Submit Application", you agree to our seller agreement and acknowledge that your application will be reviewed by our admin team.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.text,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-                      // Business Phone
-                      TextFormField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          hintText: 'Business Phone Number',
-                          prefixIcon: const Icon(Icons.phone, color: AppColors.primary),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Please enter phone number';
-                          }
-                          if (value!.length < 10) {
-                            return 'Please enter valid phone number';
-                          }
-                          return null;
-                        },
+                // Submit Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submitSellerRequest,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Address
-                      TextFormField(
-                        controller: _addressController,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          hintText: 'Business Address',
-                          prefixIcon: const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: Icon(Icons.location_on, color: AppColors.primary),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Please enter address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Terms and conditions
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'By submitting this form, you agree to our seller agreement and acknowledge that your application will be reviewed by our admin team. We typically respond within 24-48 hours.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.text,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitSellerRequest,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Submit Application',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                                  ),
-                                )
-                              : const Text(
-                                  'Submit Seller Request',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
