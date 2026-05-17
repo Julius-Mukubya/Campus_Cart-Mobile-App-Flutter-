@@ -34,7 +34,7 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
     if (userId == null) return;
     
     // Check for pending request
-    final pending = await _sellerRequestService.hasPendingSellerRequest(userId);
+    final pending = _sellerRequestService.hasPendingSellerRequest(userId);
     if (pending) {
       setState(() {
         _hasActiveRequest = true;
@@ -44,7 +44,7 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
     }
 
     // Check for approved request
-    final approved = await _sellerRequestService.hasApprovedSellerRequest(userId);
+    final approved = _sellerRequestService.hasApprovedSellerRequest(userId);
     if (approved) {
       setState(() {
         _hasActiveRequest = true;

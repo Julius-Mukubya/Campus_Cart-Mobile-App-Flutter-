@@ -30,9 +30,6 @@ import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/order_details_screen.dart';
-// Admin screens
-import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
-import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
 // Services - Managers
 import 'package:madpractical/services/managers/user_manager.dart';

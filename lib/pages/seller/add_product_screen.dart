@@ -11,6 +11,7 @@ class AddProductScreen extends StatefulWidget {
 
 class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
+  
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _discountController = TextEditingController();
@@ -18,6 +19,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   
   String _selectedCategory = 'Electronics';
+  String _selectedStore = ''; // Seller's store ID
+  
   final List<String> _categories = [
     'Electronics',
     'Fashion',
@@ -25,6 +28,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
     'Sports',
     'Groceries',
     'Books',
+  ];
+  
+  // Sample stores - in real app, fetch from SellerStoreService
+  final List<Map<String, String>> _stores = [
+    {'id': 'store_001', 'name': 'My Store 1'},
+    {'id': 'store_002', 'name': 'My Store 2'},
   ];
 
   @override
@@ -128,6 +137,61 @@ class _AddProductScreenState extends State<AddProductScreen> {
             setState(() {
               _selectedCategory = value!;
             });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStoreDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Store',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _selectedStore.isEmpty ? null : _selectedStore,
+          decoration: InputDecoration(
+            hintText: 'Choose a store',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.lightGrey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.lightGrey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.white,
+            contentPadding: const EdgeInsets.all(16),
+          ),
+          items: _stores.map((store) {
+            return DropdownMenuItem(
+              value: store['id']!,
+              child: Text(store['name']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedStore = value ?? '';
+            });
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select a store';
+            }
+            return null;
           },
         ),
       ],
@@ -266,6 +330,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 
                 // Category
                 _buildCategoryDropdown(),
+                
+                const SizedBox(height: 20),
+                
+                // Store Selection
+                _buildStoreDropdown(),
                 
                 const SizedBox(height: 20),
                 
