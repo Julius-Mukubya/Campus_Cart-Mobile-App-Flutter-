@@ -587,10 +587,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final messageController = TextEditingController(
       text: 'Your order has been approved! I will contact you shortly to arrange delivery.',
     );
+    final navigatorContext = context;
 
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: navigatorContext,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Approve Order'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -615,7 +616,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -628,8 +629,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     : 'Your order has been approved!',
               );
               if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(navigatorContext).showSnackBar(
                   const SnackBar(content: Text('Order approved successfully!')),
                 );
               }
@@ -646,10 +647,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   void _showRejectionDialog() {
     final reasonController = TextEditingController();
+    final navigatorContext = context;
 
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: navigatorContext,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Decline Order'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -674,13 +676,13 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               if (reasonController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(content: Text('Please provide a reason')),
                 );
                 return;
@@ -691,8 +693,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 rejectionReason: reasonController.text,
               );
               if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(navigatorContext).showSnackBar(
                   const SnackBar(content: Text('Order declined')),
                 );
               }
