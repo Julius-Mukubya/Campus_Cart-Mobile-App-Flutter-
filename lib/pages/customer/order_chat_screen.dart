@@ -85,7 +85,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
         children: [
           // Contact Information Card
           Container(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

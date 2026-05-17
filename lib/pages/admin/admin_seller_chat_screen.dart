@@ -81,7 +81,7 @@ class _AdminSellerChatScreenState extends State<AdminSellerChatScreen> {
         children: [
           // Seller Information Card
           Container(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

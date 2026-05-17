@@ -70,7 +70,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     // Navigate back to sign in
     Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pushReplacementNamed(context, '/signin');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/signin');
+      }
     });
   }
 

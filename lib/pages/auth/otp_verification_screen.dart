@@ -53,7 +53,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
 
       Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/reset-password');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/reset-password');
+        }
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

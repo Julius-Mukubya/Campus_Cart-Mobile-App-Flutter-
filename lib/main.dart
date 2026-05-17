@@ -248,7 +248,7 @@ class _MyAppState extends State<MyApp> {
               (s) => s.contains(WidgetState.selected) ? AppColors.primary : AppColors.darkSecondaryText),
           trackColor: WidgetStateProperty.resolveWith(
               (s) => s.contains(WidgetState.selected)
-                  ? AppColors.primary.withOpacity(0.4)
+                  ? AppColors.primary.withValues(alpha: 0.4)
                   : const Color(0xFF3A3A3A)),
         ),
         checkboxTheme: CheckboxThemeData(

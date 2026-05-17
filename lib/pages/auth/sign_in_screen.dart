@@ -78,7 +78,9 @@ class _SignInScreenState extends State<SignInScreen> {
       _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
 
       // Always navigate to home screen after login
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
     } else {
       _showErrorMessage(result['message']);
     }

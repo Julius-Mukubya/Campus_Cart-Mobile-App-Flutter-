@@ -54,7 +54,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     // Navigate to OTP verification screen
     Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pushNamed(context, '/otp-verification');
+      if (mounted) {
+        Navigator.pushNamed(context, '/otp-verification');
+      }
     });
   }
 

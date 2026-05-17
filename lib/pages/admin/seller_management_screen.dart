@@ -95,7 +95,7 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 8,
           ),
         ],
@@ -138,7 +138,7 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(req['status'])
-                            .withOpacity(0.2),
+                            .withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
