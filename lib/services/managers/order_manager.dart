@@ -11,6 +11,7 @@ class OrderManager extends ChangeNotifier {
   OrderManager._internal();
 
   final List<Map<String, dynamic>> _orders = [];
+  final Map<String, Map<String, dynamic>> _orderApprovals = {};
 
   List<Map<String, dynamic>> get orders => List.unmodifiable(_orders);
   
@@ -80,6 +81,129 @@ class OrderManager extends ChangeNotifier {
     if (index != -1) {
       _orders[index]['status'] = newStatus;
       notifyListeners();
+    }
+  }
+
+  /// Approve order - seller confirms they can fulfill
+  Future<void> approveOrder({
+    required String orderId,
+    required String sellerId,
+    String approvalMessage = 'Your order has been approved. I will contact you shortly!',
+  }) async {
+    try {
+      _orderApprovals[orderId] = {
+        'orderId': orderId,
+        'sellerId': sellerId,
+        'status': 'approved',
+        'message': approvalMessage,
+        'approvedAt': DateTime.now().toIso8601String(),
+      };
+
+      final orderIndex =
+          _orders.indexWhere((order) => order['id'] == orderId);
+      if (orderIndex != -1) {
+        _orders[orderIndex]['approvalStatus'] = 'approved';
+        _orders[orderIndex]['approvedAt'] = DateTime.now().toIso8601String();
+        _orders[orderIndex]['status'] = 'Approved';
+      }
+
+      // Notify customer about approval
+      await _notifyCustomerOfApproval(orderId, approvalMessage);
+
+      notifyListeners();
+      print('Order approved: $orderId');
+    } catch (e) {
+      print('Error approving order: $e');
+    }
+  }
+
+  /// Reject order - seller cannot fulfill
+  Future<void> rejectOrder({
+    required String orderId,
+    required String sellerId,
+    required String rejectionReason,
+  }) async {
+    try {
+      _orderApprovals[orderId] = {
+        'orderId': orderId,
+        'sellerId': sellerId,
+        'status': 'rejected',
+        'reason': rejectionReason,
+        'rejectedAt': DateTime.now().toIso8601String(),
+      };
+
+      final orderIndex =
+          _orders.indexWhere((order) => order['id'] == orderId);
+      if (orderIndex != -1) {
+        _orders[orderIndex]['approvalStatus'] = 'rejected';
+        _orders[orderIndex]['rejectedAt'] = DateTime.now().toIso8601String();
+        _orders[orderIndex]['status'] = 'Rejected';
+      }
+
+      // Notify customer about rejection
+      await _notifyCustomerOfRejection(orderId, rejectionReason);
+
+      notifyListeners();
+      print('Order rejected: $orderId');
+    } catch (e) {
+      print('Error rejecting order: $e');
+    }
+  }
+
+  /// Get approval status of an order
+  String getApprovalStatus(String orderId) {
+    return _orderApprovals[orderId]?['status'] ?? 'pending';
+  }
+
+  /// Check if order is approved
+  bool isOrderApproved(String orderId) {
+    return getApprovalStatus(orderId) == 'approved';
+  }
+
+  /// Notify customer that their order has been approved
+  Future<void> _notifyCustomerOfApproval(
+      String orderId, String approvalMessage) async {
+    try {
+      final notificationManager = NotificationManager();
+
+      final notification = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'type': 'order_approved',
+        'title': 'Order Approved!',
+        'message': approvalMessage,
+        'orderId': orderId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'isRead': false,
+      };
+
+      await notificationManager.addNotification(notification);
+      print('Customer notified of approval for order: $orderId');
+    } catch (e) {
+      print('Error notifying customer of approval: $e');
+    }
+  }
+
+  /// Notify customer that their order has been rejected
+  Future<void> _notifyCustomerOfRejection(
+      String orderId, String rejectionReason) async {
+    try {
+      final notificationManager = NotificationManager();
+
+      final notification = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'type': 'order_rejected',
+        'title': 'Order Rejected',
+        'message':
+            'Your order was rejected. Reason: $rejectionReason',
+        'orderId': orderId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'isRead': false,
+      };
+
+      await notificationManager.addNotification(notification);
+      print('Customer notified of rejection for order: $orderId');
+    } catch (e) {
+      print('Error notifying customer of rejection: $e');
     }
   }
 }

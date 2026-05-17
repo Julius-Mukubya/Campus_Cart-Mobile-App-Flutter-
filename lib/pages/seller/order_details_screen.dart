@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
+import 'package:madpractical/services/managers/order_manager.dart';
+import 'package:madpractical/pages/customer/order_chat_screen.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -12,6 +14,15 @@ class OrderDetailsScreen extends StatefulWidget {
 }
 
 class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
+  final OrderManager _orderManager = OrderManager();
+  late String _approvalStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _approvalStatus = _orderManager.getApprovalStatus(widget.order['id']);
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
@@ -488,10 +499,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Accept order logic
+                        _showApprovalDialog();
                       },
                       icon: const Icon(Icons.check_circle_outline, size: 18),
-                      label: const Text('Accept Order'),
+                      label: const Text('Approve Order'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.success,
                         foregroundColor: AppColors.white,
@@ -506,7 +517,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        // Decline order logic
+                        _showRejectionDialog();
                       },
                       icon: const Icon(Icons.cancel_outlined, size: 18),
                       label: const Text('Decline'),
@@ -552,10 +563,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  // Contact customer logic
+                  _openOrderChat();
                 },
                 icon: const Icon(Icons.message_outlined, size: 18),
-                label: const Text('Contact Customer'),
+                label: const Text('Chat with Customer'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.primary),
@@ -573,5 +584,150 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       ),
     );
   }
+
+  void _showApprovalDialog() {
+    final messageController = TextEditingController(
+      text: 'Your order has been approved! I will contact you shortly to arrange delivery.',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Approve Order'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Send a message to the customer:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: messageController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                hintText: 'Approval message...',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _orderManager.approveOrder(
+                orderId: widget.order['id'],
+                sellerId: 'sample_seller_1',
+                approvalMessage: messageController.text.isNotEmpty
+                    ? messageController.text
+                    : 'Your order has been approved!',
+              );
+              Navigator.pop(context);
+              setState(() {
+                _approvalStatus = 'approved';
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order approved successfully!')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+            ),
+            child: const Text('Approve'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectionDialog() {
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Decline Order'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Please provide a reason for declining:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                hintText: 'Reason...',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (reasonController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a reason')),
+                );
+                return;
+              }
+              await _orderManager.rejectOrder(
+                orderId: widget.order['id'],
+                sellerId: 'sample_seller_1',
+                rejectionReason: reasonController.text,
+              );
+              Navigator.pop(context);
+              setState(() {
+                _approvalStatus = 'rejected';
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order declined')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Decline'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openOrderChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderChatScreen(
+          orderId: widget.order['id'],
+          customerName: widget.order['customerName'] ?? 'Customer',
+          customerPhone: widget.order['customerPhone'] ?? 'N/A',
+          shippingAddress:
+              widget.order['shippingAddress'] ?? 'Address not provided',
+          currentUserId: 'seller_1',
+          currentUserName: 'You (Seller)',
+          userRole: 'seller',
+        ),
+      ),
+    );
+  }
 }
+
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/managers/order_manager.dart';
+import 'package:madpractical/pages/customer/order_chat_screen.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -355,6 +356,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Approval Status Section
+              _buildApprovalStatusCard(),
+              const SizedBox(height: 24),
+
               // Action Buttons
               if (widget.order['status'] == 'Processing')
                 SizedBox(
@@ -503,5 +508,118 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         return AppColors.grey;
     }
   }
+
+  Widget _buildApprovalStatusCard() {
+    final approvalStatus =
+        _orderManager.getApprovalStatus(widget.order['id']);
+    final order = _orderManager.getOrderById(widget.order['id']) ??
+        widget.order;
+
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+    String statusMessage;
+
+    switch (approvalStatus) {
+      case 'approved':
+        statusColor = AppColors.success;
+        statusIcon = Icons.check_circle;
+        statusText = 'Order Approved';
+        statusMessage =
+            order['approvalMessage'] ??
+            'Your order has been approved! The seller will contact you shortly.';
+        break;
+      case 'rejected':
+        statusColor = AppColors.error;
+        statusIcon = Icons.cancel;
+        statusText = 'Order Rejected';
+        statusMessage = order['rejectionReason'] ??
+            'Your order was rejected by the seller.';
+        break;
+      default:
+        statusColor = Colors.orange;
+        statusIcon = Icons.schedule;
+        statusText = 'Pending Approval';
+        statusMessage =
+            'Waiting for the seller to review your order...';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.1),
+        border: Border.all(color: statusColor, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(statusIcon, color: statusColor, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: statusColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            statusMessage,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.text,
+              height: 1.5,
+            ),
+          ),
+          if (approvalStatus == 'approved') ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  _openOrderChat();
+                },
+                icon: const Icon(Icons.message, size: 18),
+                label: const Text('Chat with Seller'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _openOrderChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderChatScreen(
+          orderId: widget.order['id'],
+          customerName: widget.order['customerName'] ?? 'You',
+          customerPhone: widget.order['customerPhone'] ?? 'N/A',
+          shippingAddress:
+              widget.order['shippingAddress'] ?? 'Address not provided',
+          currentUserId: 'customer_1',
+          currentUserName: 'You (Buyer)',
+          userRole: 'buyer',
+        ),
+      ),
+    );
+  }
 }
+
 

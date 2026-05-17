@@ -13,6 +13,7 @@ import 'package:madpractical/pages/customer/addresses_screen.dart';
 import 'package:madpractical/pages/profile/edit_profile_screen.dart';
 import 'package:madpractical/pages/customer/notifications_screen.dart';
 import 'package:madpractical/pages/profile/privacy_security_screen.dart';
+import 'package:madpractical/pages/profile/become_seller_screen.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
@@ -817,6 +818,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildMenuSection('Account', accountItems),
               
               const SizedBox(height: 20),
+
+              // Become Seller Section (only for customers)
+              if (_userManager.role == 'customer') ...[
+                _buildMenuSection('Opportunity', [
+                  {
+                    'icon': Icons.store_outlined,
+                    'title': 'Become a Seller',
+                    'subtitle': 'Start selling your products',
+                    'color': Colors.green,
+                    'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BecomeSellersScreen()),
+                    ),
+                  },
+                ]),
+                const SizedBox(height: 20),
+              ],
               
               // Business/Management Section (only for non-customer roles)
               if (_userManager.role != 'customer') ...[

@@ -44,6 +44,8 @@ import 'package:madpractical/services/managers/notification_manager.dart';
 import 'package:madpractical/services/business/app_settings.dart';
 // Services - Database
 import 'package:madpractical/services/database/database_service.dart';
+// Sample Data
+import 'package:madpractical/utils/helpers/sample_data_helper.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,6 +92,9 @@ void main() async{
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
+
+  // Seed sample data (categories, products, suppliers, orders)
+  await SampleDataHelper.addSampleData();
 
   runApp(const MyApp());
 }
