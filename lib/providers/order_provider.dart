@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/notification_provider.dart';
+import '../utils/app_logger.dart';
 
 /// Order state model - represents orders data
 class OrderState {
@@ -66,7 +67,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       // Save to local notifications
       // In full implementation, this would be fetched by seller's device from Firebase
     } catch (e) {
-      print('Error notifying seller: $e');
+      AppLogger.error('Error notifying seller', error: e);
     }
   }
 
@@ -125,9 +126,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
       // Notify customer about approval
       await _notifyCustomerOfApproval(orderId, approvalMessage);
 
-      print('Order approved: $orderId');
+      AppLogger.info('Order approved: $orderId');
     } catch (e) {
-      print('Error approving order: $e');
+      AppLogger.error('Error approving order', error: e);
     }
   }
 
@@ -160,9 +161,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
       // Notify customer about rejection
       await _notifyCustomerOfRejection(orderId, rejectionReason);
 
-      print('Order rejected: $orderId');
+      AppLogger.info('Order rejected: $orderId');
     } catch (e) {
-      print('Error rejecting order: $e');
+      AppLogger.error('Error rejecting order', error: e);
     }
   }
 
@@ -189,9 +190,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
         'isRead': false,
       };
 
-      print('Customer notified of approval for order: $orderId');
+      AppLogger.info('Customer notified of approval for order: $orderId');
     } catch (e) {
-      print('Error notifying customer of approval: $e');
+      AppLogger.error('Error notifying customer of approval', error: e);
     }
   }
 
@@ -208,9 +209,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
         'isRead': false,
       };
 
-      print('Customer notified of rejection for order: $orderId');
+      AppLogger.info('Customer notified of rejection for order: $orderId');
     } catch (e) {
-      print('Error notifying customer of rejection: $e');
+      AppLogger.error('Error notifying customer of rejection', error: e);
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:madpractical/utils/app_logger.dart';
 
 class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -7,29 +8,29 @@ class ProductService {
   // Test Firebase connection and log data structure
   Future<void> testFirebaseConnection() async {
     try {
-      print('Testing Firebase connection...');
+      AppLogger.info('Testing Firebase connection...');
       
       // Log a sample product
       QuerySnapshot productSnapshot = await _firestore.collection('products').limit(1).get();
       if (productSnapshot.docs.isNotEmpty) {
         final data = productSnapshot.docs.first.data() as Map<String, dynamic>;
-        print('=== SAMPLE PRODUCT FIELDS ===');
-        data.forEach((key, value) => print('  "$key": $value'));
-        print('=============================');
+        AppLogger.debug('=== SAMPLE PRODUCT FIELDS ===');
+        data.forEach((key, value) => AppLogger.debug('  "$key": $value'));
+        AppLogger.debug('=============================');
       }
 
       // Log a sample category
       QuerySnapshot categorySnapshot = await _firestore.collection('categories').get();
-      print('=== CATEGORIES: ${categorySnapshot.docs.length} docs ===');
+      AppLogger.info('=== CATEGORIES: ${categorySnapshot.docs.length} docs ===');
       for (final doc in categorySnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        print('  doc.id="${doc.id}" keys=${data.keys.toList()} name=${data['name'] ?? data['categoryName'] ?? data['title'] ?? 'NO NAME FIELD'}');
+        AppLogger.debug('  doc.id="${doc.id}" keys=${data.keys.toList()} name=${data['name'] ?? data['categoryName'] ?? data['title'] ?? 'NO NAME FIELD'}');
       }
       if (categorySnapshot.docs.isEmpty) {
-        print('*** categories collection is empty or permission denied ***');
+        AppLogger.warning('*** categories collection is empty or permission denied ***');
       }
     } catch (e) {
-      print('Firebase connection error: $e');
+      AppLogger.error('Firebase connection error: $e', error: e);
     }
   }
 
@@ -75,7 +76,7 @@ class ProductService {
       final categoryLookup = results[0] as Map<String, String>;
       final snapshot = results[1] as QuerySnapshot;
 
-      print('Found ${snapshot.docs.length} products in Firebase');
+      AppLogger.info('Found ${snapshot.docs.length} products in Firebase');
 
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
@@ -104,7 +105,7 @@ class ProductService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching products: $e');
+      AppLogger.error('Error fetching products: $e', error: e);
       return _getFallbackProducts();
     }
   }
@@ -148,7 +149,7 @@ class ProductService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching products by category: $e');
+      AppLogger.error('Error fetching products by category: $e', error: e);
       return [];
     }
   }
@@ -172,7 +173,7 @@ class ProductService {
                description.contains(searchQuery);
       }).toList();
     } catch (e) {
-      print('Error searching products: $e');
+      AppLogger.error('Error searching products: $e', error: e);
       return [];
     }
   }
@@ -190,7 +191,7 @@ class ProductService {
       final categorySnapshot = results[0] as QuerySnapshot;
       final productSnapshot = results[1] as QuerySnapshot;
 
-      print('Found ${categorySnapshot.docs.length} categories in Firebase');
+      AppLogger.info('Found ${categorySnapshot.docs.length} categories in Firebase');
 
       // Count products per category
       final Map<String, int> countByName = {};
@@ -242,7 +243,7 @@ class ProductService {
       }
 
       // categories collection is empty — derive from products
-      print('No categories collection found, deriving from products...');
+      AppLogger.info('No categories collection found, deriving from products...');
       return countByName.entries.map((entry) {
         final name = entry.key;
         final meta = categoryMeta[name];
@@ -258,7 +259,7 @@ class ProductService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching categories: $e');
+      AppLogger.error('Error fetching categories: $e', error: e);
       return _getFallbackCategories();
     }
   }
@@ -275,7 +276,7 @@ class ProductService {
       }
       return lookup;
     } catch (e) {
-      print('Error building category lookup: $e');
+      AppLogger.error('Error building category lookup: $e', error: e);
       return {};
     }
   }
@@ -316,7 +317,7 @@ class ProductService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching featured products: $e');
+      AppLogger.error('Error fetching featured products: $e', error: e);
       return [];
     }
   }
@@ -548,9 +549,9 @@ class ProductService {
         await _firestore.collection('products').add(product);
       }
 
-      print('Sample products added successfully!');
+      AppLogger.info('Sample products added successfully!');
     } catch (e) {
-      print('Error adding sample products: $e');
+      AppLogger.error('Error adding sample products: $e', error: e);
     }
   }
 }

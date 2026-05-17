@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../utils/app_logger.dart';
 
 class SupplierService extends ChangeNotifier {
   static final SupplierService _instance = SupplierService._internal();
@@ -19,7 +20,7 @@ class SupplierService extends ChangeNotifier {
       // For now, return local suppliers
       return _suppliers;
     } catch (e) {
-      print('Error fetching suppliers: $e');
+      AppLogger.error('Error fetching suppliers', error: e);
       return [];
     }
   }
@@ -73,9 +74,9 @@ class SupplierService extends ChangeNotifier {
 
       _suppliers.add(supplier);
       notifyListeners();
-      print('Supplier added: $name');
+      AppLogger.info('Supplier added: $name');
     } catch (e) {
-      print('Error adding supplier: $e');
+      AppLogger.error('Error adding supplier', error: e);
     }
   }
 
@@ -84,7 +85,7 @@ class SupplierService extends ChangeNotifier {
     try {
       // Check if suppliers already exist
       if (_suppliers.isNotEmpty) {
-        print('Suppliers already exist. Skipping sample data.');
+        AppLogger.info('Suppliers already exist. Skipping sample data.');
         return;
       }
 
@@ -178,9 +179,9 @@ class SupplierService extends ChangeNotifier {
 
       _suppliers.addAll(sampleSuppliers);
       notifyListeners();
-      print('Sample suppliers added successfully! Total: ${_suppliers.length}');
+      AppLogger.info('Sample suppliers added successfully! Total: ${_suppliers.length}');
     } catch (e) {
-      print('Error adding sample suppliers: $e');
+      AppLogger.error('Error adding sample suppliers', error: e);
     }
   }
 
@@ -194,7 +195,7 @@ class SupplierService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating supplier rating: $e');
+      AppLogger.error('Error updating supplier rating', error: e);
     }
   }
 
@@ -211,7 +212,7 @@ class SupplierService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating supplier orders: $e');
+      AppLogger.error('Error updating supplier orders', error: e);
     }
   }
 }

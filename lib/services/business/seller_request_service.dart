@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../utils/app_logger.dart';
 
 class SellerRequestService extends ChangeNotifier {
   static final SellerRequestService _instance =
@@ -66,7 +67,7 @@ class SellerRequestService extends ChangeNotifier {
       );
 
       if (existingRequest.isNotEmpty) {
-        print('User already has a pending seller request');
+        AppLogger.warning('User already has a pending seller request');
         return;
       }
 
@@ -86,9 +87,9 @@ class SellerRequestService extends ChangeNotifier {
       _sellerRequests.insert(0, request);
       notifyListeners();
 
-      print('Seller request submitted: $requestId');
+      AppLogger.info('Seller request submitted: $requestId');
     } catch (e) {
-      print('Error submitting seller request: $e');
+      AppLogger.error('Error submitting seller request', error: e);
     }
   }
 
@@ -110,10 +111,10 @@ class SellerRequestService extends ChangeNotifier {
         _sellerRequests[index]['reviewedBy'] = adminId;
 
         notifyListeners();
-        print('Seller request approved: $requestId');
+        AppLogger.info('Seller request approved: $requestId');
       }
     } catch (e) {
-      print('Error approving seller request: $e');
+      AppLogger.error('Error approving seller request', error: e);
     }
   }
 
@@ -135,10 +136,10 @@ class SellerRequestService extends ChangeNotifier {
         _sellerRequests[index]['reviewedBy'] = adminId;
 
         notifyListeners();
-        print('Seller request rejected: $requestId');
+        AppLogger.info('Seller request rejected: $requestId');
       }
     } catch (e) {
-      print('Error rejecting seller request: $e');
+      AppLogger.error('Error rejecting seller request', error: e);
     }
   }
 

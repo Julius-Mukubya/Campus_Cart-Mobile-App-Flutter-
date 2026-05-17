@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:madpractical/utils/app_logger.dart';
 
 class CategoryService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,7 +27,7 @@ class CategoryService extends ChangeNotifier {
       notifyListeners();
       return _categories;
     } catch (e) {
-      print('Error fetching categories: $e');
+      AppLogger.error('Error fetching categories: $e', error: e);
       return [];
     }
   }
@@ -45,7 +46,7 @@ class CategoryService extends ChangeNotifier {
       }
       return null;
     } catch (e) {
-      print('Error fetching category: $e');
+      AppLogger.error('Error fetching category: $e', error: e);
       return null;
     }
   }
@@ -68,7 +69,7 @@ class CategoryService extends ChangeNotifier {
       }
       return null;
     } catch (e) {
-      print('Error fetching category by name: $e');
+      AppLogger.error('Error fetching category by name: $e', error: e);
       return null;
     }
   }
@@ -92,11 +93,11 @@ class CategoryService extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print('Category added successfully: $name');
+      AppLogger.info('Category added successfully: $name');
       await fetchCategories(); // Refresh the list
       return docRef.id;
     } catch (e) {
-      print('Error adding category: $e');
+      AppLogger.error('Error adding category: $e', error: e);
       return null;
     }
   }
@@ -123,10 +124,10 @@ class CategoryService extends ChangeNotifier {
 
       await _firestore.collection('categories').doc(categoryId).update(data);
 
-      print('Category updated successfully: $categoryId');
+      AppLogger.info('Category updated successfully: $categoryId');
       await fetchCategories(); // Refresh the list
     } catch (e) {
-      print('Error updating category: $e');
+      AppLogger.error('Error updating category: $e', error: e);
     }
   }
 
@@ -135,10 +136,10 @@ class CategoryService extends ChangeNotifier {
     try {
       await _firestore.collection('categories').doc(categoryId).delete();
 
-      print('Category deleted successfully: $categoryId');
+      AppLogger.info('Category deleted successfully: $categoryId');
       await fetchCategories(); // Refresh the list
     } catch (e) {
-      print('Error deleting category: $e');
+      AppLogger.error('Error deleting category: $e', error: e);
     }
   }
 
@@ -150,7 +151,7 @@ class CategoryService extends ChangeNotifier {
           await _firestore.collection('categories').limit(1).get();
 
       if (existing.docs.isNotEmpty) {
-        print('Categories already exist. Skipping sample data.');
+        AppLogger.info('Categories already exist. Skipping sample data.');
         return;
       }
 
@@ -231,10 +232,10 @@ class CategoryService extends ChangeNotifier {
         await _firestore.collection('categories').add(category);
       }
 
-      print('Sample categories added successfully!');
+      AppLogger.info('Sample categories added successfully!');
       await fetchCategories(); // Refresh the list
     } catch (e) {
-      print('Error adding sample categories: $e');
+      AppLogger.error('Error adding sample categories: $e', error: e);
     }
   }
 }

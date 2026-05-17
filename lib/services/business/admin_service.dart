@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/app_logger.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,7 +27,7 @@ class AdminService {
 
       return results;
     } catch (e) {
-      print('Error fetching pending seller requests: $e');
+      AppLogger.error('Error fetching pending seller requests', error: e);
       return [];
     }
   }
@@ -45,7 +46,7 @@ class AdminService {
         return data;
       }).toList();
     } catch (e) {
-      print('Error fetching seller requests: $e');
+      AppLogger.error('Error fetching seller requests', error: e);
       return [];
     }
   }
@@ -119,7 +120,7 @@ class AdminService {
         'storeId': storeRef.id,
       };
     } catch (e) {
-      print('Error approving seller request: $e');
+      AppLogger.error('Error approving seller request', error: e);
       return {
         'success': false,
         'message': 'Failed to approve seller request. Please try again.',
@@ -168,7 +169,7 @@ class AdminService {
         'message': 'Seller request rejected successfully!',
       };
     } catch (e) {
-      print('Error rejecting seller request: $e');
+      AppLogger.error('Error rejecting seller request', error: e);
       return {
         'success': false,
         'message': 'Failed to reject seller request. Please try again.',
@@ -199,7 +200,7 @@ class AdminService {
 
       return results;
     } catch (e) {
-      print('Error fetching pending store requests: $e');
+      AppLogger.error('Error fetching pending store requests', error: e);
       return [];
     }
   }
@@ -240,7 +241,7 @@ class AdminService {
         'message': 'Store information submitted for admin approval!',
       };
     } catch (e) {
-      print('Error creating store approval request: $e');
+      AppLogger.error('Error creating store approval request', error: e);
       return {
         'success': false,
         'message': 'Failed to submit store for approval. Please try again.',
@@ -286,7 +287,7 @@ class AdminService {
         'message': 'Store approved successfully!',
       };
     } catch (e) {
-      print('Error approving store request: $e');
+      AppLogger.error('Error approving store request', error: e);
       return {
         'success': false,
         'message': 'Failed to approve store. Please try again.',
@@ -327,7 +328,7 @@ class AdminService {
         'message': 'Store request rejected successfully!',
       };
     } catch (e) {
-      print('Error rejecting store request: $e');
+      AppLogger.error('Error rejecting store request', error: e);
       return {
         'success': false,
         'message': 'Failed to reject store request. Please try again.',
@@ -376,7 +377,7 @@ class AdminService {
         'totalOrders': totalOrders,
       };
     } catch (e) {
-      print('Error fetching platform stats: $e');
+      AppLogger.error('Error fetching platform stats', error: e);
       return {
         'totalUsers': 0,
         'activeSellers': 0,

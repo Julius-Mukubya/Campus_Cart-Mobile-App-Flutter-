@@ -1,0 +1,313 @@
+# Campus Cart — Cline Agent Context
+
+## Your Role
+You are an expert Flutter developer refactoring the Campus Cart app.
+You have full read/write access to this project.
+You work ONE task at a time and wait for approval before continuing.
+
+---
+
+## Project Summary
+- **App**: Campus Cart — campus e-commerce platform
+- **Framework**: Flutter 3.x (null-safe)
+- **Backend**: Firebase (Firestore, Auth, Storage)
+- **Local DB**: SQLite via sqflite
+- **Roles**: Customer, Seller, Admin, Staff, Delivery, Coordinator
+- **Screens**: 30+
+- **Status**: Working app — do NOT break existing features
+
+---
+
+## Current Architecture (What Exists Now)
+- State: Singleton managers (UserManager, CartManager, etc.) + Riverpod providers
+- Navigation: Manual Navigator.push() calls (transitioning to GoRouter)
+- Data: Services call Firebase directly (transitioning to Repository pattern)
+- No repository layer yet
+- No dependency injection yet
+- 0 avoid_print warnings remaining in lib/ (down from 134)
+
+## Target Architecture (What We Are Building)
+UI → Providers (Riverpod) → Services → Repositories → Firebase/SQLite
+
+---
+
+## Current Folder Structure
+lib/
+├── main.dart
+├── firebase_options.dart
+├── constants/
+│   └── app_colors.dart
+├── models/
+│   └── product.dart
+├── pages/
+│   ├── splash_screen.dart
+│   ├── admin/
+│   │   ├── admin_dashboard_screen.dart
+│   │   ├── admin_seller_chat_screen.dart
+│   │   ├── manage_sellers_screen.dart
+│   │   └── seller_management_screen.dart
+│   ├── auth/
+│   │   ├── access_denied_screen.dart
+│   │   ├── forgot_password_screen.dart
+│   │   ├── otp_verification_screen.dart
+│   │   ├── reset_password_screen.dart
+│   │   ├── sign_in_screen.dart
+│   │   └── sign_up_screen.dart
+│   ├── customer/
+│   │   ├── addresses_screen.dart
+│   │   ├── cart_screen.dart
+│   │   ├── categories_screen.dart
+│   │   ├── checkout_screen.dart
+│   │   ├── home_screen.dart
+│   │   ├── my_orders_screen.dart
+│   │   ├── notifications_list_screen.dart
+│   │   ├── notifications_screen.dart
+│   │   ├── order_chat_screen.dart
+│   │   ├── order_details_screen.dart
+│   │   ├── order_success.dart
+│   │   ├── order_success_screen.dart
+│   │   ├── product_details.dart
+│   │   └── wishlist_screen.dart
+│   ├── profile/
+│   │   ├── become_seller_screen.dart
+│   │   ├── edit_profile_screen.dart
+│   │   ├── privacy_security_screen.dart
+│   │   └── profile_screen.dart
+│   ├── seller/
+│   │   ├── add_product_screen.dart
+│   │   ├── edit_product_screen.dart
+│   │   ├── my_products_screen.dart
+│   │   ├── seller_dashboard_screen.dart
+│   │   ├── seller_order_details_screen.dart
+│   │   └── seller_orders_screen.dart
+│   └── help/
+│       ├── help_center_screen.dart
+│       ├── faq_screen.dart
+│       ├── contact_us_screen.dart
+│       ├── ai_chat_support_screen.dart
+│       └── debug_firebase_screen.dart
+├── providers/
+│   ├── cart_provider.dart
+│   ├── notification_provider.dart
+│   ├── order_provider.dart
+│   ├── user_provider.dart
+│   └── wishlist_provider.dart
+├── services/
+│   ├── auth/
+│   │   └── firebase_auth_service.dart
+│   ├── business/
+│   │   ├── admin_service.dart
+│   │   ├── admin_settings_service.dart
+│   │   ├── admin_seller_chat_service.dart
+│   │   ├── seller_service.dart
+│   │   ├── seller_request_service.dart
+│   │   ├── seller_store_service.dart
+│   │   ├── product_service.dart
+│   │   ├── category_service.dart
+│   │   ├── order_service.dart
+│   │   ├── order_chat_service.dart
+│   │   ├── customer_service.dart
+│   │   ├── review_service.dart
+│   │   └── supplier_service.dart
+│   ├── managers/
+│   │   ├── user_manager.dart
+│   │   ├── cart_manager.dart
+│   │   ├── wishlist_manager.dart
+│   │   ├── notification_manager.dart
+│   │   ├── order_manager.dart
+│   │   ├── preferences_service.dart
+│   │   └── app_settings.dart
+│   ├── database/
+│   │   ├── database_service.dart
+│   │   ├── batch_service.dart
+│   │   └── user_subcollection_service.dart
+│   └── storage/
+│       └── firebase_storage_service.dart
+├── utils/
+│   ├── app_logger.dart                 ← NEW (created)
+│   └── helpers/
+│       ├── sample_data_helper.dart
+│       ├── sample_orders_helper.dart
+│       └── validation_helper.dart
+└── widgets/
+    ├── common/
+    └── navigation/
+
+---
+
+## Target Folder Structure
+lib/
+├── main.dart
+├── firebase_options.dart
+├── router.dart                         ← NEW (pending)
+├── constants/
+│   └── app_colors.dart
+├── models/                             ← MOVED from utils/models/
+│   ├── product_model.dart
+│   ├── order_model.dart
+│   ├── user_model.dart
+│   ├── cart_item_model.dart
+│   └── review_model.dart
+├── repositories/                       ← NEW (pending)
+│   ├── user_repository.dart
+│   ├── product_repository.dart
+│   ├── order_repository.dart
+│   ├── cart_repository.dart
+│   └── seller_repository.dart
+├── providers/                          ← DONE (created)
+│   ├── user_provider.dart
+│   ├── cart_provider.dart
+│   ├── wishlist_provider.dart
+│   ├── order_provider.dart
+│   └── notification_provider.dart
+├── services/
+│   ├── auth/
+│   └── business/
+├── pages/
+├── widgets/
+└── utils/
+    ├── exceptions.dart                 ← NEW (pending)
+    ├── app_logger.dart                 ← DONE (created)
+    └── helpers/
+
+---
+
+## Packages to Add to pubspec.yaml
+flutter_riverpod: ^2.5.1     ← DONE
+go_router: ^14.0.0           ← DONE
+logger: ^2.3.0               ← DONE
+
+---
+
+## Task Progress
+
+### ✅ TASK 1 — Fix Duplicate Files (COMPLETED)
+- [x] admin_dashboard_screen.dart - Already removed from pages/staff/ (dir doesn't exist)
+- [x] checkout_screen.dart - Only one copy exists
+- [x] order_details_screen.dart - Seller version already renamed to seller_order_details_screen.dart
+
+### ✅ TASK 2 — Add Packages & Logger (COMPLETED)
+- [x] Add flutter_riverpod to pubspec.yaml
+- [x] Add go_router to pubspec.yaml
+- [x] Add logger to pubspec.yaml
+- [x] Run flutter pub get
+- [x] Wrap MyApp with ProviderScope in main.dart (already done)
+- [x] Create lib/utils/app_logger.dart
+- [x] Replace print() in sample_data_helper.dart
+- [x] Replace print() in sample_orders_helper.dart
+- [x] Replace print() in product_service.dart
+- [x] Replace print() in category_service.dart
+- [x] Replace print() in admin_service.dart (9 calls)
+- [x] Replace print() in admin_settings_service.dart (8 calls)
+- [x] Replace print() in admin_seller_chat_service.dart (4 calls)
+- [x] Replace print() in seller_service.dart (10 calls)
+- [x] Replace print() in seller_request_service.dart (6 calls)
+- [x] Replace print() in seller_store_service.dart (10 calls)
+- [x] Replace print() in order_chat_service.dart (4 calls)
+- [x] Replace print() in review_service.dart (3 calls)
+- [x] Replace print() in supplier_service.dart (7 calls)
+- [x] Replace print() in firebase_auth_service.dart (2 calls)
+- [x] Replace print() in firebase_storage_service.dart (1 call)
+- [x] Replace print() in order_manager.dart (12 calls)
+- [x] Replace print() in order_provider.dart (8 calls)
+- [x] Replace print() in categories_screen.dart (3 calls)
+- [x] Run flutter analyze (0 avoid_print warnings in lib/; 36 total issues, all pre-existing)
+
+### ⏳ TASK 3 — Create Repository Layer (PENDING)
+Create lib/repositories/ with these files and methods:
+
+user_repository.dart
+  getUser(String userId) → Future<UserModel>
+  updateUser(UserModel user) → Future<void>
+  watchUser(String userId) → Stream<UserModel>
+
+product_repository.dart
+  getProducts() → Future<List<ProductModel>>
+  getProductById(String id) → Future<ProductModel>
+  getProductsByCategory(String categoryId) → Future<List<ProductModel>>
+  addProduct(ProductModel p) → Future<void>
+  updateProduct(ProductModel p) → Future<void>
+  deleteProduct(String id) → Future<void>
+  searchProducts(String query) → Future<List<ProductModel>>
+  getCachedProducts() → Future<List<ProductModel>>     ← from SQLite
+  cacheProducts(List<ProductModel> p) → Future<void>   ← to SQLite
+
+order_repository.dart
+  createOrder(OrderModel o) → Future<String>
+  getOrdersByUser(String userId) → Future<List<OrderModel>>
+  getOrdersBySeller(String sellerId) → Future<List<OrderModel>>
+  updateOrderStatus(String orderId, String status) → Future<void>
+  watchOrder(String orderId) → Stream<OrderModel>
+  watchOrdersByUser(String userId) → Stream<List<OrderModel>>
+
+cart_repository.dart
+  saveCart(String userId, List<CartItemModel> items) → Future<void>
+  loadCart(String userId) → Future<List<CartItemModel>>
+  clearCart(String userId) → Future<void>
+
+seller_repository.dart
+  getSeller(String sellerId) → Future<SellerModel>
+  updateSeller(SellerModel s) → Future<void>
+  getSellerProducts(String sellerId) → Future<List<ProductModel>>
+  getSellerOrders(String sellerId) → Future<List<OrderModel>>
+  watchSellerOrders(String sellerId) → Stream<List<OrderModel>>
+
+Repository rules:
+  - Constructor injection for FirebaseFirestore + Database
+  - All Firestore calls wrapped in try/catch
+  - Rethrow as RepositoryException (create in utils/exceptions.dart)
+  - No Flutter UI imports
+
+### ⏳ TASK 4 — Update Services (PENDING)
+- product_service.dart → inject + use ProductRepository
+- order_service.dart → inject + use OrderRepository
+- seller_service.dart → inject + use SellerRepository
+- customer_service.dart → inject + use UserRepository
+- Remove all FirebaseFirestore.instance calls from services
+- Keep all existing business logic unchanged
+- Keep all existing method signatures unchanged
+
+### ✅ TASK 5 — Create Riverpod Providers (COMPLETED)
+- [x] user_provider.dart - UserState with UserNotifier
+- [x] cart_provider.dart - CartState with CartNotifier
+- [x] wishlist_provider.dart
+- [x] order_provider.dart
+- [x] notification_provider.dart
+
+### ⏳ TASK 6 — GoRouter Navigation (PENDING)
+Create lib/router.dart with routes and redirect guards
+
+### ⏳ TASK 7 — Update Screens (PENDING)
+Convert screens to use ConsumerWidget/ConsumerStatefulWidget
+
+### ⏳ TASK 8 — Offline Caching (PENDING)
+Implement SQLite caching in repositories
+
+---
+
+## Absolute Rules — Never Break These
+1. Never change UI design, colors, or layouts
+2. Never remove existing screens or features
+3. Never rename Firebase collection names or document fields
+4. Never change existing model class structures
+5. Never do more than one task at a time
+6. Always run flutter analyze after each task
+7. Always fix new errors before moving to next task
+8. If unsure about existing logic → ASK before changing
+9. If a task creates more than 5 new errors → STOP and report
+10. All code must be null-safe (Flutter 3.x)
+
+---
+
+## After Each Task Report This
+✅ Files Created: (list)
+✅ Files Modified: (list)
+✅ Files Deleted: (list)
+✅ flutter analyze result: (x warnings, x errors)
+✅ What to test manually: (list)
+⏳ Waiting for your approval to continue to Task N+1
+
+---
+
+## Last Updated
+2026-05-17 - Updated progress: TASK 1 complete, TASK 2 complete (0 avoid_print warnings), TASK 5 complete

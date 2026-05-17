@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../utils/app_logger.dart';
 
 class OrderChatService extends ChangeNotifier {
   static final OrderChatService _instance = OrderChatService._internal();
@@ -44,9 +45,9 @@ class OrderChatService extends ChangeNotifier {
       _orderChats[orderId]!.add(newMessage);
       notifyListeners();
 
-      print('Message sent in order $orderId: $message');
+      AppLogger.info('Message sent in order $orderId: $message');
     } catch (e) {
-      print('Error sending message: $e');
+      AppLogger.error('Error sending message', error: e);
     }
   }
 
@@ -63,7 +64,7 @@ class OrderChatService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error marking message as read: $e');
+      AppLogger.error('Error marking message as read', error: e);
     }
   }
 
@@ -78,7 +79,7 @@ class OrderChatService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error marking messages as read: $e');
+      AppLogger.error('Error marking messages as read', error: e);
     }
   }
 

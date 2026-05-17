@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/services/business/admin_service.dart';
+import '../../utils/app_logger.dart';
 
 class SellerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -37,7 +38,7 @@ class SellerService {
 
       return null;
     } catch (e) {
-      print('Error fetching seller store: $e');
+      AppLogger.error('Error fetching seller store', error: e);
       return null;
     }
   }
@@ -83,7 +84,7 @@ class SellerService {
 
       return result;
     } catch (e) {
-      print('Error updating store info: $e');
+      AppLogger.error('Error updating store info', error: e);
       return {
         'success': false,
         'message': 'Failed to update store information. Please try again.',
@@ -106,7 +107,7 @@ class SellerService {
         return data;
       }).toList();
     } catch (e) {
-      print('Error fetching seller products: $e');
+      AppLogger.error('Error fetching seller products', error: e);
       return [];
     }
   }
@@ -158,7 +159,7 @@ class SellerService {
         'productId': productRef.id,
       };
     } catch (e) {
-      print('Error adding product: $e');
+      AppLogger.error('Error adding product', error: e);
       return {
         'success': false,
         'message': 'Failed to add product. Please try again.',
@@ -197,7 +198,7 @@ class SellerService {
         'message': 'Product updated successfully!',
       };
     } catch (e) {
-      print('Error updating product: $e');
+      AppLogger.error('Error updating product', error: e);
       return {
         'success': false,
         'message': 'Failed to update product. Please try again.',
@@ -224,7 +225,7 @@ class SellerService {
         'message': 'Product deleted successfully!',
       };
     } catch (e) {
-      print('Error deleting product: $e');
+      AppLogger.error('Error deleting product', error: e);
       return {
         'success': false,
         'message': 'Failed to delete product. Please try again.',
@@ -247,7 +248,7 @@ class SellerService {
         return data;
       }).toList();
     } catch (e) {
-      print('Error fetching seller orders: $e');
+      AppLogger.error('Error fetching seller orders', error: e);
       return [];
     }
   }
@@ -276,7 +277,7 @@ class SellerService {
         'isStoreVerified': store['isVerified'] ?? false,
       };
     } catch (e) {
-      print('Error fetching seller stats: $e');
+      AppLogger.error('Error fetching seller stats', error: e);
       return {
         'totalSales': 0,
         'totalOrders': 0,
@@ -331,7 +332,7 @@ class SellerService {
         'orderCount': ordersSnap.docs.length,
       };
     } catch (e) {
-      print('Error fetching seller earnings: $e');
+      AppLogger.error('Error fetching seller earnings', error: e);
       return {
         'totalEarnings': 0.0,
         'totalPayouts': 0.0,
@@ -362,7 +363,7 @@ class SellerService {
       });
       return {'success': true, 'message': 'Payout request submitted!'};
     } catch (e) {
-      print('Error requesting payout: $e');
+      AppLogger.error('Error requesting payout', error: e);
       return {'success': false, 'message': 'Failed to submit payout request.'};
     }
   }

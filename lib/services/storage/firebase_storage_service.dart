@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/app_logger.dart';
 
 class FirebaseStorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -41,7 +42,7 @@ class FirebaseStorageService {
       await storageRef.delete();
     } catch (e) {
       // Silently fail if image doesn't exist or can't be deleted
-      print('Failed to delete profile image: $e');
+      AppLogger.error('Failed to delete profile image', error: e);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/app_logger.dart';
 
 class AdminSettings {
   final int maxStoresPerSeller;
@@ -62,7 +63,7 @@ class AdminSettingsService {
 
       return AdminSettings.fromJson(doc.data() as Map<String, dynamic>);
     } catch (e) {
-      print('Error fetching admin settings: $e');
+      AppLogger.error('Error fetching admin settings', error: e);
       // Return default settings on error
       return AdminSettings(
         maxStoresPerSeller: 1,
@@ -96,7 +97,7 @@ class AdminSettingsService {
 
       return true;
     } catch (e) {
-      print('Error setting max stores: $e');
+      AppLogger.error('Error setting max stores', error: e);
       return false;
     }
   }
@@ -119,7 +120,7 @@ class AdminSettingsService {
 
       return true;
     } catch (e) {
-      print('Error setting seller approval required: $e');
+      AppLogger.error('Error setting seller approval required', error: e);
       return false;
     }
   }
@@ -130,7 +131,7 @@ class AdminSettingsService {
       final settings = await getSettings();
       return settings.maxStoresPerSeller;
     } catch (e) {
-      print('Error getting max stores: $e');
+      AppLogger.error('Error getting max stores', error: e);
       return 1; // Default fallback
     }
   }
@@ -141,7 +142,7 @@ class AdminSettingsService {
       final settings = await getSettings();
       return settings.sellerApprovalRequired;
     } catch (e) {
-      print('Error getting seller approval requirement: $e');
+      AppLogger.error('Error getting seller approval requirement', error: e);
       return true; // Default fallback - require approval for safety
     }
   }
@@ -170,7 +171,7 @@ class AdminSettingsService {
 
       return true;
     } catch (e) {
-      print('Error resetting settings: $e');
+      AppLogger.error('Error resetting settings', error: e);
       return false;
     }
   }
@@ -188,7 +189,7 @@ class AdminSettingsService {
 
       return snapshot.docs.map((doc) => doc.data()).toList();
     } catch (e) {
-      print('Error fetching audit log: $e');
+      AppLogger.error('Error fetching audit log', error: e);
       return [];
     }
   }
@@ -207,7 +208,7 @@ class AdminSettingsService {
             'timestamp': Timestamp.now(),
           });
     } catch (e) {
-      print('Error logging setting change: $e');
+      AppLogger.error('Error logging setting change', error: e);
     }
   }
 

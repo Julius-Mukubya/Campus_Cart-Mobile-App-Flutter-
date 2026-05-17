@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:madpractical/services/managers/notification_manager.dart';
+import '../../utils/app_logger.dart';
 
 class OrderManager extends ChangeNotifier {
   static final OrderManager _instance = OrderManager._internal();
@@ -56,7 +57,7 @@ class OrderManager extends ChangeNotifier {
       // and be fetched by the seller's device
       await notificationManager.addNotification(notification);
     } catch (e) {
-      print('Error notifying seller: $e');
+      AppLogger.error('Error notifying seller', error: e);
     }
   }
   
@@ -111,9 +112,9 @@ class OrderManager extends ChangeNotifier {
       await _notifyCustomerOfApproval(orderId, approvalMessage);
 
       notifyListeners();
-      print('Order approved: $orderId');
+      AppLogger.info('Order approved: $orderId');
     } catch (e) {
-      print('Error approving order: $e');
+      AppLogger.error('Error approving order', error: e);
     }
   }
 
@@ -144,9 +145,9 @@ class OrderManager extends ChangeNotifier {
       await _notifyCustomerOfRejection(orderId, rejectionReason);
 
       notifyListeners();
-      print('Order rejected: $orderId');
+      AppLogger.info('Order rejected: $orderId');
     } catch (e) {
-      print('Error rejecting order: $e');
+      AppLogger.error('Error rejecting order', error: e);
     }
   }
 
@@ -177,9 +178,9 @@ class OrderManager extends ChangeNotifier {
       };
 
       await notificationManager.addNotification(notification);
-      print('Customer notified of approval for order: $orderId');
+      AppLogger.info('Customer notified of approval for order: $orderId');
     } catch (e) {
-      print('Error notifying customer of approval: $e');
+      AppLogger.error('Error notifying customer of approval', error: e);
     }
   }
 
@@ -201,9 +202,9 @@ class OrderManager extends ChangeNotifier {
       };
 
       await notificationManager.addNotification(notification);
-      print('Customer notified of rejection for order: $orderId');
+      AppLogger.info('Customer notified of rejection for order: $orderId');
     } catch (e) {
-      print('Error notifying customer of rejection: $e');
+      AppLogger.error('Error notifying customer of rejection', error: e);
     }
   }
 }

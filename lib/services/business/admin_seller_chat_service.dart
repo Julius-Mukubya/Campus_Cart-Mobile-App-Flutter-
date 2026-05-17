@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../utils/app_logger.dart';
 
 class AdminSellerChatService extends ChangeNotifier {
   static final AdminSellerChatService _instance =
@@ -45,9 +46,9 @@ class AdminSellerChatService extends ChangeNotifier {
       _adminSellerChats[sellerId]!.add(newMessage);
       notifyListeners();
 
-      print('Message sent in admin-seller chat with $sellerId: $message');
+      AppLogger.info('Message sent in admin-seller chat with $sellerId: $message');
     } catch (e) {
-      print('Error sending message: $e');
+      AppLogger.error('Error sending message', error: e);
     }
   }
 
@@ -64,7 +65,7 @@ class AdminSellerChatService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error marking message as read: $e');
+      AppLogger.error('Error marking message as read', error: e);
     }
   }
 
@@ -79,7 +80,7 @@ class AdminSellerChatService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error marking messages as read: $e');
+      AppLogger.error('Error marking messages as read', error: e);
     }
   }
 

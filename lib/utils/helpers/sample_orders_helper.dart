@@ -1,4 +1,5 @@
 import 'package:madpractical/services/managers/order_manager.dart';
+import 'package:madpractical/utils/app_logger.dart';
 
 class SampleOrdersHelper {
   /// Add sample orders with different statuses
@@ -166,9 +167,9 @@ class SampleOrdersHelper {
         await orderManager.addOrder(order);
       }
 
-      print('Sample orders added successfully! Total: ${sampleOrders.length}');
+      AppLogger.info('Sample orders added successfully! Total: ${sampleOrders.length}');
     } catch (e) {
-      print('Error adding sample orders: $e');
+      AppLogger.error('Error adding sample orders: $e', error: e);
     }
   }
 }

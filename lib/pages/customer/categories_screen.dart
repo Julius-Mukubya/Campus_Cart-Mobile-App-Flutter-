@@ -7,7 +7,7 @@ import 'package:madpractical/services/managers/cart_manager.dart';
 import 'package:madpractical/services/business/product_service.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
-
+import '../../utils/app_logger.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -52,8 +52,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       final categoryList = await _productService.getCategories();
       final products = await _productService.getAllProducts();
 
-      print('Loaded ${categoryList.length} categories');
-      print('Loaded ${products.length} products');
+      AppLogger.info('Loaded ${categoryList.length} categories');
+      AppLogger.info('Loaded ${products.length} products');
 
       setState(() {
         categories = categoryList;
@@ -61,7 +61,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading data: $e');
+      AppLogger.error('Error loading data', error: e);
       setState(() {
         _hasError = true;
         _isLoading = false;

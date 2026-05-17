@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/app_logger.dart';
 
 class SellerStore {
   final String id;
@@ -125,7 +126,7 @@ class SellerStoreService {
 
       return newStore;
     } catch (e) {
-      print('Error creating store: $e');
+      AppLogger.error('Error creating store', error: e);
       rethrow;
     }
   }
@@ -154,7 +155,7 @@ class SellerStoreService {
           .map((doc) => SellerStore.fromJson(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('Error fetching seller stores: $e');
+      AppLogger.error('Error fetching seller stores', error: e);
       return [];
     }
   }
@@ -167,7 +168,7 @@ class SellerStoreService {
 
       return SellerStore.fromJson(doc.data() as Map<String, dynamic>, doc.id);
     } catch (e) {
-      print('Error fetching store: $e');
+      AppLogger.error('Error fetching store', error: e);
       return null;
     }
   }
@@ -179,7 +180,7 @@ class SellerStoreService {
       await _firestore.collection('seller_stores').doc(storeId).update(updates);
       return true;
     } catch (e) {
-      print('Error updating store: $e');
+      AppLogger.error('Error updating store', error: e);
       return false;
     }
   }
@@ -207,7 +208,7 @@ class SellerStoreService {
 
       return true;
     } catch (e) {
-      print('Error deactivating store: $e');
+      AppLogger.error('Error deactivating store', error: e);
       return false;
     }
   }
@@ -224,7 +225,7 @@ class SellerStoreService {
           .map((doc) => SellerStore.fromJson(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('Error fetching all stores: $e');
+      AppLogger.error('Error fetching all stores', error: e);
       return [];
     }
   }
@@ -241,7 +242,7 @@ class SellerStoreService {
       final data = doc.data() as Map<String, dynamic>;
       return data['maxStoresPerSeller'] ?? 1;
     } catch (e) {
-      print('Error fetching max stores config: $e');
+      AppLogger.error('Error fetching max stores config', error: e);
       return 1; // Default fallback
     }
   }
@@ -255,7 +256,7 @@ class SellerStoreService {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error updating store rating: $e');
+      AppLogger.error('Error updating store rating', error: e);
     }
   }
 
@@ -272,7 +273,7 @@ class SellerStoreService {
           .map((doc) => SellerStore.fromJson(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('Error fetching stores by location: $e');
+      AppLogger.error('Error fetching stores by location', error: e);
       return [];
     }
   }

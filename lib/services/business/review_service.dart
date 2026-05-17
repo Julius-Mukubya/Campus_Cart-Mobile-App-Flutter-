@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/app_logger.dart';
 
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -34,7 +35,7 @@ class ReviewService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching reviews: $e');
+      AppLogger.error('Error fetching reviews', error: e);
       return [];
     }
   }
@@ -110,7 +111,7 @@ class ReviewService {
 
       return {'success': true, 'message': 'Review submitted successfully!'};
     } catch (e) {
-      print('Error submitting review: $e');
+      AppLogger.error('Error submitting review', error: e);
       return {'success': false, 'message': 'Failed to submit review. Please try again.'};
     }
   }
@@ -140,7 +141,7 @@ class ReviewService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating product rating: $e');
+      AppLogger.error('Error updating product rating', error: e);
     }
   }
 

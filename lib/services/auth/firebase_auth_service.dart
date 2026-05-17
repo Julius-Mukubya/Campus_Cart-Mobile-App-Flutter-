@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/app_logger.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -478,7 +479,7 @@ class FirebaseAuthService {
         'documents': [], // Array of document URLs
       });
     } catch (e) {
-      print('Error creating seller approval request: $e');
+      AppLogger.error('Error creating seller approval request', error: e);
     }
   }
 
@@ -507,7 +508,7 @@ class FirebaseAuthService {
       
     } catch (e) {
       // Log error but don't fail the signup process
-      print('Error initializing user subcollections: $e');
+      AppLogger.error('Error initializing user subcollections', error: e);
     }
   }
 
