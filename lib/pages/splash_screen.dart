@@ -2,18 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth/firebase_auth_service.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/providers/user_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -25,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final userData = await authService.getUserData(user.uid);
         if (!mounted) return;
         if (userData != null) {
-          UserManager().updateProfile(
+          ref.read(userProvider.notifier).updateProfile(
             userId: user.uid,
             name: userData['name'] ?? '',
             email: userData['email'] ?? '',

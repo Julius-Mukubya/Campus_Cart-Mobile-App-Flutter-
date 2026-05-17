@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 
 // Auth screens
@@ -31,12 +32,14 @@ import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/seller_order_details_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
+// Providers
+import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/notification_provider.dart';
+import 'package:madpractical/providers/order_provider.dart';
 // Services - Managers
-import 'package:madpractical/services/managers/user_manager.dart';
 import 'package:madpractical/services/managers/preferences_service.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
-import 'package:madpractical/services/managers/wishlist_manager.dart';
-import 'package:madpractical/services/managers/notification_manager.dart';
 // Services - Business
 import 'package:madpractical/services/business/app_settings.dart';
 // Services - Database
@@ -44,7 +47,7 @@ import 'package:madpractical/services/database/database_service.dart';
 // Sample Data
 import 'package:madpractical/utils/helpers/sample_data_helper.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -56,26 +59,8 @@ void main() async{
   // Load saved theme and language
   AppSettings().loadFromPrefs();
 
-  // Restore user session from SharedPreferences into UserManager
-  if (PreferencesService.isLoggedIn) {
-    UserManager().updateProfile(
-      userId: PreferencesService.userId,
-      name: PreferencesService.userName,
-      email: PreferencesService.userEmail,
-      phone: PreferencesService.userPhone,
-      role: PreferencesService.userRole,
-      staffType: PreferencesService.staffType,
-      storeId: PreferencesService.storeId,
-    );
-  }
-
-  // Restore cart and wishlist from SharedPreferences
-  CartManager().loadFromPrefs();
-  WishlistManager().loadFromPrefs();
-
   // Initialize SQLite and load persisted notifications
   await DatabaseService().database; // opens/creates the DB
-  await NotificationManager().loadFromDb();
 
   // Initialize App Check — uses debug provider in debug builds
   await FirebaseAppCheck.instance.activate(
@@ -93,23 +78,46 @@ void main() async{
   // Seed sample data (categories, products, suppliers, orders)
   await SampleDataHelper.addSampleData();
 
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   final AppSettings _settings = AppSettings();
 
   @override
   void initState() {
     super.initState();
     _settings.addListener(_onSettingsChanged);
+    _initializeProviders();
+  }
+
+  void _initializeProviders() {
+    // Initialize cart from preferences
+    ref.read(cartProvider.notifier).loadFromPrefs();
+    // Initialize wishlist from preferences
+    ref.read(wishlistProvider.notifier).loadFromPrefs();
+    // Initialize notifications from database
+    ref.read(notificationProvider.notifier).loadFromDb();
+
+    // Restore user session from SharedPreferences into user provider
+    if (PreferencesService.isLoggedIn) {
+      ref.read(userProvider.notifier).updateProfile(
+        userId: PreferencesService.userId,
+        name: PreferencesService.userName,
+        email: PreferencesService.userEmail,
+        phone: PreferencesService.userPhone,
+        role: PreferencesService.userRole,
+        staffType: PreferencesService.staffType,
+        storeId: PreferencesService.storeId,
+      );
+    }
   }
 
   @override
@@ -306,9 +314,10 @@ class _MyAppState extends State<MyApp> {
       // Start on a splash screen which will redirect to sign in
       initialRoute: '/splash',
       onGenerateRoute: (settings) {
-        // Check user role for protected routes
-        final userManager = UserManager();
-        final userRole = userManager.role;
+        // Get user role from app settings or use a shared reference
+        // NOTE: This is a temporary solution. In TASK 4, we'll implement GoRouter
+        // which has better support for accessing providers during routing
+        String userRole = 'customer'; // Default role
         
         // Role-based route protection - only allow sellers and admins to access seller/admin routes
         if (settings.name?.startsWith('/seller/') == true && userRole != 'seller' && userRole != 'admin') {

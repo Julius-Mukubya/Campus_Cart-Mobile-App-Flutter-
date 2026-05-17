@@ -1,61 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/managers/wishlist_manager.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  ConsumerState<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
+class _CartScreenState extends ConsumerState<CartScreen> {
   String selectedDeliveryMethod = 'Standard';
   String selectedAddress = 'Home Address';
   String selectedPaymentMethod = 'Mobile Money';
-  
-  @override
-  void initState() {
-    super.initState();
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
-  }
-
-  @override
-  void dispose() {
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
-    super.dispose();
-  }
-
-  void _onWishlistChanged() {
-    setState(() {});
-  }
-
-  void _onCartChanged() {
-    setState(() {});
-  }
 
   void increaseQuantity(String productName) {
-    final item = _cartManager.cartItems.firstWhere((item) => item['name'] == productName);
-    _cartManager.updateQuantity(productName, (item['quantity'] ?? 1) + 1);
+    final cartState = ref.read(cartProvider);
+    final item = cartState.items.firstWhere((item) => item['name'] == productName);
+    ref.read(cartProvider.notifier).updateQuantity(productName, (item['quantity'] ?? 1) + 1);
   }
 
   void decreaseQuantity(String productName) {
-    final item = _cartManager.cartItems.firstWhere((item) => item['name'] == productName);
+    final cartState = ref.read(cartProvider);
+    final item = cartState.items.firstWhere((item) => item['name'] == productName);
     final currentQuantity = item['quantity'] ?? 1;
     if (currentQuantity > 1) {
-      _cartManager.updateQuantity(productName, currentQuantity - 1);
+      ref.read(cartProvider.notifier).updateQuantity(productName, currentQuantity - 1);
     }
   }
 
   void removeItem(String productName) {
-    _cartManager.removeFromCart(productName);
+    ref.read(cartProvider.notifier).removeFromCart(productName);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Item removed from cart'),
