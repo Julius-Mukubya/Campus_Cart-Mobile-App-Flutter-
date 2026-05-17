@@ -366,7 +366,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     color: AppColors.white,
                   ),
                   child: DropdownButtonFormField<String>(
-                    value: _selectedRole,
+                    initialValue: _selectedRole,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
                       border: InputBorder.none,

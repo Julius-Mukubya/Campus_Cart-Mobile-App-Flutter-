@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import '../lib/firebase_options.dart';
+import 'package:madpractical/firebase_options.dart';
 
 /// Script to create test users with different roles
 /// Run with: dart run scripts/create_test_users.dart

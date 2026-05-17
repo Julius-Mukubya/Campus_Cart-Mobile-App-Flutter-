@@ -467,7 +467,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Switch(
                           value: setAsDefault,
                           onChanged: (v) => setSheet(() => setAsDefault = v),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                         const SizedBox(width: 8),
                         Text('Set as default address',

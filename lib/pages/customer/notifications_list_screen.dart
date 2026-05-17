@@ -62,60 +62,6 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
     }
   }
 
-  // Keep the old list for reference but use manager
-  final List<Map<String, dynamic>> _oldNotifications = [
-    {
-      'id': '1',
-      'title': 'Order Delivered',
-      'message': 'Your order #ORD-2024-001 has been delivered successfully',
-      'type': 'order',
-      'time': '2 hours ago',
-      'isRead': false,
-      'icon': Icons.check_circle,
-      'color': AppColors.success,
-    },
-    {
-      'id': '2',
-      'title': 'Special Offer',
-      'message': 'Get 30% off on all electronics! Limited time offer.',
-      'type': 'promotion',
-      'time': '5 hours ago',
-      'isRead': false,
-      'icon': Icons.local_offer,
-      'color': AppColors.accent,
-    },
-    {
-      'id': '3',
-      'title': 'Order Shipped',
-      'message': 'Your order #ORD-2024-002 is on the way',
-      'type': 'order',
-      'time': '1 day ago',
-      'isRead': true,
-      'icon': Icons.local_shipping,
-      'color': AppColors.primary,
-    },
-    {
-      'id': '4',
-      'title': 'Price Drop Alert',
-      'message': 'Smart Watch in your wishlist is now 15% off!',
-      'type': 'price_drop',
-      'time': '2 days ago',
-      'isRead': true,
-      'icon': Icons.trending_down,
-      'color': AppColors.success,
-    },
-    {
-      'id': '5',
-      'title': 'New Arrival',
-      'message': 'Check out the latest collection of designer t-shirts',
-      'type': 'new_arrival',
-      'time': '3 days ago',
-      'isRead': true,
-      'icon': Icons.new_releases,
-      'color': AppColors.primary,
-    },
-  ];
-
   int get unreadCount => _notificationManager.unreadCount;
   List<Map<String, dynamic>> get _notifications => _notificationManager.notifications;
 

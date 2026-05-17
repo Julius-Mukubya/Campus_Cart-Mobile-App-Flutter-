@@ -338,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 12, color: AppColors.getSecondaryText(context))),
             trailing: Switch(
               value: settings.isDark,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (_) async {
                 await settings.toggleTheme();
                 setState(() {});

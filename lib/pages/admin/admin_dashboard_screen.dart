@@ -39,10 +39,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading dashboard data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
@@ -467,30 +468,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         adminNotes: 'Approved by admin',
       );
 
-      if (result['success']) {
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+          _loadDashboardData(); // Refresh data
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
-        _loadDashboardData(); // Refresh data
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
+          const SnackBar(
+            content: Text('Error approving seller'),
             backgroundColor: AppColors.error,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error approving seller'),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 
@@ -507,30 +512,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         adminNotes: 'Rejected by admin',
       );
 
-      if (result['success']) {
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+          _loadDashboardData(); // Refresh data
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
-        _loadDashboardData(); // Refresh data
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
+          const SnackBar(
+            content: Text('Error rejecting seller'),
             backgroundColor: AppColors.error,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error rejecting seller'),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 
@@ -546,30 +555,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         adminNotes: 'Store approved by admin',
       );
 
-      if (result['success']) {
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+          _loadDashboardData(); // Refresh data
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
-        _loadDashboardData(); // Refresh data
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
+          const SnackBar(
+            content: Text('Error approving store'),
             backgroundColor: AppColors.error,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error approving store'),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 
@@ -586,30 +599,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         adminNotes: 'Store rejected by admin',
       );
 
-      if (result['success']) {
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+          _loadDashboardData(); // Refresh data
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
-        _loadDashboardData(); // Refresh data
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
+          const SnackBar(
+            content: Text('Error rejecting store'),
             backgroundColor: AppColors.error,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error rejecting store'),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 }

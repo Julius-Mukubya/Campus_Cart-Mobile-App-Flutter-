@@ -166,14 +166,12 @@ class _MyAppState extends State<MyApp> {
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.darkBackground,
         cardColor: AppColors.darkCards,
-        dialogBackgroundColor: AppColors.darkCards,
         colorScheme: const ColorScheme.dark(
           primary: AppColors.primary,
           secondary: AppColors.accent,
           surface: AppColors.darkCards,
           error: AppColors.error,
           onSurface: AppColors.darkText,
-          onBackground: AppColors.darkText,
           onPrimary: AppColors.white,
           outline: Color(0xFF3A3A3A),
         ),
@@ -268,7 +266,7 @@ class _MyAppState extends State<MyApp> {
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
-        ),
+        ), dialogTheme: DialogThemeData(backgroundColor: AppColors.darkCards),
       );
 
   @override

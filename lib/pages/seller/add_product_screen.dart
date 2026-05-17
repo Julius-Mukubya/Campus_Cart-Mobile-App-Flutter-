@@ -109,7 +109,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedCategory,
+          initialValue: _selectedCategory,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -157,7 +157,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedStore.isEmpty ? null : _selectedStore,
+          initialValue: _selectedStore.isEmpty ? null : _selectedStore,
           decoration: InputDecoration(
             hintText: 'Choose a store',
             border: OutlineInputBorder(

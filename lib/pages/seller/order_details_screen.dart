@@ -15,12 +15,10 @@ class OrderDetailsScreen extends StatefulWidget {
 
 class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   final OrderManager _orderManager = OrderManager();
-  late String _approvalStatus;
 
   @override
   void initState() {
     super.initState();
-    _approvalStatus = _orderManager.getApprovalStatus(widget.order['id']);
   }
 
   Color _getStatusColor(String status) {
@@ -629,13 +627,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ? messageController.text
                     : 'Your order has been approved!',
               );
-              Navigator.pop(context);
-              setState(() {
-                _approvalStatus = 'approved';
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order approved successfully!')),
-              );
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order approved successfully!')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
@@ -693,13 +690,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 sellerId: 'sample_seller_1',
                 rejectionReason: reasonController.text,
               );
-              Navigator.pop(context);
-              setState(() {
-                _approvalStatus = 'rejected';
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order declined')),
-              );
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order declined')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
