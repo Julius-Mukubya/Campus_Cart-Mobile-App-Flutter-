@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:madpractical/services/managers/preferences_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 /// Cart state model - represents cart data
 class CartState {

@@ -1,4 +1,4 @@
-import 'package:madpractical/services/managers/order_manager.dart';
+// Note: Removed dependency on order_manager (replaced by providers)
 import 'package:madpractical/utils/app_logger.dart';
 
 class SampleOrdersHelper {

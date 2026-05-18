@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/managers/wishlist_manager.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 

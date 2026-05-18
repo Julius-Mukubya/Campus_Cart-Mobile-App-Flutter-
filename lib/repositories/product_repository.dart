@@ -1,20 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/models/product.dart';
-import 'package:madpractical/services/database/database_service.dart';
 import 'package:madpractical/utils/app_logger.dart';
 import 'package:madpractical/utils/exceptions.dart';
 
 /// Repository for product data operations.
-/// Wraps Firestore and SQLite calls for product access.
+/// Wraps Firestore calls for product access.
 class ProductRepository {
   final FirebaseFirestore _firestore;
-  final DatabaseService _database;
 
   ProductRepository({
     FirebaseFirestore? firestore,
-    DatabaseService? database,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _database = database ?? DatabaseService();
+  }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Fetch all products from Firestore.
   Future<List<Product>> getProducts() async {
@@ -142,33 +138,18 @@ class ProductRepository {
     }
   }
 
-  // ── SQLite caching ───────────────────────────────────────────────────────
+  // ── SQLite caching (TASK 9) ──────────────────────────────────────────────
+  // These methods will be reimplemented in TASK 9 - Offline Caching.
+  // For now, they return empty lists as placeholders.
 
   /// Retrieve cached products from the local SQLite database.
   Future<List<Map<String, dynamic>>> getCachedProducts() async {
-    try {
-      return await _database.getCachedProducts();
-    } catch (e) {
-      AppLogger.error('ProductRepository.getCachedProducts failed', error: e);
-      throw RepositoryException(
-        'Failed to get cached products',
-        operation: 'getCachedProducts',
-        originalError: e,
-      );
-    }
+    // TODO: Reimplement in TASK 9
+    return [];
   }
 
   /// Store a list of products in the local SQLite cache.
   Future<void> cacheProducts(List<Map<String, dynamic>> products) async {
-    try {
-      await _database.cacheProducts(products);
-    } catch (e) {
-      AppLogger.error('ProductRepository.cacheProducts failed', error: e);
-      throw RepositoryException(
-        'Failed to cache products',
-        operation: 'cacheProducts',
-        originalError: e,
-      );
-    }
+    // TODO: Reimplement in TASK 9
   }
 }

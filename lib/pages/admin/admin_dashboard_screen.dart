@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
-import 'package:madpractical/services/business/admin_service.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
+import 'package:madpractical/services/admin_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});

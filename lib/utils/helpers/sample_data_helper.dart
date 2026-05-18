@@ -1,6 +1,6 @@
-import 'package:madpractical/services/business/product_service.dart';
-import 'package:madpractical/services/business/category_service.dart';
-import 'package:madpractical/services/business/supplier_service.dart';
+import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/category_service.dart';
+import 'package:madpractical/services/supplier_service.dart';
 import 'package:madpractical/utils/helpers/sample_orders_helper.dart';
 import 'package:madpractical/utils/app_logger.dart';
 

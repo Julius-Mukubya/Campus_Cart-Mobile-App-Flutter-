@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/business/seller_request_service.dart';
+import 'package:madpractical/services/seller_service.dart';
 import 'package:madpractical/pages/admin/admin_seller_chat_screen.dart';
 
 class SellerManagementScreen extends StatefulWidget {

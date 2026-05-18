@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/business/seller_service.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
-import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/seller_service.dart';
+import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
 class SellerOrdersScreen extends StatefulWidget {
@@ -15,7 +14,7 @@ class SellerOrdersScreen extends StatefulWidget {
 class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
   final SellerService _sellerService = SellerService();
   final UserManager _userManager = UserManager();
-  final FirebaseAuthService _authService = FirebaseAuthService();
+  final AuthService _authService = AuthService();
 
   String _searchQuery = '';
   String _selectedStatus = 'All';

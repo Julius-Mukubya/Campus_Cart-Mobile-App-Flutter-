@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:madpractical/services/database/database_service.dart';
-import 'package:madpractical/services/managers/preferences_service.dart';
 
 /// Notification state model - represents notifications data
 class NotificationState {
@@ -22,28 +20,24 @@ class NotificationState {
 }
 
 /// NotificationNotifier - handles notification state updates
+/// Notifications are stored in-memory for now.
+/// Full Firestore sync will be implemented in TASK 6.
 class NotificationNotifier extends StateNotifier<NotificationState> {
   NotificationNotifier() : super(const NotificationState());
 
-  final _db = DatabaseService();
-
-  /// Load persisted notifications from SQLite (call after DB init in main.dart)
-  Future<void> loadFromDb() async {
-    final userId = PreferencesService.userId;
-    if (userId == null || userId.isEmpty) return;
-    final rows = await _db.getNotifications(userId);
-    state = state.copyWith(notifications: rows);
+  /// Load notifications (placeholder — in-memory only for now)
+  void loadFromPrefs() {
+    // Notifications are in-memory only. Will be connected to Firestore in TASK 6.
   }
 
-  /// Persist and display a new notification
+  /// Add a new notification
   Future<void> addNotification(Map<String, dynamic> notification) async {
-    final userId = PreferencesService.userId ?? '';
-    await _db.insertNotification(notification, userId);
-    await loadFromDb();
+    final updatedNotifications = List<Map<String, dynamic>>.from(state.notifications);
+    updatedNotifications.insert(0, notification);
+    state = state.copyWith(notifications: updatedNotifications);
   }
 
   Future<void> markAsRead(String id) async {
-    await _db.markNotificationRead(id);
     final updatedNotifications = List<Map<String, dynamic>>.from(state.notifications);
     final index = updatedNotifications.indexWhere((n) => n['id'] == id);
     if (index != -1) {
@@ -53,8 +47,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   Future<void> markAllAsRead() async {
-    final userId = PreferencesService.userId ?? '';
-    await _db.markAllNotificationsRead(userId);
     final updatedNotifications = List<Map<String, dynamic>>.from(state.notifications);
     for (var i = 0; i < updatedNotifications.length; i++) {
       updatedNotifications[i] = {...updatedNotifications[i], 'isRead': true};
@@ -63,15 +55,12 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   Future<void> deleteNotification(String id) async {
-    await _db.deleteNotification(id);
     final updatedNotifications = List<Map<String, dynamic>>.from(state.notifications);
     updatedNotifications.removeWhere((n) => n['id'] == id);
     state = state.copyWith(notifications: updatedNotifications);
   }
 
   Future<void> clearAll() async {
-    final userId = PreferencesService.userId ?? '';
-    await _db.clearNotifications(userId);
     state = const NotificationState(notifications: []);
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:madpractical/services/business/app_settings.dart';
+import 'package:madpractical/services/app_settings.dart';
 
 class AppColors {
   // Primary brand colors — same in both themes

@@ -38,12 +38,9 @@ import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
 import 'package:madpractical/providers/order_provider.dart';
-// Services - Managers
-import 'package:madpractical/services/managers/preferences_service.dart';
-// Services - Business
-import 'package:madpractical/services/business/app_settings.dart';
-// Services - Database
-import 'package:madpractical/services/database/database_service.dart';
+// Services
+import 'package:madpractical/services/app_settings.dart';
+import 'package:madpractical/services/preferences_service.dart';
 // Sample Data
 import 'package:madpractical/utils/helpers/sample_data_helper.dart';
 
@@ -58,9 +55,6 @@ void main() async {
 
   // Load saved theme and language
   AppSettings().loadFromPrefs();
-
-  // Initialize SQLite and load persisted notifications
-  await DatabaseService().database; // opens/creates the DB
 
   // Initialize App Check — uses debug provider in debug builds
   await FirebaseAppCheck.instance.activate(
@@ -103,8 +97,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.read(cartProvider.notifier).loadFromPrefs();
     // Initialize wishlist from preferences
     ref.read(wishlistProvider.notifier).loadFromPrefs();
-    // Initialize notifications from database
-    ref.read(notificationProvider.notifier).loadFromDb();
+    // Initialize notifications (will be connected to Firestore in TASK 6)
+    ref.read(notificationProvider.notifier).loadFromPrefs();
 
     // Restore user session from SharedPreferences into user provider
     if (PreferencesService.isLoggedIn) {

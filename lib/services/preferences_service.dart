@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
@@ -34,7 +34,7 @@ class PreferencesService {
     return _prefs!;
   }
 
-  // ── User session ──────────────────────────────────────────────────────────
+  // ΓöÇΓöÇ User session ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static Future<void> saveUser({
     required String userId,
@@ -85,7 +85,7 @@ class PreferencesService {
   static String get profileImage => _instance.getString(_keyProfileImage) ?? '';
   static bool get isLoggedIn => userId != null && userId!.isNotEmpty;
 
-  // ── App preferences ───────────────────────────────────────────────────────
+  // ΓöÇΓöÇ App preferences ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static Future<void> setOnboardingSeen() async =>
       _instance.setBool(_keyOnboardingSeen, true);
@@ -117,7 +117,7 @@ class PreferencesService {
   static String get language =>
       _instance.getString(_keyLanguage) ?? 'en';
 
-  // ── Cart persistence ──────────────────────────────────────────────────────
+  // ΓöÇΓöÇ Cart persistence ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static Future<void> saveCartItems(List<Map<String, dynamic>> items) async {
     final encoded = jsonEncode(items);
@@ -138,7 +138,7 @@ class PreferencesService {
   static Future<void> clearCartItems() async =>
       _instance.remove(_keyCartItems);
 
-  // ── Wishlist persistence ──────────────────────────────────────────────────
+  // ΓöÇΓöÇ Wishlist persistence ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static Future<void> saveWishlistItems(List<Map<String, dynamic>> items) async {
     final encoded = jsonEncode(items);
@@ -159,7 +159,7 @@ class PreferencesService {
   static Future<void> clearWishlistItems() async =>
       _instance.remove(_keyWishlistItems);
 
-  // ── Search history ────────────────────────────────────────────────────────
+  // ΓöÇΓöÇ Search history ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static List<String> get searchHistory {
     return _instance.getStringList(_keySearchHistory) ?? [];
@@ -186,7 +186,7 @@ class PreferencesService {
   static Future<void> clearSearchHistory() async =>
       _instance.remove(_keySearchHistory);
 
-  // ── Recently viewed products ──────────────────────────────────────────────
+  // ΓöÇΓöÇ Recently viewed products ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   static List<Map<String, dynamic>> get recentlyViewed {
     final raw = _instance.getString(_keyRecentlyViewed);

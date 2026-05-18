@@ -5,9 +5,8 @@ import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/services/managers/wishlist_manager.dart';
 import 'package:madpractical/services/managers/cart_manager.dart';
 import 'package:madpractical/services/managers/notification_manager.dart';
-import 'package:madpractical/services/business/product_service.dart';
-import 'package:madpractical/services/managers/preferences_service.dart';
-import 'package:madpractical/services/database/database_service.dart';
+import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';

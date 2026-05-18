@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/business/admin_seller_chat_service.dart';
+import 'package:madpractical/services/chat_service.dart';
 
 class AdminSellerChatScreen extends StatefulWidget {
   final String sellerId;
@@ -23,7 +23,7 @@ class AdminSellerChatScreen extends StatefulWidget {
 }
 
 class _AdminSellerChatScreenState extends State<AdminSellerChatScreen> {
-  final AdminSellerChatService _chatService = AdminSellerChatService();
+  final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -31,7 +31,7 @@ class _AdminSellerChatScreenState extends State<AdminSellerChatScreen> {
   void initState() {
     super.initState();
     _chatService.initializeSellerChat(widget.sellerId);
-    _chatService.markAllMessagesAsRead(widget.sellerId);
+    _chatService.markAllAdminSellerMessagesAsRead(widget.sellerId);
   }
 
   @override
@@ -44,7 +44,7 @@ class _AdminSellerChatScreenState extends State<AdminSellerChatScreen> {
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
-    _chatService.sendMessage(
+    _chatService.sendAdminSellerMessage(
       sellerId: widget.sellerId,
       senderId: 'admin_1',
       senderName: 'Admin',

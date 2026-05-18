@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/providers/user_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -22,7 +22,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     Timer(const Duration(milliseconds: 1800), () async {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final authService = FirebaseAuthService();
+        final authService = AuthService();
         final userData = await authService.getUserData(user.uid);
         if (!mounted) return;
         if (userData != null) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/business/order_chat_service.dart';
+import 'package:madpractical/services/chat_service.dart';
 
 class OrderChatScreen extends StatefulWidget {
   final String orderId;

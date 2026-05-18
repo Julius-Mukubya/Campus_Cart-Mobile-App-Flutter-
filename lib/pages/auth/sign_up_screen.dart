@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/auth/firebase_auth_service.dart';
+import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/managers/user_manager.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuthService _authService = FirebaseAuthService();
+  final AuthService _authService = AuthService();
   bool _obscurePassword = true;
   bool _agree = false;
   bool _isLoading = false;

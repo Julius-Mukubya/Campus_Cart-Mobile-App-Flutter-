@@ -1,8 +1,44 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../utils/app_logger.dart';
+import '../utils/app_logger.dart';
 
+/// AdminSettings model class
+class AdminSettings {
+  final int maxStoresPerSeller;
+  final bool sellerApprovalRequired;
+  final DateTime lastUpdatedAt;
+  final String lastUpdatedBy;
+
+  AdminSettings({
+    this.maxStoresPerSeller = 1,
+    this.sellerApprovalRequired = true,
+    required this.lastUpdatedAt,
+    required this.lastUpdatedBy,
+  });
+
+  factory AdminSettings.fromJson(Map<String, dynamic> json) {
+    return AdminSettings(
+      maxStoresPerSeller: json['maxStoresPerSeller'] ?? 1,
+      sellerApprovalRequired: json['sellerApprovalRequired'] ?? true,
+      lastUpdatedAt: (json['lastUpdatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastUpdatedBy: json['lastUpdatedBy'] ?? 'system',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'maxStoresPerSeller': maxStoresPerSeller,
+        'sellerApprovalRequired': sellerApprovalRequired,
+        'lastUpdatedAt': Timestamp.fromDate(lastUpdatedAt),
+        'lastUpdatedBy': lastUpdatedBy,
+      };
+}
+
+/// Merged AdminService combining admin_service and admin_settings_service
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // ======================================================================
+  // SELLER APPROVAL METHODS (from admin_service.dart)
+  // ======================================================================
 
   // Get all pending seller approval requests
   Future<List<Map<String, dynamic>>> getPendingSellerRequests() async {
@@ -59,10 +95,8 @@ class AdminService {
     String adminNotes = '',
   }) async {
     try {
-      // Start a batch write
       WriteBatch batch = _firestore.batch();
 
-      // Update the approval request
       DocumentReference requestRef = _firestore
           .collection('seller_approval_requests')
           .doc(requestId);
@@ -74,7 +108,6 @@ class AdminService {
         'adminNotes': adminNotes,
       });
 
-      // Update the user document to activate the seller
       DocumentReference userRef = _firestore.collection('users').doc(userId);
       batch.update(userRef, {
         'isActive': true,
@@ -84,7 +117,6 @@ class AdminService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Create initial store document for the seller
       DocumentReference storeRef = _firestore.collection('stores').doc();
       batch.set(storeRef, {
         'storeId': storeRef.id,
@@ -106,12 +138,10 @@ class AdminService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update user document with store ID
       batch.update(userRef, {
         'storeId': storeRef.id,
       });
 
-      // Commit the batch
       await batch.commit();
 
       return {
@@ -137,10 +167,8 @@ class AdminService {
     String adminNotes = '',
   }) async {
     try {
-      // Start a batch write
       WriteBatch batch = _firestore.batch();
 
-      // Update the approval request
       DocumentReference requestRef = _firestore
           .collection('seller_approval_requests')
           .doc(requestId);
@@ -153,7 +181,6 @@ class AdminService {
         'rejectionReason': rejectionReason,
       });
 
-      // Update the user document
       DocumentReference userRef = _firestore.collection('users').doc(userId);
       batch.update(userRef, {
         'sellerStatus': 'rejected',
@@ -161,7 +188,6 @@ class AdminService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Commit the batch
       await batch.commit();
 
       return {
@@ -177,7 +203,11 @@ class AdminService {
     }
   }
 
-  // Get store approval requests (when sellers create/update stores)
+  // ======================================================================
+  // STORE APPROVAL METHODS (from admin_service.dart)
+  // ======================================================================
+
+  // Get store approval requests
   Future<List<Map<String, dynamic>>> getPendingStoreRequests() async {
     try {
       QuerySnapshot snapshot = await _firestore
@@ -205,7 +235,7 @@ class AdminService {
     }
   }
 
-  // Create store approval request (called when seller creates/updates store)
+  // Create store approval request
   Future<Map<String, dynamic>> createStoreApprovalRequest({
     required String storeId,
     required String sellerId,
@@ -228,7 +258,7 @@ class AdminService {
         'storeEmail': storeEmail,
         'storeAddress': storeAddress,
         'storeImage': storeImage,
-        'status': 'pending', // pending, approved, rejected
+        'status': 'pending',
         'requestedAt': FieldValue.serverTimestamp(),
         'processedAt': null,
         'processedBy': null,
@@ -257,10 +287,8 @@ class AdminService {
     String adminNotes = '',
   }) async {
     try {
-      // Start a batch write
       WriteBatch batch = _firestore.batch();
 
-      // Update the approval request
       DocumentReference requestRef = _firestore
           .collection('store_approval_requests')
           .doc(requestId);
@@ -272,14 +300,12 @@ class AdminService {
         'adminNotes': adminNotes,
       });
 
-      // Update the store document
       DocumentReference storeRef = _firestore.collection('stores').doc(storeId);
       batch.update(storeRef, {
         'isVerified': true,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Commit the batch
       await batch.commit();
 
       return {
@@ -304,10 +330,8 @@ class AdminService {
     String adminNotes = '',
   }) async {
     try {
-      // Start a batch write
       WriteBatch batch = _firestore.batch();
 
-      // Update the approval request
       DocumentReference requestRef = _firestore
           .collection('store_approval_requests')
           .doc(requestId);
@@ -320,7 +344,6 @@ class AdminService {
         'rejectionReason': rejectionReason,
       });
 
-      // Commit the batch
       await batch.commit();
 
       return {
@@ -336,14 +359,16 @@ class AdminService {
     }
   }
 
+  // ======================================================================
+  // PLATFORM STATS (from admin_service.dart)
+  // ======================================================================
+
   // Get platform statistics for admin dashboard
   Future<Map<String, dynamic>> getPlatformStats() async {
     try {
-      // Get total users count
       QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
       int totalUsers = usersSnapshot.docs.length;
 
-      // Get active sellers count
       QuerySnapshot sellersSnapshot = await _firestore
           .collection('users')
           .where('role', isEqualTo: 'seller')
@@ -351,21 +376,18 @@ class AdminService {
           .get();
       int activeSellers = sellersSnapshot.docs.length;
 
-      // Get pending seller requests count
       QuerySnapshot pendingSellerSnapshot = await _firestore
           .collection('seller_approval_requests')
           .where('status', isEqualTo: 'pending')
           .get();
       int pendingSellerRequests = pendingSellerSnapshot.docs.length;
 
-      // Get pending store requests count
       QuerySnapshot pendingStoreSnapshot = await _firestore
           .collection('store_approval_requests')
           .where('status', isEqualTo: 'pending')
           .get();
       int pendingStoreRequests = pendingStoreSnapshot.docs.length;
 
-      // Get total orders count (if orders collection exists)
       QuerySnapshot ordersSnapshot = await _firestore.collection('orders').get();
       int totalOrders = ordersSnapshot.docs.length;
 
@@ -386,5 +408,179 @@ class AdminService {
         'totalOrders': 0,
       };
     }
+  }
+
+  // ======================================================================
+  // SETTINGS METHODS (from admin_settings_service.dart)
+  // ======================================================================
+
+  /// Get current admin settings
+  Future<AdminSettings> getSettings() async {
+    try {
+      final doc = await _firestore.collection('admin_settings').doc('seller_config').get();
+
+      if (!doc.exists) {
+        final defaultSettings = AdminSettings(
+          maxStoresPerSeller: 1,
+          sellerApprovalRequired: true,
+          lastUpdatedAt: DateTime.now(),
+          lastUpdatedBy: 'system',
+        );
+        await _firestore
+            .collection('admin_settings')
+            .doc('seller_config')
+            .set(defaultSettings.toJson());
+        return defaultSettings;
+      }
+
+      return AdminSettings.fromJson(doc.data() as Map<String, dynamic>);
+    } catch (e) {
+      AppLogger.error('Error fetching admin settings', error: e);
+      return AdminSettings(
+        maxStoresPerSeller: 1,
+        sellerApprovalRequired: true,
+        lastUpdatedAt: DateTime.now(),
+        lastUpdatedBy: 'system',
+      );
+    }
+  }
+
+  /// Set maximum stores allowed per seller
+  Future<bool> setMaxStoresPerSeller(int maxStores, String adminId) async {
+    try {
+      if (maxStores < 1) {
+        throw Exception('Max stores must be at least 1');
+      }
+
+      await _firestore.collection('admin_settings').doc('seller_config').set({
+        'maxStoresPerSeller': maxStores,
+        'lastUpdatedAt': Timestamp.now(),
+        'lastUpdatedBy': adminId,
+        'sellerApprovalRequired': true,
+      }, SetOptions(merge: true));
+
+      await _logSettingChange('maxStoresPerSeller', maxStores.toString(), adminId);
+      return true;
+    } catch (e) {
+      AppLogger.error('Error setting max stores', error: e);
+      return false;
+    }
+  }
+
+  /// Set whether seller approval is required
+  Future<bool> setSellerApprovalRequired(bool required, String adminId) async {
+    try {
+      await _firestore.collection('admin_settings').doc('seller_config').set({
+        'sellerApprovalRequired': required,
+        'lastUpdatedAt': Timestamp.now(),
+        'lastUpdatedBy': adminId,
+      }, SetOptions(merge: true));
+
+      await _logSettingChange('sellerApprovalRequired', required.toString(), adminId);
+      return true;
+    } catch (e) {
+      AppLogger.error('Error setting seller approval required', error: e);
+      return false;
+    }
+  }
+
+  /// Get max stores allowed per seller
+  Future<int> getMaxStoresPerSeller() async {
+    try {
+      final settings = await getSettings();
+      return settings.maxStoresPerSeller;
+    } catch (e) {
+      AppLogger.error('Error getting max stores', error: e);
+      return 1;
+    }
+  }
+
+  /// Get seller approval requirement setting
+  Future<bool> isSellerApprovalRequired() async {
+    try {
+      final settings = await getSettings();
+      return settings.sellerApprovalRequired;
+    } catch (e) {
+      AppLogger.error('Error getting seller approval requirement', error: e);
+      return true;
+    }
+  }
+
+  /// Reset settings to defaults
+  Future<bool> resetToDefaults(String adminId) async {
+    try {
+      final defaultSettings = AdminSettings(
+        maxStoresPerSeller: 1,
+        sellerApprovalRequired: true,
+        lastUpdatedAt: DateTime.now(),
+        lastUpdatedBy: adminId,
+      );
+
+      await _firestore
+          .collection('admin_settings')
+          .doc('seller_config')
+          .set(defaultSettings.toJson());
+
+      await _logSettingChange('all_settings', 'reset_to_defaults', adminId);
+      return true;
+    } catch (e) {
+      AppLogger.error('Error resetting settings', error: e);
+      return false;
+    }
+  }
+
+  /// Get settings change log (admin audit trail)
+  Future<List<Map<String, dynamic>>> getSettingsAuditLog({int limit = 50}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('admin_settings')
+          .doc('seller_config')
+          .collection('audit_log')
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .get();
+
+      return snapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      AppLogger.error('Error fetching audit log', error: e);
+      return [];
+    }
+  }
+
+  /// Internal: Log setting changes for audit trail
+  Future<void> _logSettingChange(String setting, String newValue, String adminId) async {
+    try {
+      await _firestore
+          .collection('admin_settings')
+          .doc('seller_config')
+          .collection('audit_log')
+          .add({
+        'setting': setting,
+        'newValue': newValue,
+        'changedBy': adminId,
+        'timestamp': Timestamp.now(),
+      });
+    } catch (e) {
+      AppLogger.error('Error logging setting change', error: e);
+    }
+  }
+
+  /// Stream settings for real-time updates
+  Stream<AdminSettings> watchSettings() {
+    return _firestore
+        .collection('admin_settings')
+        .doc('seller_config')
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) {
+        return AdminSettings(
+          maxStoresPerSeller: 1,
+          sellerApprovalRequired: true,
+          lastUpdatedAt: DateTime.now(),
+          lastUpdatedBy: 'system',
+        );
+      }
+      return AdminSettings.fromJson(doc.data() as Map<String, dynamic>);
+    });
   }
 }

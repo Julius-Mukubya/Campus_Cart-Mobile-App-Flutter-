@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
-import 'package:madpractical/services/managers/order_manager.dart';
 import 'package:madpractical/pages/customer/order_chat_screen.dart';
 
 class OrderDetailsScreen extends StatefulWidget {

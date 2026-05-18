@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/managers/wishlist_manager.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
-import 'package:madpractical/services/managers/order_manager.dart';
-import 'package:madpractical/services/auth/firebase_auth_service.dart';
-import 'package:madpractical/services/managers/preferences_service.dart';
-import 'package:madpractical/services/business/app_settings.dart';
+import 'package:madpractical/services/auth_service.dart';
+import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/pages/customer/my_orders_screen.dart';
 import 'package:madpractical/pages/customer/addresses_screen.dart';
 import 'package:madpractical/pages/profile/edit_profile_screen.dart';
@@ -891,7 +887,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onPressed: () async {
                               Navigator.pop(context); // Close dialog
                               // Sign out from Firebase Auth and clear local state
-                              await FirebaseAuthService().signOut();
+                              await AuthService().signOut();
                               await PreferencesService.clearUser();
                               await PreferencesService.clearCartItems();
                               await PreferencesService.clearWishlistItems();
