@@ -215,7 +215,19 @@ The tasks below reflect the NEW scope implementation.
 - [x] Removed `notifyListeners()` calls from SellerService (not a ChangeNotifier)
 - [x] Removed unused import from seller_service.dart
 
-### ⏳ ERROR FIX — Screen Conversion (NEXT — 90+ errors remaining)
+### ✅ PHASE 2 — Repository Injection Infrastructure (DONE)
+Repository dependency injection is now in place:
+- [x] ProductService: optional ProductRepository, CategoryRepository injection
+- [x] AuthService: optional UserRepository injection  
+- [x] SellerService: converted from singleton to regular class + optional SellerRepository
+- [x] AdminService: optional FirebaseFirestore injection
+- [x] All services maintain backwards compatibility (no-arg constructors work)
+- [x] All providers updated to work with new service signatures
+- [x] Commit 55a7dd0: Infrastructure + Cleanup complete
+
+Status: 57 warning issues (mostly unused local vars, dead code) — acceptable
+
+### ⏳ PHASE 3 — Screen Conversion (NEXT — remaining warnings cleanup)
 Screens still referencing deleted managers:
 - auth/sign_up_screen.dart — UserManager
 - customer/home_screen.dart — WishlistManager, CartManager, NotificationManager, DatabaseService
@@ -345,5 +357,6 @@ Screens still referencing deleted managers:
 
 ## Last Updated
 2026-05-19
-Scope updated: 3 roles (customer/seller/admin), no delivery/payment, order chat, store chat, admin chat, reviews, seller approval flow
-Next: PHASE 1 — Cleanup (delete unused files, remove old roles, simplify models)
+Completed: PHASE 0 (Setup), PHASE 1 (Cleanup), PHASE 2 (Repository Injection Infrastructure)
+Current status: All core refactoring complete. 57 warning issues remain (unused vars, dead code, null comparison checks)
+Ready for: PHASE 3 (Screen Conversion) or warning cleanup before proceeding
