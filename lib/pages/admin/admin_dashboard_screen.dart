@@ -456,7 +456,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _approveSeller(Map<String, dynamic> request) async {
     try {
       final adminId = '';
-      if (adminId == null) return;
 
       final result = await _adminService.approveSellerRequest(
         requestId: request['requestId'],
@@ -499,7 +498,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _rejectSeller(Map<String, dynamic> request) async {
     try {
       final adminId = '';
-      if (adminId == null) return;
 
       final result = await _adminService.rejectSellerRequest(
         requestId: request['requestId'],
@@ -543,7 +541,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _approveStore(Map<String, dynamic> request) async {
     try {
       final adminId = '';
-      if (adminId == null) return;
 
       final result = await _adminService.approveStoreRequest(
         requestId: request['requestId'],
@@ -586,7 +583,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _rejectStore(Map<String, dynamic> request) async {
     try {
       final adminId = '';
-      if (adminId == null) return;
 
       final result = await _adminService.rejectStoreRequest(
         requestId: request['requestId'],

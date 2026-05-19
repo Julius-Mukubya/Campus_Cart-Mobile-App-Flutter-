@@ -18,35 +18,6 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  // ── Provider helpers (replaces old manager methods) ────────────────────────
-  bool _wishlistIsInWishlist(String name) =>
-      ref.read(wishlistProvider.notifier).isInWishlist(name);
-
-  void _wishlistToggle(Map<String, dynamic> product) {
-    final n = ref.read(wishlistProvider.notifier);
-    if (n.isInWishlist(product['name'] as String)) {
-      n.removeFromWishlist(product['name'] as String);
-    } else {
-      n.addToWishlist(product);
-    }
-    if (mounted) setState(() {});
-  }
-
-  void _wishlistRemove(String name) {
-    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
-    if (mounted) setState(() {});
-  }
-
-  bool _cartIsInCart(String name) =>
-      ref.read(cartProvider.notifier).isInCart(name);
-
-  void _cartAddToCart(Map<String, dynamic> product) {
-    ref.read(cartProvider.notifier).addToCart(product);
-    if (mounted) setState(() {});
-  }
-
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
   // ────────────────────────────────────────────────────────────────────────────
 
   final ProductService _productService = ProductService();
@@ -137,13 +108,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     super.dispose();
   }
 
-  void _onWishlistChanged() {
-    setState(() {});
-  }
-
-  void _onCartChanged() {
-    setState(() {});
-  }
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
 
   int _getProductCount(String categoryTitle) {
     // Find matching category and return its product count
@@ -838,11 +804,6 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
     if (mounted) setState(() {});
   }
 
-  void _wishlistRemove(String name) {
-    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
-    if (mounted) setState(() {});
-  }
-
   bool _cartIsInCart(String name) =>
       ref.read(cartProvider.notifier).isInCart(name);
 
@@ -851,8 +812,6 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
     if (mounted) setState(() {});
   }
 
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
   // ────────────────────────────────────────────────────────────────────────────
 
   final ProductService _productService = ProductService();
@@ -874,14 +833,6 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
   @override
   void dispose() {
     super.dispose();
-  }
-
-  void _onWishlistChanged() {
-    setState(() {});
-  }
-
-  void _onCartChanged() {
-    setState(() {});
   }
 
   double _extractPrice(String priceString) {
