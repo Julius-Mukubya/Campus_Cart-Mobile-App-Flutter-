@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import '../utils/app_logger.dart';
 import 'admin_service.dart';
+import 'package:madpractical/repositories/seller_repository.dart';
 
 /// SellerStore model class
 class SellerStore {
@@ -66,16 +66,19 @@ class SellerStore {
 }
 
 /// Merged SellerService combining seller_service, seller_store_service, and seller_request_service
-class SellerService extends ChangeNotifier {
-  static final SellerService _instance = SellerService._internal();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final AdminService _adminService = AdminService();
+class SellerService {
+  // ignore: unused_field
+  final SellerRepository? _sellerRepository;
+  final FirebaseFirestore _firestore;
+  final AdminService _adminService;
 
-  factory SellerService() {
-    return _instance;
-  }
-
-  SellerService._internal();
+  SellerService({
+    SellerRepository? sellerRepository,
+    FirebaseFirestore? firestore,
+    AdminService? adminService,
+  })  : _sellerRepository = sellerRepository,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _adminService = adminService ?? AdminService();
 
   final List<Map<String, dynamic>> _sellerRequests = [];
 
@@ -714,7 +717,6 @@ class SellerService extends ChangeNotifier {
       };
 
       _sellerRequests.insert(0, request);
-      notifyListeners();
 
       AppLogger.info('Seller request submitted: $requestId');
     } catch (e) {
@@ -737,7 +739,6 @@ class SellerService extends ChangeNotifier {
         _sellerRequests[index]['reviewedAt'] = DateTime.now().toIso8601String();
         _sellerRequests[index]['reviewedBy'] = adminId;
 
-        notifyListeners();
         AppLogger.info('Seller request approved: $requestId');
       }
     } catch (e) {
@@ -760,7 +761,6 @@ class SellerService extends ChangeNotifier {
         _sellerRequests[index]['reviewedAt'] = DateTime.now().toIso8601String();
         _sellerRequests[index]['reviewedBy'] = adminId;
 
-        notifyListeners();
         AppLogger.info('Seller request rejected: $requestId');
       }
     } catch (e) {

@@ -1,10 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/app_logger.dart';
+import 'package:madpractical/repositories/user_repository.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // ignore: unused_field
+  final UserRepository? _userRepository;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  AuthService({
+    UserRepository? userRepository,
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+  })  : _userRepository = userRepository,
+        _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -55,8 +66,7 @@ class AuthService {
         'rating': 0,
         'completedDeliveries': 0,
         
-        // Role-specific fields (null initially)
-        'staffType': null,
+        // Seller-specific fields
         'storeId': null,
         'defaultAddressId': null,
         'defaultPaymentMethodId': null,
@@ -118,7 +128,6 @@ class AuthService {
           'phone': '',
           'role': 'customer',
           'isActive': true,
-          'staffType': null,
           'storeId': null,
         };
         await _firestore.collection('users').doc(userCredential.user!.uid).set({

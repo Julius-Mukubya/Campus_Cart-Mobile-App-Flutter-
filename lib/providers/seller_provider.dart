@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/seller_service.dart';
+import '../services/order_service.dart';
 import '../utils/app_logger.dart';
 
 /// Seller state model
@@ -46,6 +47,7 @@ class SellerState {
 /// Seller notifier for managing seller state
 class SellerNotifier extends StateNotifier<SellerState> {
   final SellerService _sellerService = SellerService();
+  final OrderService _orderService = OrderService();
 
   SellerNotifier() : super(const SellerState());
 
@@ -96,8 +98,7 @@ class SellerNotifier extends StateNotifier<SellerState> {
   Future<void> updateOrderStatus(String orderId, String status) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _sellerService.updateOrderStatus(orderId, status);
-
+      await _orderService.updateOrderStatus(orderId, status);
       // Update local orders
       final updatedOrders = state.orders.map((order) {
         if (order['id'] == orderId) {
@@ -105,7 +106,6 @@ class SellerNotifier extends StateNotifier<SellerState> {
         }
         return order;
       }).toList();
-
       state = state.copyWith(orders: updatedOrders, isLoading: false);
       AppLogger.info('Order status updated: $orderId -> $status');
     } catch (e) {
@@ -121,9 +121,20 @@ class SellerNotifier extends StateNotifier<SellerState> {
   Future<void> addProduct(Map<String, dynamic> productData) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final productId = await _sellerService.addProduct(productData);
+      final result = await _sellerService.addProduct(
+        sellerId: productData['sellerId'] ?? '',
+        storeId: productData['storeId'] ?? '',
+        productName: productData['productName'] ?? '',
+        productDescription: productData['productDescription'] ?? '',
+        category: productData['category'] ?? '',
+        price: (productData['price'] ?? 0).toDouble(),
+        stockQuantity: productData['stockQuantity'] ?? 0,
+        productImage: productData['productImage'] ?? '',
+        discount: (productData['discount'] ?? 0).toDouble(),
+        tags: productData['tags'] is List ? List<String>.from(productData['tags']) : [],
+      );
+      final productId = result['productId'] as String?;
       final newProduct = {...productData, 'id': productId};
-
       state = state.copyWith(
         products: [...state.products, newProduct],
         isLoading: false,
@@ -142,16 +153,23 @@ class SellerNotifier extends StateNotifier<SellerState> {
   Future<void> updateProduct(String productId, Map<String, dynamic> updates) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _sellerService.updateProduct(productId, updates);
-
-      // Update local products
+      await _sellerService.updateProduct(
+        productId: productId,
+        productName: updates['productName'] ?? '',
+        productDescription: updates['productDescription'] ?? '',
+        category: updates['category'] ?? '',
+        price: (updates['price'] ?? 0).toDouble(),
+        stockQuantity: updates['stockQuantity'] ?? 0,
+        productImage: updates['productImage'] ?? '',
+        discount: (updates['discount'] ?? 0).toDouble(),
+        tags: updates['tags'] is List ? List<String>.from(updates['tags']) : [],
+      );
       final updatedProducts = state.products.map((product) {
         if (product['id'] == productId) {
           return {...product, ...updates};
         }
         return product;
       }).toList();
-
       state = state.copyWith(products: updatedProducts, isLoading: false);
       AppLogger.info('Product updated: $productId');
     } catch (e) {
@@ -164,11 +182,13 @@ class SellerNotifier extends StateNotifier<SellerState> {
   }
 
   /// Delete product
-  Future<void> deleteProduct(String productId) async {
+  Future<void> deleteProduct(String productId, String storeId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _sellerService.deleteProduct(productId);
-
+      await _sellerService.deleteProduct(
+        productId: productId,
+        storeId: storeId,
+      );
       final filteredProducts =
           state.products.where((p) => p['id'] != productId).toList();
       state = state.copyWith(products: filteredProducts, isLoading: false);

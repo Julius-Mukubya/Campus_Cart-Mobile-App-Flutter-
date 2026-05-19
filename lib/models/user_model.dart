@@ -5,9 +5,8 @@ class UserModel {
   final String? phone;
   final String? profileImage;
   final String role; // 'customer', 'seller', 'admin'
-  final String? staffType; // for admin users
   final String? storeId; // for sellers
-  final bool isPremium;
+  final bool showContactInfo; // privacy toggle for customers
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -18,9 +17,8 @@ class UserModel {
     this.phone,
     this.profileImage,
     required this.role,
-    this.staffType,
     this.storeId,
-    this.isPremium = false,
+    this.showContactInfo = true,
     required this.createdAt,
     this.updatedAt,
   });
@@ -34,9 +32,8 @@ class UserModel {
       phone: data['phone'],
       profileImage: data['profileImage'],
       role: data['role'] ?? 'customer',
-      staffType: data['staffType'],
       storeId: data['storeId'],
-      isPremium: data['isPremium'] ?? false,
+      showContactInfo: data['showContactInfo'] ?? true,
       createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as dynamic)?.toDate(),
     );
@@ -50,9 +47,8 @@ class UserModel {
       'phone': phone,
       'profileImage': profileImage,
       'role': role,
-      'staffType': staffType,
       'storeId': storeId,
-      'isPremium': isPremium,
+      'showContactInfo': showContactInfo,
       'createdAt': createdAt,
       'updatedAt': updatedAt ?? DateTime.now(),
     };
@@ -66,9 +62,8 @@ class UserModel {
     String? phone,
     String? profileImage,
     String? role,
-    String? staffType,
     String? storeId,
-    bool? isPremium,
+    bool? showContactInfo,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -79,9 +74,8 @@ class UserModel {
       phone: phone ?? this.phone,
       profileImage: profileImage ?? this.profileImage,
       role: role ?? this.role,
-      staffType: staffType ?? this.staffType,
       storeId: storeId ?? this.storeId,
-      isPremium: isPremium ?? this.isPremium,
+      showContactInfo: showContactInfo ?? this.showContactInfo,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

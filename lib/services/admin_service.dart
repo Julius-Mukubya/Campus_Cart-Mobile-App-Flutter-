@@ -34,7 +34,11 @@ class AdminSettings {
 
 /// Merged AdminService combining admin_service and admin_settings_service
 class AdminService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  AdminService({
+    FirebaseFirestore? firestore,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // ======================================================================
   // SELLER APPROVAL METHODS (from admin_service.dart)

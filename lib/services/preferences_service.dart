@@ -7,7 +7,6 @@ class PreferencesService {
   static const _keyUserEmail = 'user_email';
   static const _keyUserPhone = 'user_phone';
   static const _keyUserRole = 'user_role';
-  static const _keyStaffType = 'staff_type';
   static const _keyStoreId = 'store_id';
   static const _keyProfileImage = 'profile_image';
   static const _keyOnboardingSeen = 'onboarding_seen';
@@ -34,7 +33,7 @@ class PreferencesService {
     return _prefs!;
   }
 
-  // ΓöÇΓöÇ User session ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── User session ────────────────────────────────────────────────────────────
 
   static Future<void> saveUser({
     required String userId,
@@ -42,7 +41,6 @@ class PreferencesService {
     required String email,
     String phone = '',
     String role = 'customer',
-    String? staffType,
     String? storeId,
     String profileImage = '',
   }) async {
@@ -51,11 +49,6 @@ class PreferencesService {
     await _instance.setString(_keyUserEmail, email);
     await _instance.setString(_keyUserPhone, phone);
     await _instance.setString(_keyUserRole, role);
-    if (staffType != null) {
-      await _instance.setString(_keyStaffType, staffType);
-    } else {
-      await _instance.remove(_keyStaffType);
-    }
     if (storeId != null) {
       await _instance.setString(_keyStoreId, storeId);
     } else {
@@ -70,7 +63,6 @@ class PreferencesService {
     await _instance.remove(_keyUserEmail);
     await _instance.remove(_keyUserPhone);
     await _instance.remove(_keyUserRole);
-    await _instance.remove(_keyStaffType);
     await _instance.remove(_keyStoreId);
     await _instance.remove(_keyProfileImage);
   }
@@ -80,12 +72,11 @@ class PreferencesService {
   static String get userEmail => _instance.getString(_keyUserEmail) ?? '';
   static String get userPhone => _instance.getString(_keyUserPhone) ?? '';
   static String get userRole => _instance.getString(_keyUserRole) ?? 'customer';
-  static String? get staffType => _instance.getString(_keyStaffType);
   static String? get storeId => _instance.getString(_keyStoreId);
   static String get profileImage => _instance.getString(_keyProfileImage) ?? '';
   static bool get isLoggedIn => userId != null && userId!.isNotEmpty;
 
-  // ΓöÇΓöÇ App preferences ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── App preferences ─────────────────────────────────────────────────────────
 
   static Future<void> setOnboardingSeen() async =>
       _instance.setBool(_keyOnboardingSeen, true);
@@ -117,7 +108,7 @@ class PreferencesService {
   static String get language =>
       _instance.getString(_keyLanguage) ?? 'en';
 
-  // ΓöÇΓöÇ Cart persistence ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Cart persistence ────────────────────────────────────────────────────────
 
   static Future<void> saveCartItems(List<Map<String, dynamic>> items) async {
     final encoded = jsonEncode(items);
@@ -138,7 +129,7 @@ class PreferencesService {
   static Future<void> clearCartItems() async =>
       _instance.remove(_keyCartItems);
 
-  // ΓöÇΓöÇ Wishlist persistence ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Wishlist persistence ────────────────────────────────────────────────────
 
   static Future<void> saveWishlistItems(List<Map<String, dynamic>> items) async {
     final encoded = jsonEncode(items);
@@ -159,7 +150,7 @@ class PreferencesService {
   static Future<void> clearWishlistItems() async =>
       _instance.remove(_keyWishlistItems);
 
-  // ΓöÇΓöÇ Search history ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Search history ──────────────────────────────────────────────────────────
 
   static List<String> get searchHistory {
     return _instance.getStringList(_keySearchHistory) ?? [];
@@ -186,7 +177,7 @@ class PreferencesService {
   static Future<void> clearSearchHistory() async =>
       _instance.remove(_keySearchHistory);
 
-  // ΓöÇΓöÇ Recently viewed products ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Recently viewed products ────────────────────────────────────────────────
 
   static List<Map<String, dynamic>> get recentlyViewed {
     final raw = _instance.getString(_keyRecentlyViewed);

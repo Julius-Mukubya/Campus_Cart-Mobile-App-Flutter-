@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
-
+import 'package:madpractical/services/preferences_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -46,17 +46,6 @@ class _SignInScreenState extends State<SignInScreen> {
       // Get user data from result
       final userData = result['userData'] as Map<String, dynamic>;
       
-      // Update user manager with the logged-in user's info
-      final userManager = UserManager();
-      userManager.updateProfile(
-        userId: result['user']?.uid,
-        name: userData['name'] ?? 'User',
-        email: userData['email'] ?? email,
-        phone: userData['phone'] ?? '',
-        role: userData['role'] ?? 'customer',
-        staffType: userData['staffType'],
-      );
-
       // Persist session to SharedPreferences
       await PreferencesService.saveUser(
         userId: result['user']?.uid ?? '',
@@ -64,16 +53,12 @@ class _SignInScreenState extends State<SignInScreen> {
         email: userData['email'] ?? email,
         phone: userData['phone'] ?? '',
         role: userData['role'] ?? 'customer',
-        staffType: userData['staffType'],
         storeId: userData['storeId'],
         profileImage: userData['profileImage'] ?? '',
       );
 
       // Show success message
       String roleDisplay = userData['role'] ?? 'customer';
-      if (userData['role'] == 'staff' && userData['staffType'] != null) {
-        roleDisplay = '${userData['staffType']} staff';
-      }
       _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
 
       // Always navigate to home screen after login

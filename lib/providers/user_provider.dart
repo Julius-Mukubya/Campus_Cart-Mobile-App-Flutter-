@@ -8,11 +8,11 @@ class UserState {
   final String phone;
   final String profileImage;
   final bool isPremium;
-  final String role;
-  final String? staffType;
+  final String role; // 'customer', 'seller', 'admin'
   final String? storeId;
+  final bool showContactInfo;
 
-  UserState({
+  const UserState({
     this.userId,
     this.name = 'John Doe',
     this.email = 'johndoe@example.com',
@@ -21,13 +21,9 @@ class UserState {
         'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
     this.isPremium = true,
     this.role = 'customer',
-    this.staffType,
     this.storeId,
+    this.showContactInfo = true,
   });
-
-  // Helper getters
-  bool get isCustomerSupport => role == 'staff' && staffType == 'support';
-  bool get isDeliveryPersonnel => role == 'staff' && staffType == 'delivery';
 
   UserState copyWith({
     String? userId,
@@ -37,8 +33,8 @@ class UserState {
     String? profileImage,
     bool? isPremium,
     String? role,
-    String? staffType,
     String? storeId,
+    bool? showContactInfo,
   }) {
     return UserState(
       userId: userId ?? this.userId,
@@ -48,8 +44,8 @@ class UserState {
       profileImage: profileImage ?? this.profileImage,
       isPremium: isPremium ?? this.isPremium,
       role: role ?? this.role,
-      staffType: (role != null && role != 'staff') ? null : staffType ?? this.staffType,
       storeId: (role != null && role != 'seller') ? null : storeId ?? this.storeId,
+      showContactInfo: showContactInfo ?? this.showContactInfo,
     );
   }
 }
@@ -65,8 +61,8 @@ class UserNotifier extends StateNotifier<UserState> {
     String? phone,
     String? profileImage,
     String? role,
-    String? staffType,
     String? storeId,
+    bool? showContactInfo,
   }) {
     state = state.copyWith(
       userId: userId,
@@ -75,19 +71,18 @@ class UserNotifier extends StateNotifier<UserState> {
       phone: phone,
       profileImage: profileImage,
       role: role,
-      staffType: staffType,
       storeId: storeId,
+      showContactInfo: showContactInfo,
     );
   }
 
   void logout() {
-    state = const UserState(
+    state = UserState(
       userId: null,
       name: 'Guest User',
       email: 'guest@example.com',
       phone: '+256 700 000 000',
       role: 'customer',
-      staffType: null,
       storeId: null,
     );
   }

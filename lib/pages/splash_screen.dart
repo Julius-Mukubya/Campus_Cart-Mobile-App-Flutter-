@@ -32,7 +32,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             email: userData['email'] ?? '',
             phone: userData['phone'] ?? '',
             role: userData['role'] ?? 'customer',
-            staffType: userData['staffType'],
             storeId: userData['storeId'],
           );
           Navigator.pushReplacementNamed(context, '/home');

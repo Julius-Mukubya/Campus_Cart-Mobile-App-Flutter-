@@ -1,9 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/utils/app_logger.dart';
+import 'package:madpractical/repositories/product_repository.dart';
+import 'package:madpractical/repositories/category_repository.dart';
 
 class ProductService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // ignore: unused_field
+  final ProductRepository? _productRepository;
+  // ignore: unused_field
+  final CategoryRepository? _categoryRepository;
+  final FirebaseFirestore _firestore;
+
+  ProductService({
+    ProductRepository? productRepository,
+    CategoryRepository? categoryRepository,
+    FirebaseFirestore? firestore,
+  })  : _productRepository = productRepository,
+        _categoryRepository = categoryRepository,
+        _firestore = firestore ?? FirebaseFirestore.instance;
 
   // Test Firebase connection and log data structure
   Future<void> testFirebaseConnection() async {

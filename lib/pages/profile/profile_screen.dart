@@ -1,46 +1,233 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/pages/customer/my_orders_screen.dart';
-import 'package:madpractical/pages/customer/addresses_screen.dart';
 import 'package:madpractical/pages/profile/edit_profile_screen.dart';
 import 'package:madpractical/pages/customer/notifications_screen.dart';
 import 'package:madpractical/pages/profile/privacy_security_screen.dart';
 import 'package:madpractical/pages/profile/become_seller_screen.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
+import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final UserManager _userManager = UserManager();
-  final OrderManager _orderManager = OrderManager();
-
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
-  void initState() {
-    super.initState();
-    _userManager.addListener(_onUserChanged);
+  Widget build(BuildContext context) {
+    final userState = ref.watch(userProvider);
+    final cartState = ref.watch(cartProvider);
+    final wishlistState = ref.watch(wishlistProvider);
+
+    final accountItems = [
+      {
+        'icon': Icons.receipt_long_outlined,
+        'title': 'My Orders',
+        'subtitle': 'Track your orders',
+        'color': AppColors.primary,
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+        ),
+      },
+      {
+        'icon': Icons.location_on_outlined,
+        'title': 'Addresses',
+        'subtitle': 'Manage delivery addresses',
+        'color': AppColors.accent,
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Address management not available in this version')),
+        ),
+      },
+      {
+        'icon': Icons.payment_outlined,
+        'title': 'Payment Methods',
+        'subtitle': 'Manage payment options',
+        'color': AppColors.success,
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment methods not available in this version')),
+        ),
+      },
+    ];
+
+    final settingsItems = [
+      {
+        'icon': Icons.notifications_outlined,
+        'title': 'Notifications',
+        'subtitle': 'Manage notifications',
+        'color': AppColors.primary,
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+        ),
+      },
+      {
+        'icon': Icons.security_outlined,
+        'title': 'Privacy & Security',
+        'subtitle': 'Account security settings',
+        'color': AppColors.accent,
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PrivacySecurityScreen()),
+        ),
+      },
+    ];
+
+    final helpSupportItems = [
+      {
+        'icon': Icons.quiz_outlined,
+        'title': 'FAQ',
+        'subtitle': 'Frequently asked questions',
+        'color': AppColors.success,
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('FAQ not available in this version')),
+        ),
+      },
+      {
+        'icon': Icons.contact_support_outlined,
+        'title': 'Contact Us',
+        'subtitle': 'Get in touch with support',
+        'color': Colors.blue,
+        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Contact us feature not available in this version')),
+        ),
+      },
+    ];
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: AppColors.text,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        centerTitle: false,
+        actions: const [
+          DarkModeToggle(),
+          NotificationIcon(),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Header
+              _buildProfileHeader(userState),
+
+              const SizedBox(height: 24),
+
+              // Stats Row
+              _buildStatsRow(userState, cartState, wishlistState),
+
+              const SizedBox(height: 24),
+
+              // Account Section
+              _buildMenuSection('Account', accountItems),
+
+              const SizedBox(height: 20),
+
+              // Become Seller Section (only for customers)
+              if (userState.role == 'customer') ...[
+                _buildMenuSection('Opportunity', [
+                  {
+                    'icon': Icons.store_outlined,
+                    'title': 'Become a Seller',
+                    'subtitle': 'Start selling your products',
+                    'color': Colors.green,
+                    'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BecomeSellersScreen()),
+                    ),
+                  },
+                ]),
+                const SizedBox(height: 20),
+              ],
+
+              // Business/Management Section (only for non-customer roles)
+              if (userState.role != 'customer') ...[
+                _buildMenuSection('Business / Management', _getBusinessMenuItems(userState.role)),
+                const SizedBox(height: 20),
+              ],
+
+              // Settings Section
+              _buildMenuSection('Settings', settingsItems),
+
+              const SizedBox(height: 20),
+
+              // Appearance Section
+              _buildAppearanceSection(),
+
+              const SizedBox(height: 20),
+
+              // Help & Support Section
+              _buildMenuSection('Help & Support', helpSupportItems),
+
+              const SizedBox(height: 32),
+
+              // Logout Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _showLogoutDialog(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.logout, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Logout',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 4,
+        wishlistCount: wishlistState.itemCount,
+        cartCount: cartState.itemCount,
+      ),
+    );
   }
 
-  @override
-  void dispose() {
-    _userManager.removeListener(_onUserChanged);
-    super.dispose();
-  }
-
-  void _onUserChanged() {
-    setState(() {});
-  }
-
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(UserState userState) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -69,19 +256,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            child: _userManager.profileImage.isNotEmpty && 
-                   _userManager.profileImage.startsWith('http')
+            child: userState.profileImage.isNotEmpty &&
+                    userState.profileImage.startsWith('http')
                 ? CircleAvatar(
                     radius: 40,
-                    backgroundImage: NetworkImage(_userManager.profileImage),
+                    backgroundImage: NetworkImage(userState.profileImage),
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   )
                 : CircleAvatar(
                     radius: 40,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: Text(
-                      _userManager.name.isNotEmpty 
-                          ? _userManager.name[0].toUpperCase()
+                      userState.name.isNotEmpty
+                          ? userState.name[0].toUpperCase()
                           : 'U',
                       style: const TextStyle(
                         fontSize: 32,
@@ -97,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userManager.name,
+                  userState.name,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -106,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _userManager.email,
+                  userState.email,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.secondaryText,
@@ -149,7 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(UserState userState, CartState cartState, WishlistState wishlistState) {
     return Row(
       children: [
         Expanded(
@@ -182,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${_orderManager.orderCount}',
+                  '${cartState.items.length}',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -190,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Text(
-                  'Orders',
+                  'Cart',
                   style: TextStyle(
                     fontSize: 14,
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -231,7 +418,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${WishlistManager().itemCount}',
+                  '${wishlistState.items.length}',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -320,8 +507,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(20),
             child: Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.getText(context))),
           ),
-
-          // Dark mode toggle
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             leading: Container(
@@ -341,10 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
           ),
-
           Divider(height: 1, color: isDark ? AppColors.darkSecondaryText.withValues(alpha: 0.2) : AppColors.lightGrey),
-
-          // Language selector
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             leading: Container(
@@ -499,10 +681,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _getBusinessMenuItems() {
-    final userRole = _userManager.role;
-    
-    switch (userRole) {
+  List<Map<String, dynamic>> _getBusinessMenuItems(String role) {
+    switch (role) {
       case 'seller':
         return [
           {
@@ -533,103 +713,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'color': Colors.blue,
             'onTap': () => Navigator.pushNamed(context, '/seller/orders'),
           },
-          {
-            'icon': Icons.account_balance_wallet,
-            'title': 'Earnings / Payouts',
-            'subtitle': 'View earnings & withdrawals',
-            'color': Colors.green,
-            'onTap': () => Navigator.pushNamed(context, '/seller/earnings'),
-          },
-          {
-            'icon': Icons.store_mall_directory,
-            'title': 'Store Settings',
-            'subtitle': 'Update store details',
-            'color': Colors.purple,
-            'onTap': () => Navigator.pushNamed(context, '/seller/settings'),
-          },
         ];
-      
-      case 'staff':
-        final userManager = UserManager();
-        final staffType = userManager.staffType;
-        
-        // Common items for all staff
-        List<Map<String, dynamic>> staffItems = [
-          {
-            'icon': Icons.dashboard,
-            'title': 'Staff Dashboard',
-            'subtitle': 'Assigned tasks overview',
-            'color': AppColors.primary,
-            'onTap': () => Navigator.pushNamed(context, '/staff/dashboard'),
-          },
-        ];
-        
-        // Add role-specific items
-        if (staffType == 'support') {
-          // Customer Support specific items
-          staffItems.addAll([
-            {
-              'icon': Icons.support_agent,
-              'title': 'Support Tickets',
-              'subtitle': 'Customer issues & inquiries',
-              'color': AppColors.success,
-              'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
-            },
-            {
-              'icon': Icons.chat,
-              'title': 'Live Chat',
-              'subtitle': 'Real-time customer support',
-              'color': Colors.blue,
-              'onTap': () => Navigator.pushNamed(context, '/staff/chat'),
-            },
-          ]);
-        } else if (staffType == 'delivery') {
-          // Delivery Personnel specific items
-          staffItems.addAll([
-            {
-              'icon': Icons.assignment,
-              'title': 'Orders to Deliver',
-              'subtitle': 'Pick up & deliver orders',
-              'color': AppColors.accent,
-              'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
-            },
-            {
-              'icon': Icons.local_shipping,
-              'title': 'Active Deliveries',
-              'subtitle': 'Track ongoing deliveries',
-              'color': Colors.blue,
-              'onTap': () => Navigator.pushNamed(context, '/staff/active-deliveries'),
-            },
-            {
-              'icon': Icons.history,
-              'title': 'Delivery History',
-              'subtitle': 'Completed deliveries',
-              'color': AppColors.success,
-              'onTap': () => Navigator.pushNamed(context, '/staff/delivery-history'),
-            },
-          ]);
-        } else {
-          // Default staff items (if staffType is not set)
-          staffItems.addAll([
-            {
-              'icon': Icons.assignment,
-              'title': 'Orders to Process',
-              'subtitle': 'Pack, ship, update status',
-              'color': AppColors.accent,
-              'onTap': () => Navigator.pushNamed(context, '/staff/orders'),
-            },
-            {
-              'icon': Icons.support_agent,
-              'title': 'Support Tickets',
-              'subtitle': 'Customer issues & returns',
-              'color': AppColors.success,
-              'onTap': () => Navigator.pushNamed(context, '/staff/tickets'),
-            },
-          ]);
-        }
-        
-        return staffItems;
-      
       case 'admin':
         return [
           {
@@ -646,315 +730,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'color': AppColors.accent,
             'onTap': () => Navigator.pushNamed(context, '/admin/sellers'),
           },
-          {
-            'icon': Icons.category,
-            'title': 'Manage Categories',
-            'subtitle': 'Add/edit/delete categories',
-            'color': AppColors.success,
-            'onTap': () => Navigator.pushNamed(context, '/admin/categories'),
-          },
-          {
-            'icon': Icons.inventory,
-            'title': 'Manage Products',
-            'subtitle': 'View all products & takedowns',
-            'color': Colors.blue,
-            'onTap': () => Navigator.pushNamed(context, '/admin/products'),
-          },
-          {
-            'icon': Icons.shopping_bag,
-            'title': 'Manage Orders',
-            'subtitle': 'View all orders',
-            'color': Colors.green,
-            'onTap': () => Navigator.pushNamed(context, '/admin/orders'),
-          },
-          {
-            'icon': Icons.payment,
-            'title': 'Payments / Refunds',
-            'subtitle': 'Review transactions',
-            'color': Colors.purple,
-            'onTap': () => Navigator.pushNamed(context, '/admin/payments'),
-          },
-          {
-            'icon': Icons.analytics,
-            'title': 'Reports',
-            'subtitle': 'Analytics & exports',
-            'color': Colors.orange,
-            'onTap': () => Navigator.pushNamed(context, '/admin/reports'),
-          },
-          {
-            'icon': Icons.settings,
-            'title': 'System Settings',
-            'subtitle': 'Shipping, taxes, payments',
-            'color': Colors.grey,
-            'onTap': () => Navigator.pushNamed(context, '/admin/settings'),
-          },
         ];
-      
       default:
         return [];
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final wishlistManager = WishlistManager();
-    final cartManager = CartManager();
-    final accountItems = [
-      {
-        'icon': Icons.receipt_long_outlined,
-        'title': 'My Orders',
-        'subtitle': 'Track your orders',
-        'color': AppColors.primary,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-      },
-      {
-        'icon': Icons.location_on_outlined,
-        'title': 'Addresses',
-        'subtitle': 'Manage delivery addresses',
-        'color': AppColors.accent,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AddressesScreen()),
-        ),
-      },
-      {
-        'icon': Icons.payment_outlined,
-        'title': 'Payment Methods',
-        'subtitle': 'Manage payment options',
-        'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment methods not available in this version')),
-        ),
-      },
-    ];
-
-    final settingsItems = [
-      {
-        'icon': Icons.notifications_outlined,
-        'title': 'Notifications',
-        'subtitle': 'Manage notifications',
-        'color': AppColors.primary,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-        ),
-      },
-      {
-        'icon': Icons.security_outlined,
-        'title': 'Privacy & Security',
-        'subtitle': 'Account security settings',
-        'color': AppColors.accent,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PrivacySecurityScreen()),
-        ),
-      },
-    ];
-
-    final helpSupportItems = [
-      {
-        'icon': Icons.quiz_outlined,
-        'title': 'FAQ',
-        'subtitle': 'Frequently asked questions',
-        'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('FAQ not available in this version')),
-        ),
-      },
-      {
-        'icon': Icons.contact_support_outlined,
-        'title': 'Contact Us',
-        'subtitle': 'Get in touch with support',
-        'color': Colors.blue,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact us feature not available in this version')),
-        ),
-      },
-    ];
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
         title: const Text(
-          'Profile',
+          'Logout',
           style: TextStyle(
-            color: AppColors.text,
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            color: AppColors.primary,
           ),
         ),
-        centerTitle: false,
-        actions: const [
-          DarkModeToggle(),
-          NotificationIcon(),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Header
-              _buildProfileHeader(),
-              
-              const SizedBox(height: 24),
-              
-              // Stats Row
-              _buildStatsRow(),
-              
-              const SizedBox(height: 24),
-              
-              // Account Section
-              _buildMenuSection('Account', accountItems),
-              
-              const SizedBox(height: 20),
-
-              // Become Seller Section (only for customers)
-              if (_userManager.role == 'customer') ...[
-                _buildMenuSection('Opportunity', [
-                  {
-                    'icon': Icons.store_outlined,
-                    'title': 'Become a Seller',
-                    'subtitle': 'Start selling your products',
-                    'color': Colors.green,
-                    'onTap': () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const BecomeSellersScreen()),
-                    ),
-                  },
-                ]),
-                const SizedBox(height: 20),
-              ],
-              
-              // Business/Management Section (only for non-customer roles)
-              if (_userManager.role != 'customer') ...[
-                _buildMenuSection('Business / Management', _getBusinessMenuItems()),
-                const SizedBox(height: 20),
-              ],
-              
-              // Settings Section
-              _buildMenuSection('Settings', settingsItems),
-
-              const SizedBox(height: 20),
-
-              // Appearance Section
-              _buildAppearanceSection(),
-
-              const SizedBox(height: 20),
-
-              // Help & Support Section
-              _buildMenuSection('Help & Support', helpSupportItems),
-              
-              const SizedBox(height: 32),
-              
-              // Logout Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        title: const Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        content: const Text(
-                          'Are you sure you want to logout?',
-                          style: TextStyle(color: AppColors.text),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(color: AppColors.secondaryText),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              Navigator.pop(context); // Close dialog
-                              // Sign out from Firebase Auth and clear local state
-                              await AuthService().signOut();
-                              await PreferencesService.clearUser();
-                              await PreferencesService.clearCartItems();
-                              await PreferencesService.clearWishlistItems();
-                              CartManager().clearCart();
-                              WishlistManager().clearWishlist();
-                              _userManager.logout();
-                              if (!context.mounted) return;
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/signin',
-                                (route) => false,
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: const Text('Logout'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Logout',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: AppColors.text),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.secondaryText),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              // Sign out from Firebase Auth and clear local state
+              await AuthService().signOut();
+              await PreferencesService.clearUser();
+              await PreferencesService.clearCartItems();
+              await PreferencesService.clearWishlistItems();
+              ref.read(userProvider.notifier).logout();
+              if (!context.mounted) return;
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/signin',
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              
-              const SizedBox(height: 20),
-            ],
+              elevation: 2,
+            ),
+            child: const Text('Logout'),
           ),
-        ),
-      ),
-
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 4,
-        wishlistCount: wishlistManager.itemCount,
-        cartCount: cartManager.itemCount,
+        ],
       ),
     );
   }
 }
-
-
-

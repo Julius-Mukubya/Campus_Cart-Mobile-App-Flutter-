@@ -78,7 +78,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
   /// Load categories
   Future<void> loadCategories() async {
     try {
-      final categories = await _categoryService.getCategories();
+      final categories = await _categoryService.fetchCategories();
       state = state.copyWith(categories: categories);
       AppLogger.info('Categories loaded: ${categories.length}');
     } catch (e) {

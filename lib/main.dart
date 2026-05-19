@@ -108,7 +108,6 @@ class _MyAppState extends ConsumerState<MyApp> {
         email: PreferencesService.userEmail,
         phone: PreferencesService.userPhone,
         role: PreferencesService.userRole,
-        staffType: PreferencesService.staffType,
         storeId: PreferencesService.storeId,
       );
     }
