@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
@@ -30,11 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       n.addToWishlist(product);
     }
-    if (mounted) setState(() {});
-  }
-
-  void _wishlistRemove(String name) {
-    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
     if (mounted) setState(() {});
   }
 
@@ -321,14 +317,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 'category': return Icons.category;
       default: return Icons.category;
     }
-  }
-
-  void _onWishlistChanged() {
-    setState(() {});
-  }
-
-  void _onCartChanged() {
-    setState(() {});
   }
   
   void _autoScrollBanner() {
@@ -1052,9 +1040,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               );
             },
-            icon: 0 /* TODO: ref.watch(notificationProvider).unreadCount */ > 0
+            icon: ref.watch(notificationProvider).unreadCount > 0
                 ? Badge(
-                    label: Text('${0 /* TODO: ref.watch(notificationProvider).unreadCount */}'),
+                    label: Text('${ref.watch(notificationProvider).unreadCount}'),
                     backgroundColor: AppColors.error,
                     child: Icon(
                       Icons.notifications_outlined,
