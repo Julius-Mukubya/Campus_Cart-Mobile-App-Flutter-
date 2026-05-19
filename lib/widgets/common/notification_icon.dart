@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/notifications_list_screen.dart';
+import 'package:madpractical/providers/notification_provider.dart';
 
-class NotificationIcon extends StatelessWidget {
+class NotificationIcon extends ConsumerWidget {
   final double size;
   final bool showBadge;
 
@@ -13,9 +15,8 @@ class NotificationIcon extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final notificationManager = NotificationManager();
-    final unreadCount = notificationManager.unreadCount;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(notificationProvider).unreadCount;
 
     return GestureDetector(
       onTap: () {
@@ -59,5 +60,3 @@ class NotificationIcon extends StatelessWidget {
     );
   }
 }
-
-

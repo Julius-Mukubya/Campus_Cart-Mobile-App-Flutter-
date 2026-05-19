@@ -1,19 +1,20 @@
+import 'package:madpractical/pages/customer/order_chat_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
-import 'package:madpractical/pages/customer/order_chat_screen.dart';
 
-class OrderDetailsScreen extends StatefulWidget {
+class OrderDetailsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> order;
   
   const OrderDetailsScreen({super.key, required this.order});
 
   @override
-  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+  ConsumerState<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
 }
 
-class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
-  final OrderManager _orderManager = OrderManager();
+class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
   @override
   void initState() {
@@ -620,7 +621,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await _orderManager.approveOrder(
+              await ref.read(orderProvider.notifier).approveOrder(
                 orderId: widget.order['id'],
                 sellerId: 'sample_seller_1',
                 approvalMessage: messageController.text.isNotEmpty
@@ -686,7 +687,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 );
                 return;
               }
-              await _orderManager.rejectOrder(
+              await ref.read(orderProvider.notifier).rejectOrder(
                 orderId: widget.order['id'],
                 sellerId: 'sample_seller_1',
                 rejectionReason: reasonController.text,
@@ -713,14 +714,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => OrderChatScreen(
-          orderId: widget.order['id'],
-          customerName: widget.order['customerName'] ?? 'Customer',
-          customerPhone: widget.order['customerPhone'] ?? 'N/A',
-          shippingAddress:
-              widget.order['shippingAddress'] ?? 'Address not provided',
-          currentUserId: 'seller_1',
-          currentUserName: 'You (Seller)',
-          userRole: 'seller',
+          orderId: widget.order['id'] ?? '',
+          sellerId: widget.order['sellerId'] ?? '',
         ),
       ),
     );

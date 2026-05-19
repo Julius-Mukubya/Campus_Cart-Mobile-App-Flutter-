@@ -13,9 +13,7 @@ class MyOrdersScreen extends StatefulWidget {
 }
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  final _authService = FirebaseAuthService();
-  final _userManager = UserManager();
-  final _db = DatabaseService();
+  final _authService = AuthService();
 
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Active', 'Delivered', 'Cancelled'];
@@ -30,9 +28,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   Future<void> _loadCachedOrders() async {
-    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    final uid = _authService.currentUser?.uid;
     if (uid == null) { setState(() => _loadingCache = false); return; }
-    final cached = await _db.getCachedOrders(uid);
+    final List<Map<String, dynamic>> cached = [];
     if (mounted) {
       setState(() { _cachedOrders = cached; _loadingCache = false; });
     }
@@ -62,7 +60,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   // ── Firestore stream ──────────────────────────────────────────────────────
   Stream<List<Map<String, dynamic>>> _ordersStream() {
-    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    final uid = _authService.currentUser?.uid;
     if (uid == null) return const Stream.empty();
 
     return FirebaseFirestore.instance
@@ -87,7 +85,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             };
           }).toList();
           // Write-through cache
-          await _db.cacheOrders(orders, uid);
           return orders;
         });
   }

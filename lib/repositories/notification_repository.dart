@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import '../utils/exceptions.dart';
 import '../utils/app_logger.dart';
-import 'package:path/path.dart';
 
 class NotificationRepository {
   static final NotificationRepository _instance = NotificationRepository._internal();

@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
@@ -7,16 +10,45 @@ import 'package:madpractical/widgets/common/notification_icon.dart';
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 import '../../utils/app_logger.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
+class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
+  // ── Provider helpers (replaces old manager methods) ────────────────────────
+  bool _wishlistIsInWishlist(String name) =>
+      ref.read(wishlistProvider.notifier).isInWishlist(name);
+
+  void _wishlistToggle(Map<String, dynamic> product) {
+    final n = ref.read(wishlistProvider.notifier);
+    if (n.isInWishlist(product['name'] as String)) {
+      n.removeFromWishlist(product['name'] as String);
+    } else {
+      n.addToWishlist(product);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _wishlistRemove(String name) {
+    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
+    if (mounted) setState(() {});
+  }
+
+  bool _cartIsInCart(String name) =>
+      ref.read(cartProvider.notifier).isInCart(name);
+
+  void _cartAddToCart(Map<String, dynamic> product) {
+    ref.read(cartProvider.notifier).addToCart(product);
+    if (mounted) setState(() {});
+  }
+
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
+  // ────────────────────────────────────────────────────────────────────────────
+
   final ProductService _productService = ProductService();
   String _sortBy = 'Default';
   String _searchQuery = '';
@@ -32,8 +64,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   void initState() {
     super.initState();
     _loadData();
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
   }
 
   Future<void> _loadData() async {
@@ -104,8 +134,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   
   @override
   void dispose() {
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -773,15 +801,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 1,
-        wishlistCount: _wishlistManager.itemCount,
-        cartCount: _cartManager.itemCount,
+        wishlistCount: _wishlistItemCount,
+        cartCount: _cartItemCount,
       ),
     );
   }
 }
 
 // New screen to show products for a specific category
-class CategoryProductsScreen extends StatefulWidget {
+class CategoryProductsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> category;
   final List<Map<String, dynamic>> products;
 
@@ -792,12 +820,41 @@ class CategoryProductsScreen extends StatefulWidget {
   });
 
   @override
-  State<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
+  ConsumerState<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
 }
 
-class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
+class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen> {
+  // ── Provider helpers (replaces old manager methods) ────────────────────────
+  bool _wishlistIsInWishlist(String name) =>
+      ref.read(wishlistProvider.notifier).isInWishlist(name);
+
+  void _wishlistToggle(Map<String, dynamic> product) {
+    final n = ref.read(wishlistProvider.notifier);
+    if (n.isInWishlist(product['name'] as String)) {
+      n.removeFromWishlist(product['name'] as String);
+    } else {
+      n.addToWishlist(product);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _wishlistRemove(String name) {
+    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
+    if (mounted) setState(() {});
+  }
+
+  bool _cartIsInCart(String name) =>
+      ref.read(cartProvider.notifier).isInCart(name);
+
+  void _cartAddToCart(Map<String, dynamic> product) {
+    ref.read(cartProvider.notifier).addToCart(product);
+    if (mounted) setState(() {});
+  }
+
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
+  // ────────────────────────────────────────────────────────────────────────────
+
   final ProductService _productService = ProductService();
   late List<Map<String, dynamic>> _products;
 
@@ -805,8 +862,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   void initState() {
     super.initState();
     _products = List.from(widget.products);
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
   }
 
   Future<void> _refreshProducts() async {
@@ -818,8 +873,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
   @override
   void dispose() {
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -1037,8 +1090,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 right: 12,
                 child: GestureDetector(
                   onTap: () {
-                    final isInWishlist = _wishlistManager.isInWishlist(product['name']);
-                    _wishlistManager.toggleWishlist(product);
+                    final isInWishlist = _wishlistIsInWishlist(product['name']);
+                    _wishlistToggle(product);
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -1068,11 +1121,11 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       ],
                     ),
                     child: Icon(
-                      _wishlistManager.isInWishlist(product['name'])
+                      _wishlistIsInWishlist(product['name'])
                           ? Icons.favorite
                           : Icons.favorite_border,
                       size: 16,
-                      color: _wishlistManager.isInWishlist(product['name'])
+                      color: _wishlistIsInWishlist(product['name'])
                           ? Colors.red
                           : AppColors.grey,
                     ),
@@ -1128,7 +1181,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       const Spacer(),
                       GestureDetector(
                         onTap: () {
-                          _cartManager.addToCart(product);
+                          _cartAddToCart(product);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('${product['name']} added to cart'),
@@ -1142,13 +1195,13 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            color: _cartManager.isInCart(product['name'])
+                            color: _cartIsInCart(product['name'])
                                 ? AppColors.accent
                                 : AppColors.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
-                            _cartManager.isInCart(product['name'])
+                            _cartIsInCart(product['name'])
                                 ? Icons.shopping_cart
                                 : Icons.add_shopping_cart,
                             size: 16,

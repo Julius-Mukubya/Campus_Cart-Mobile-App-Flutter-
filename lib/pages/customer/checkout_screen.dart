@@ -1,21 +1,19 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
-import 'package:madpractical/services/managers/order_manager.dart';
-import 'package:madpractical/services/auth/firebase_auth_service.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
 import 'package:madpractical/pages/customer/order_success.dart';
 
-class CheckoutScreen extends StatefulWidget {
+class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
   @override
-  State<CheckoutScreen> createState() => _CheckoutScreenState();
+  ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
-  final CartManager _cartManager = CartManager();
-  final OrderManager _orderManager = OrderManager();
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+
   final PageController _pageController = PageController();
 
   int _currentStep = 0; // 0=Address, 1=Review
@@ -30,10 +28,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   List<Map<String, dynamic>> _savedAddresses = [];
   String? _selectedAddressId;
   bool _loadingAddresses = true;
-
-  final FirebaseAuthService _authService = FirebaseAuthService();
-  final UserManager _userManager = UserManager();
-
   @override
   void initState() {
     super.initState();
@@ -41,24 +35,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _loadSavedAddresses() async {
-    final uid = _userManager.userId ?? _authService.currentUser?.uid;
-    if (uid == null) {
-      setState(() => _loadingAddresses = false);
-      return;
-    }
-    final addresses = await _authService.getUserAddresses(uid);
-    setState(() {
-      _savedAddresses = addresses;
-      _loadingAddresses = false;
-    });
-    // Auto-select default address and prefill
-    final defaultAddr = addresses.firstWhere(
-      (a) => a['isDefault'] == true,
-      orElse: () => addresses.isNotEmpty ? addresses.first : <String, dynamic>{},
-    );
-    if (defaultAddr.isNotEmpty) {
-      _selectAddress(defaultAddr);
-    }
+    // Addresses not used in Campus Cart (no delivery)
+    setState(() => _loadingAddresses = false);
+    return; // Addresses not used (no delivery)
   }
 
   void _selectAddress(Map<String, dynamic> addr) {
@@ -79,7 +58,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  double get _total => _cartManager.subtotal;
+  double get _total => ref.watch(cartProvider).subtotal;
 
   void _goTo(int step) {
     setState(() => _currentStep = step);
@@ -98,7 +77,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _placeOrder() async {
-    final subtotal = _cartManager.subtotal;
+    final subtotal = ref.watch(cartProvider).subtotal;
     final now = DateTime.now();
     final orderId = 'ORD-${now.year}-${now.millisecondsSinceEpoch.toString().substring(7)}';
 
@@ -107,9 +86,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
       'status': 'Pending',
       'total': subtotal,
-      'items': _cartManager.itemCount,
+      'items': ref.watch(cartProvider).itemCount,
       'products': List<Map<String, dynamic>>.from(
-        _cartManager.cartItems.map((item) => {
+        ref.watch(cartProvider).items.map((item) => {
           'name': item['name'],
           'quantity': item['quantity'],
           'price': item['price'],
@@ -122,8 +101,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'subtotal': subtotal,
     };
 
-    await _orderManager.addOrder(order);
-    _cartManager.clearCart();
+    await ref.read(orderProvider.notifier).addOrder(order);
+    ref.read(cartProvider.notifier).clearCart();
 
     if (mounted) {
       Navigator.pushReplacement(
@@ -486,23 +465,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 if (!formKey.currentState!.validate()) return;
                                 setSheet(() => saving = true);
 
-                                final uid = _userManager.userId ??
-                                    _authService.currentUser?.uid;
+                                final uid = null ??
+                                    null;
 
                                 if (uid != null) {
-                                  await _authService.addUserAddress(
-                                    userId: uid,
-                                    label: labelCtrl.text.trim().isNotEmpty
-                                        ? labelCtrl.text.trim()
-                                        : 'Address',
-                                    fullName: nameCtrl.text.trim(),
-                                    phone: phoneCtrl.text.trim(),
-                                    addressLine1: line1Ctrl.text.trim(),
-                                    city: cityCtrl.text.trim(),
-                                    state: '',
-                                    postalCode: '',
-                                    isDefault: setAsDefault,
-                                  );
+                                  // TODO Phase 9: await userService.addAddress(...);
                                 }
 
                                 // Build the new address map locally so it
@@ -604,10 +571,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           // Items
           _reviewCard(
-            title: 'Items (${_cartManager.itemCount})',
+            title: 'Items (${ref.watch(cartProvider).itemCount})',
             icon: Icons.shopping_bag_outlined,
             child: Column(
-              children: _cartManager.cartItems.map((item) {
+              children: ref.watch(cartProvider).items.map((item) {
                 final price = double.tryParse(
                     item['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
                 final qty = item['quantity'] ?? 1;
@@ -674,9 +641,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             icon: Icons.receipt_outlined,
             child: Column(
               children: [
-                _reviewRow('Subtotal', 'UGX ${_cartManager.subtotal.toStringAsFixed(0)}'),
+                _reviewRow('Subtotal', 'UGX ${ref.watch(cartProvider).subtotal.toStringAsFixed(0)}'),
                 const Divider(height: 20),
-                _reviewRow('Total', 'UGX ${_cartManager.subtotal.toStringAsFixed(0)}', bold: true),
+                _reviewRow('Total', 'UGX ${ref.watch(cartProvider).subtotal.toStringAsFixed(0)}', bold: true),
               ],
             ),
           ),

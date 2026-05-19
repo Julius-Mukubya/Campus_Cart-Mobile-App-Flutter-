@@ -13,7 +13,6 @@ class SellerOrdersScreen extends StatefulWidget {
 
 class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
   final SellerService _sellerService = SellerService();
-  final UserManager _userManager = UserManager();
   final AuthService _authService = AuthService();
 
   String _searchQuery = '';
@@ -32,7 +31,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
 
   Future<void> _loadOrders() async {
     setState(() => _isLoading = true);
-    final uid = _userManager.userId ?? _authService.currentUser?.uid;
+    final uid = _authService.currentUser?.uid;
     if (uid == null) {
       setState(() => _isLoading = false);
       return;

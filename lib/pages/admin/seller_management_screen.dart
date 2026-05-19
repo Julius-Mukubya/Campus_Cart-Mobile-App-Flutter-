@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/seller_service.dart';
 import 'package:madpractical/pages/admin/admin_seller_chat_screen.dart';
 
 class SellerManagementScreen extends StatefulWidget {
@@ -12,7 +11,6 @@ class SellerManagementScreen extends StatefulWidget {
 }
 
 class _SellerManagementScreenState extends State<SellerManagementScreen> {
-  final SellerRequestService _requestService = SellerRequestService();
   String _filter = 'pending';
 
   @override
@@ -41,7 +39,7 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
           // Requests list
           Expanded(
             child: ListenableBuilder(
-              listenable: _requestService,
+              listenable: ValueNotifier(null),
               builder: (context, _) {
                 final requests = _getRequests();
                 if (requests.isEmpty) {
@@ -214,11 +212,11 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
   List<Map<String, dynamic>> _getRequests() {
     switch (_filter) {
       case 'pending':
-        return _requestService.getPendingRequests();
+        return [] /* TODO: SellerService.getPendingRequests() */;
       case 'approved':
-        return _requestService.getApprovedRequests();
+        return [] /* TODO: SellerService.getApprovedRequests() */;
       case 'rejected':
-        return _requestService.getRejectedRequests();
+        return [] /* TODO: SellerService.getRejectedRequests() */;
       default:
         return [];
     }
@@ -231,10 +229,7 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
   }
 
   void _approveRequest(Map<String, dynamic> req) {
-    _requestService.approveSellerRequest(
-      requestId: req['id'],
-      adminId: 'admin_1',
-    );
+    // TODO Phase 2: approveSellerRequest(requestId: req['id'], adminId: 'admin_1');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Seller approved!'),
@@ -262,11 +257,7 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
             ),
             TextButton(
               onPressed: () {
-                _requestService.rejectSellerRequest(
-                  requestId: req['id'],
-                  adminId: 'admin_1',
-                  rejectionReason: reasonCtrl.text,
-                );
+                // TODO Phase 2: rejectSellerRequest(requestId: req['id'], reason: reasonCtrl.text);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Request rejected')),

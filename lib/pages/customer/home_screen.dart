@@ -1,28 +1,56 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
-import 'package:madpractical/services/managers/wishlist_manager.dart';
-import 'package:madpractical/services/managers/cart_manager.dart';
-import 'package:madpractical/services/managers/notification_manager.dart';
 import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // ── Provider helpers (replaces old manager methods) ────────────────────────
+  bool _wishlistIsInWishlist(String name) =>
+      ref.read(wishlistProvider.notifier).isInWishlist(name);
+
+  void _wishlistToggle(Map<String, dynamic> product) {
+    final n = ref.read(wishlistProvider.notifier);
+    if (n.isInWishlist(product['name'] as String)) {
+      n.removeFromWishlist(product['name'] as String);
+    } else {
+      n.addToWishlist(product);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _wishlistRemove(String name) {
+    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
+    if (mounted) setState(() {});
+  }
+
+  bool _cartIsInCart(String name) =>
+      ref.read(cartProvider.notifier).isInCart(name);
+
+  void _cartAddToCart(Map<String, dynamic> product) {
+    ref.read(cartProvider.notifier).addToCart(product);
+    if (mounted) setState(() {});
+  }
+
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
+  // ────────────────────────────────────────────────────────────────────────────
+
   String selectedCategory = 'All';
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
-  final NotificationManager _notificationManager = NotificationManager();
   final ProductService _productService = ProductService();
   final PageController _bannerController = PageController();
   int _currentBannerPage = 0;
@@ -70,8 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchHistory = PreferencesService.searchHistory;
     // Auto-scroll banner every 3 seconds
     Future.delayed(const Duration(seconds: 3), _autoScrollBanner);
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
   }
 
@@ -188,44 +214,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    final db = DatabaseService();
     try {
       setState(() { _isLoading = true; _hasError = false; });
 
-      // ── Cache-first: show SQLite data immediately ──────────────────────
-      final isFresh = await db.isProductCacheFresh(maxAgeMinutes: 30);
-      if (isFresh) {
-        final cached = await db.getCachedProducts();
-        if (cached.isNotEmpty) {
-          _applyProducts(cached);
-          setState(() => _isLoading = false);
-          // Refresh in background without showing loader
-          _refreshFromFirestore(db);
-          return;
-        }
-      }
-
-      // ── No fresh cache: fetch from Firestore ───────────────────────────
-      await _refreshFromFirestore(db);
+      // Fetch from Firestore directly
+      await _refreshFromFirestore();
     } catch (e) {
-      // Try stale cache as last resort
-      final stale = await db.getCachedProducts();
-      if (stale.isNotEmpty) {
-        _applyProducts(stale);
-        setState(() => _isLoading = false);
-      } else {
-        setState(() { _hasError = true; _isLoading = false; _loadFallbackData(); });
-      }
+      setState(() { _hasError = true; _isLoading = false; _loadFallbackData(); });
     }
   }
 
-  Future<void> _refreshFromFirestore(DatabaseService db) async {
+  Future<void> _refreshFromFirestore() async {
     try {
       await _productService.testFirebaseConnection();
       final products = await _productService.getAllProducts();
       final categoryList = await _productService.getCategories();
       // Persist to SQLite
-      await db.cacheProducts(products);
       if (mounted) {
         _applyProducts(products, categoryList: categoryList);
         setState(() => _isLoading = false);
@@ -345,8 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchFocusNode.removeListener(_onSearchFocusChanged);
     _searchFocusNode.dispose();
     _removeOverlay();
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -872,8 +874,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 12,
                 child: GestureDetector(
                   onTap: () {
-                    final isInWishlist = _wishlistManager.isInWishlist(product['name']);
-                    _wishlistManager.toggleWishlist(product);
+                    final isInWishlist = _wishlistIsInWishlist(product['name']);
+                    _wishlistToggle(product);
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -896,11 +898,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(
-                      _wishlistManager.isInWishlist(product['name'])
+                      _wishlistIsInWishlist(product['name'])
                           ? Icons.favorite
                           : Icons.favorite_border,
                       size: 16,
-                      color: _wishlistManager.isInWishlist(product['name'])
+                      color: _wishlistIsInWishlist(product['name'])
                           ? Colors.red
                           : AppColors.grey,
                     ),
@@ -955,7 +957,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
-                        _cartManager.addToCart(product);
+                        _cartAddToCart(product);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('${product['name']} added to cart'),
@@ -969,13 +971,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                          color: _cartManager.isInCart(product['name'])
+                          color: _cartIsInCart(product['name'])
                               ? AppColors.accent
                               : AppColors.primary,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Icon(
-                          _cartManager.isInCart(product['name'])
+                          _cartIsInCart(product['name'])
                               ? Icons.shopping_cart
                               : Icons.add_shopping_cart,
                           size: 16,
@@ -1050,9 +1052,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            icon: _notificationManager.unreadCount > 0
+            icon: 0 /* TODO: ref.watch(notificationProvider).unreadCount */ > 0
                 ? Badge(
-                    label: Text('${_notificationManager.unreadCount}'),
+                    label: Text('${0 /* TODO: ref.watch(notificationProvider).unreadCount */}'),
                     backgroundColor: AppColors.error,
                     child: Icon(
                       Icons.notifications_outlined,
@@ -1473,8 +1475,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // Bottom Navigation Bar
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 0,
-        wishlistCount: _wishlistManager.itemCount,
-        cartCount: _cartManager.itemCount,
+        wishlistCount: _wishlistItemCount,
+        cartCount: _cartItemCount,
       ),
     );
   }

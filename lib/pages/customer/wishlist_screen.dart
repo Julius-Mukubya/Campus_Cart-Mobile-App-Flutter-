@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
@@ -5,17 +8,46 @@ import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
 
-class WishlistScreen extends StatefulWidget {
+class WishlistScreen extends ConsumerStatefulWidget {
   const WishlistScreen({super.key});
 
   @override
-  State<WishlistScreen> createState() => _WishlistScreenState();
+  ConsumerState<WishlistScreen> createState() => _WishlistScreenState();
 }
 
-class _WishlistScreenState extends State<WishlistScreen> {
+class _WishlistScreenState extends ConsumerState<WishlistScreen> {
+  // ── Provider helpers (replaces old manager methods) ────────────────────────
+  bool _wishlistIsInWishlist(String name) =>
+      ref.read(wishlistProvider.notifier).isInWishlist(name);
+
+  void _wishlistToggle(Map<String, dynamic> product) {
+    final n = ref.read(wishlistProvider.notifier);
+    if (n.isInWishlist(product['name'] as String)) {
+      n.removeFromWishlist(product['name'] as String);
+    } else {
+      n.addToWishlist(product);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _wishlistRemove(String name) {
+    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
+    if (mounted) setState(() {});
+  }
+
+  bool _cartIsInCart(String name) =>
+      ref.read(cartProvider.notifier).isInCart(name);
+
+  void _cartAddToCart(Map<String, dynamic> product) {
+    ref.read(cartProvider.notifier).addToCart(product);
+    if (mounted) setState(() {});
+  }
+
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
+  // ────────────────────────────────────────────────────────────────────────────
+
   bool isGridView = true;
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   List<Map<String, dynamic>> _filteredItems = [];
@@ -23,16 +55,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   void initState() {
     super.initState();
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
-    _filteredItems = _wishlistManager.wishlistItems;
+    _filteredItems = ref.watch(wishlistProvider).items;
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -48,9 +76,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   void _filterItems() {
     if (_searchQuery.isEmpty) {
-      _filteredItems = _wishlistManager.wishlistItems;
+      _filteredItems = ref.watch(wishlistProvider).items;
     } else {
-      _filteredItems = _wishlistManager.wishlistItems.where((item) {
+      _filteredItems = ref.watch(wishlistProvider).items.where((item) {
         final name = item['name'].toString().toLowerCase();
         final category = item['category'].toString().toLowerCase();
         final query = _searchQuery.toLowerCase();
@@ -67,7 +95,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   void removeItem(String productName) {
-    _wishlistManager.removeFromWishlist(productName);
+    _wishlistRemove(productName);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Item removed from wishlist'),
@@ -195,7 +223,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   void addToCart(Map<String, dynamic> item) {
-    _cartManager.addToCart(item);
+    _cartAddToCart(item);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${item['name']} added to cart'),
@@ -414,13 +442,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            color: _cartManager.isInCart(item['name'])
+                            color: _cartIsInCart(item['name'])
                                 ? AppColors.accent
                                 : AppColors.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
-                            _cartManager.isInCart(item['name'])
+                            _cartIsInCart(item['name'])
                                 ? Icons.shopping_cart
                                 : Icons.add_shopping_cart,
                             size: 16,
@@ -619,7 +647,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: _cartManager.isInCart(item['name'])
+                            color: _cartIsInCart(item['name'])
                                 ? AppColors.accent
                                 : AppColors.primary,
                             borderRadius: BorderRadius.circular(10),
@@ -628,7 +656,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _cartManager.isInCart(item['name'])
+                                _cartIsInCart(item['name'])
                                     ? Icons.shopping_cart
                                     : Icons.add_shopping_cart_rounded,
                                 size: 16,
@@ -636,7 +664,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _cartManager.isInCart(item['name']) ? 'In Cart' : 'Add',
+                                _cartIsInCart(item['name']) ? 'In Cart' : 'Add',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -747,7 +775,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ],
       ),
       body: SafeArea(
-        child: _wishlistManager.wishlistItems.isEmpty
+        child: ref.watch(wishlistProvider).items.isEmpty
             ? _buildEmptyState()
             : Padding(
                 padding: const EdgeInsets.all(16),
@@ -964,8 +992,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 2,
-        wishlistCount: _wishlistManager.itemCount,
-        cartCount: _cartManager.itemCount,
+        wishlistCount: _wishlistItemCount,
+        cartCount: _cartItemCount,
       ),
     );
   }

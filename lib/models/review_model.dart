@@ -55,8 +55,8 @@ class ReviewModel {
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       comment: data['comment'],
       images: data['images'] != null ? List<String>.from(data['images']) : null,
-      createdAt: (data['createdAt'] as dynamic?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as dynamic?)?.toDate(),
+      createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as dynamic)?.toDate(),
     );
   }
 

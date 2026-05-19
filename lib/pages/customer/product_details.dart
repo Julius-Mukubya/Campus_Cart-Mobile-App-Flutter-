@@ -1,20 +1,52 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/review_service.dart';
 import 'package:madpractical/services/product_service.dart';
 
-class ProductDetailScreen extends StatefulWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
 
   const ProductDetailScreen({super.key, required this.product});
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final WishlistManager _wishlistManager = WishlistManager();
-  final CartManager _cartManager = CartManager();
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  // ── Provider helpers (replaces old manager methods) ────────────────────────
+  bool _wishlistIsInWishlist(String name) =>
+      ref.read(wishlistProvider.notifier).isInWishlist(name);
+
+  void _wishlistToggle(Map<String, dynamic> product) {
+    final n = ref.read(wishlistProvider.notifier);
+    if (n.isInWishlist(product['name'] as String)) {
+      n.removeFromWishlist(product['name'] as String);
+    } else {
+      n.addToWishlist(product);
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _wishlistRemove(String name) {
+    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
+    if (mounted) setState(() {});
+  }
+
+  bool _cartIsInCart(String name) =>
+      ref.read(cartProvider.notifier).isInCart(name);
+
+  void _cartAddToCart(Map<String, dynamic> product) {
+    ref.read(cartProvider.notifier).addToCart(product);
+    if (mounted) setState(() {});
+  }
+
+  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
+  int get _cartItemCount => ref.watch(cartProvider).itemCount;
+  // ────────────────────────────────────────────────────────────────────────────
+
   final ReviewService _reviewService = ReviewService();
   final ProductService _productService = ProductService();
 
@@ -31,16 +63,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _wishlistManager.addListener(_onWishlistChanged);
-    _cartManager.addListener(_onCartChanged);
     _loadReviews();
     _loadRelatedProducts();
   }
 
   @override
   void dispose() {
-    _wishlistManager.removeListener(_onWishlistChanged);
-    _cartManager.removeListener(_onCartChanged);
     _reviewController.dispose();
     _reviewTitleController.dispose();
     super.dispose();
@@ -347,8 +375,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     right: 12,
                     child: GestureDetector(
                       onTap: () {
-                        final isInWishlist = _wishlistManager.isInWishlist(widget.product['name']);
-                        _wishlistManager.toggleWishlist(widget.product);
+                        final isInWishlist = _wishlistIsInWishlist(widget.product['name']);
+                        _wishlistToggle(widget.product);
                         
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -378,11 +406,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ],
                         ),
                         child: Icon(
-                          _wishlistManager.isInWishlist(widget.product['name'])
+                          _wishlistIsInWishlist(widget.product['name'])
                               ? Icons.favorite
                               : Icons.favorite_border,
                           size: 20,
-                          color: _wishlistManager.isInWishlist(widget.product['name'])
+                          color: _wishlistIsInWishlist(widget.product['name'])
                               ? Colors.red
                               : AppColors.grey,
                         ),
@@ -464,7 +492,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 56,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: _cartManager.isInCart(widget.product['name'])
+                        colors: _cartIsInCart(widget.product['name'])
                             ? [
                                 AppColors.accent,
                                 AppColors.accent.withValues(alpha: 0.85),
@@ -477,7 +505,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: (_cartManager.isInCart(widget.product['name'])
+                          color: (_cartIsInCart(widget.product['name'])
                                   ? AppColors.accent
                                   : AppColors.primary)
                               .withValues(alpha: 0.4),
@@ -488,8 +516,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        if (!_cartManager.isInCart(widget.product['name'])) {
-                          _cartManager.addToCart(widget.product);
+                        if (!_cartIsInCart(widget.product['name'])) {
+                          _cartAddToCart(widget.product);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('${widget.product['name']} added to cart'),
@@ -513,13 +541,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       icon: Icon(
-                        _cartManager.isInCart(widget.product['name'])
+                        _cartIsInCart(widget.product['name'])
                             ? Icons.shopping_cart
                             : Icons.add_shopping_cart_rounded,
                         color: AppColors.white,
                       ),
                       label: Text(
-                        _cartManager.isInCart(widget.product['name'])
+                        _cartIsInCart(widget.product['name'])
                             ? 'View Cart'
                             : 'Add to Cart',
                         style: const TextStyle(
@@ -934,8 +962,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     right: 8,
                                     child: GestureDetector(
                                       onTap: () {
-                                        final isInWishlist = _wishlistManager.isInWishlist(product['name']);
-                                        _wishlistManager.toggleWishlist(product);
+                                        final isInWishlist = _wishlistIsInWishlist(product['name']);
+                                        _wishlistToggle(product);
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text(
@@ -956,11 +984,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Icon(
-                                          _wishlistManager.isInWishlist(product['name'])
+                                          _wishlistIsInWishlist(product['name'])
                                               ? Icons.favorite
                                               : Icons.favorite_border,
                                           size: 16,
-                                          color: _wishlistManager.isInWishlist(product['name'])
+                                          color: _wishlistIsInWishlist(product['name'])
                                               ? Colors.red
                                               : AppColors.grey,
                                         ),
@@ -1004,7 +1032,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         const Spacer(),
                                         GestureDetector(
                                           onTap: () {
-                                            _cartManager.addToCart(product);
+                                            _cartAddToCart(product);
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
                                                 content: Text('${product['name']} added to cart'),
@@ -1017,13 +1045,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.all(5),
                                             decoration: BoxDecoration(
-                                              color: _cartManager.isInCart(product['name'])
+                                              color: _cartIsInCart(product['name'])
                                                   ? AppColors.accent
                                                   : AppColors.primary,
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Icon(
-                                              _cartManager.isInCart(product['name'])
+                                              _cartIsInCart(product['name'])
                                                   ? Icons.shopping_cart
                                                   : Icons.add_shopping_cart,
                                               size: 14,

@@ -13,7 +13,6 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final UserManager _userManager = UserManager();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -22,9 +21,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _userManager.name);
-    _emailController = TextEditingController(text: _userManager.email);
-    _phoneController = TextEditingController(text: _userManager.phone);
+    _nameController = TextEditingController(text: '');
+    _emailController = TextEditingController(text: '');
+    _phoneController = TextEditingController(text: '');
   }
 
   @override
@@ -105,21 +104,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
 
       // Upload to Firebase Storage
-      final FirebaseAuthService authService = FirebaseAuthService();
+      final AuthService authService = AuthService();
       final String? userId = authService.currentUser?.uid;
 
       if (userId == null) {
         throw Exception('User not logged in');
       }
 
-      final FirebaseStorageService storageService = FirebaseStorageService();
+      final StorageService storageService = StorageService();
       final String downloadUrl = await storageService.uploadProfileImage(
         File(pickedFile.path),
         userId,
       );
 
       // Update UserManager
-      _userManager.updateProfile(profileImage: downloadUrl);
+      // ''(profileImage: downloadUrl);
 
       setState(() {
         _isUploading = false;
@@ -154,11 +153,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _saveProfile() {
-    _userManager.updateProfile(
-      name: _nameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-    );
+    // TODO: save profile via userProvider in PHASE 9
+    // ref.read(userProvider.notifier).updateProfile(name: ..., email: ..., phone: ...);
     
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -232,19 +228,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ],
                       ),
-                      child: _userManager.profileImage.isNotEmpty && 
-                             _userManager.profileImage.startsWith('http')
+                      child: false /* TODO Phase 9: profileImage != null && profileImage.startsWith('http') */
                           ? CircleAvatar(
                               radius: 50,
-                              backgroundImage: NetworkImage(_userManager.profileImage),
+                              backgroundImage: const NetworkImage(''),
                               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                             )
                           : CircleAvatar(
                               radius: 50,
                               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                               child: Text(
-                                _userManager.name.isNotEmpty 
-                                    ? _userManager.name[0].toUpperCase()
+                                ''.isNotEmpty 
+                                    ? ''[0].toUpperCase()
                                     : 'U',
                                 style: const TextStyle(
                                   fontSize: 40,

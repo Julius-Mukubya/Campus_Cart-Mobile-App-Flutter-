@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
-import 'package:madpractical/services/managers/user_manager.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -60,16 +59,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     if (result['success']) {
-      // Update user manager
-      final userManager = UserManager();
-      userManager.updateProfile(
-        userId: result['user']?.uid,
-        name: name,
-        email: email,
-        phone: '',
-        role: _selectedRole,
-      );
-
       if (_selectedRole == 'seller') {
         _showSuccessMessage('Account created successfully! Your seller application is pending admin approval.');
       } else {

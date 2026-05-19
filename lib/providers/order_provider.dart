@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:madpractical/providers/notification_provider.dart';
+import 'package:madpractical/services/notification_service.dart';
 import '../utils/app_logger.dart';
 
 /// Order state model - represents orders data
@@ -27,10 +27,9 @@ class OrderState {
 
 /// OrderNotifier - handles order state updates
 class OrderNotifier extends StateNotifier<OrderState> {
-  OrderNotifier(this._notificationNotifier) : super(const OrderState());
+  OrderNotifier(this._notificationService) : super(const OrderState());
 
-  final StateNotifierProvider<NotificationNotifier, NotificationState>
-      _notificationNotifier;
+  final NotificationService _notificationService;
 
   /// Add a new order and send notification to seller
   Future<void> addOrder(Map<String, dynamic> order) async {
@@ -44,28 +43,21 @@ class OrderNotifier extends StateNotifier<OrderState> {
   /// Send a notification to the seller about a new order
   Future<void> _notifySeller(Map<String, dynamic> order) async {
     try {
-      // Extract product seller info
       final products = order['products'] as List<Map<String, dynamic>>? ?? [];
       final totalItems =
           products.fold<int>(0, (sum, product) => sum + (product['quantity'] as int? ?? 0));
 
-      final notification = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'type': 'new_order',
-        'title': 'New Order Received',
-        'message': 'Customer ${order['customerName']} placed an order for $totalItems item(s)',
-        'orderId': order['id'],
-        'customerName': order['customerName'],
-        'customerPhone': order['customerPhone'],
-        'shippingAddress': order['shippingAddress'],
-        'total': order['total'],
-        'itemCount': totalItems,
-        'timestamp': DateTime.now().toIso8601String(),
-        'isRead': false,
-      };
-
-      // Save to local notifications
-      // In full implementation, this would be fetched by seller's device from Firebase
+      await _notificationService.sendNotification(
+        userId: order['sellerId'] ?? '',
+        title: 'New Order Received',
+        message: 'Customer ${order['customerName']} placed an order for $totalItems item(s)',
+        type: 'new_order',
+        data: {
+          'orderId': order['id'],
+          'customerName': order['customerName'],
+          'totalItems': totalItems.toString(),
+        },
+      );
     } catch (e) {
       AppLogger.error('Error notifying seller', error: e);
     }
@@ -180,16 +172,14 @@ class OrderNotifier extends StateNotifier<OrderState> {
   /// Notify customer that their order has been approved
   Future<void> _notifyCustomerOfApproval(String orderId, String approvalMessage) async {
     try {
-      final notification = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'type': 'order_approved',
-        'title': 'Order Approved!',
-        'message': approvalMessage,
-        'orderId': orderId,
-        'timestamp': DateTime.now().toIso8601String(),
-        'isRead': false,
-      };
-
+      final order = getOrderById(orderId);
+      await _notificationService.sendNotification(
+        userId: order?['customerId'] ?? '',
+        title: 'Order Approved!',
+        message: approvalMessage,
+        type: 'order_approved',
+        data: {'orderId': orderId},
+      );
       AppLogger.info('Customer notified of approval for order: $orderId');
     } catch (e) {
       AppLogger.error('Error notifying customer of approval', error: e);
@@ -199,16 +189,14 @@ class OrderNotifier extends StateNotifier<OrderState> {
   /// Notify customer that their order has been rejected
   Future<void> _notifyCustomerOfRejection(String orderId, String rejectionReason) async {
     try {
-      final notification = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'type': 'order_rejected',
-        'title': 'Order Rejected',
-        'message': 'Your order was rejected. Reason: $rejectionReason',
-        'orderId': orderId,
-        'timestamp': DateTime.now().toIso8601String(),
-        'isRead': false,
-      };
-
+      final order = getOrderById(orderId);
+      await _notificationService.sendNotification(
+        userId: order?['customerId'] ?? '',
+        title: 'Order Rejected',
+        message: 'Your order was rejected. Reason: $rejectionReason',
+        type: 'order_rejected',
+        data: {'orderId': orderId},
+      );
       AppLogger.info('Customer notified of rejection for order: $orderId');
     } catch (e) {
       AppLogger.error('Error notifying customer of rejection', error: e);
@@ -218,5 +206,5 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
 /// Order provider - provides access to order state
 final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
-  return OrderNotifier(notificationProvider);
+  return OrderNotifier(NotificationService());
 });

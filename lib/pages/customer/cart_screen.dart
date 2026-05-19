@@ -45,13 +45,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-
-
   Widget _buildCartItem(Map<String, dynamic> item) {
     final price = double.tryParse(item['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-    final discount = item['discount'] != null ? double.tryParse(item['discount'].toString().replaceAll('%', '').replaceAll('-', '')) ?? 0 : 0;
+    final discount = item['discount'] != null
+        ? double.tryParse(item['discount'].toString().replaceAll('%', '').replaceAll('-', '')) ?? 0
+        : 0;
     final discountedPrice = discount > 0 ? price * (1 - discount / 100) : price;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -101,15 +101,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Product Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product Name and Remove Button
                   Row(
                     children: [
                       Expanded(
@@ -141,15 +140,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 4),
-                  
-                  // Category
+
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -163,19 +158,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
-                  // Price and Quantity Controls
+
                   Row(
                     children: [
-                      // Price
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (discount > 0) ...[
                             Text(
-                              item['price'].toString().contains('UGX') ? item['price'] : 'UGX ${price.toStringAsFixed(0)}',
+                              item['price'].toString().contains('UGX')
+                                  ? item['price']
+                                  : 'UGX ${price.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.secondaryText,
@@ -192,7 +187,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             ),
                           ] else ...[
                             Text(
-                              item['price'].toString().contains('UGX') ? item['price'] : 'UGX ${price.toStringAsFixed(0)}',
+                              item['price'].toString().contains('UGX')
+                                  ? item['price']
+                                  : 'UGX ${price.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -202,10 +199,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           ],
                         ],
                       ),
-                      
+
                       const Spacer(),
-                      
-                      // Quantity Controls
+
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.secondary,
@@ -219,7 +215,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: item['quantity'] > 1 
+                                  color: item['quantity'] > 1
                                       ? AppColors.primary.withValues(alpha: 0.1)
                                       : AppColors.grey.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
@@ -227,9 +223,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 child: Icon(
                                   Icons.remove,
                                   size: 16,
-                                  color: item['quantity'] > 1 
-                                      ? AppColors.primary 
-                                      : AppColors.grey,
+                                  color: item['quantity'] > 1 ? AppColors.primary : AppColors.grey,
                                 ),
                               ),
                             ),
@@ -273,7 +267,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildPriceSummary() {
+  Widget _buildPriceSummary(CartState cart) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -298,18 +292,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Subtotal (${_cartManager.itemCount} items)',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.secondaryText,
-                ),
+                'Subtotal (${cart.itemCount} items)',
+                style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
               ),
               Text(
-                'UGX ${_cartManager.subtotal.toStringAsFixed(0)}',
+                'UGX ${cart.subtotal.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -319,20 +311,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          
-          // Delivery Fee
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Delivery Fee',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.secondaryText,
-                ),
+                style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
               ),
               Text(
-                'UGX ${_cartManager.deliveryFee.toStringAsFixed(0)}',
+                'UGX ${cart.deliveryFee.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -341,10 +328,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
             ],
           ),
-          
           const Divider(height: 20),
-          
-          // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -357,7 +341,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
               Text(
-                'UGX ${_cartManager.total.toStringAsFixed(0)}',
+                'UGX ${cart.total.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -414,9 +398,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
             child: const Row(
@@ -426,10 +408,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 SizedBox(width: 8),
                 Text(
                   'Start Shopping',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -439,9 +418,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final cart = ref.watch(cartProvider);
+    final wishlist = ref.watch(wishlistProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -456,19 +437,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
         ),
         centerTitle: false,
-        actions: const [
-          NotificationIcon(),
-        ],
+        actions: const [NotificationIcon()],
       ),
       body: SafeArea(
-        child: _cartManager.cartItems.isEmpty
+        child: cart.items.isEmpty
             ? _buildEmptyCart()
             : Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Info
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -489,7 +467,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${_cartManager.itemCount} ${_cartManager.itemCount == 1 ? 'Item' : 'Items'} in Cart',
+                                  '${cart.itemCount} ${cart.itemCount == 1 ? 'Item' : 'Items'} in Cart',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -499,10 +477,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   'Review your items before checkout',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.secondaryText,
-                                  ),
+                                  style: TextStyle(fontSize: 14, color: AppColors.secondaryText),
                                 ),
                               ],
                             ),
@@ -513,36 +488,29 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.shopping_cart,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
+                            child: const Icon(Icons.shopping_cart, color: AppColors.primary, size: 24),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
-                    // Cart Items
+
                     Expanded(
                       child: ListView.builder(
-                        itemCount: _cartManager.itemCount,
+                        itemCount: cart.itemCount,
                         itemBuilder: (context, index) {
-                          return _buildCartItem(_cartManager.cartItems[index]);
+                          return _buildCartItem(cart.items[index]);
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
-                    // Price Summary
-                    _buildPriceSummary(),
-                    
+
+                    _buildPriceSummary(cart),
+
                     const SizedBox(height: 20),
 
-                    // Checkout Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -551,9 +519,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
                         child: Row(
@@ -562,11 +528,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             const Icon(Icons.payment, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'Proceed to Checkout • UGX ${_cartManager.total.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              'Proceed to Checkout • UGX ${cart.total.toStringAsFixed(0)}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -576,14 +539,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
       ),
-
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: 3,
-        wishlistCount: _wishlistManager.itemCount,
-        cartCount: _cartManager.itemCount,
+        wishlistCount: wishlist.itemCount,
+        cartCount: cart.itemCount,
       ),
     );
   }
 }
-
-

@@ -12,9 +12,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final AdminService _adminService = AdminService();
-  final UserManager _userManager = UserManager();
-  
-  Map<String, dynamic> _platformStats = {};
+    Map<String, dynamic> _platformStats = {};
   List<Map<String, dynamic>> _pendingSellerRequests = [];
   List<Map<String, dynamic>> _pendingStoreRequests = [];
   bool _isLoading = true;
@@ -457,7 +455,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _approveSeller(Map<String, dynamic> request) async {
     try {
-      final adminId = _userManager.userId;
+      final adminId = '';
       if (adminId == null) return;
 
       final result = await _adminService.approveSellerRequest(
@@ -500,7 +498,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _rejectSeller(Map<String, dynamic> request) async {
     try {
-      final adminId = _userManager.userId;
+      final adminId = '';
       if (adminId == null) return;
 
       final result = await _adminService.rejectSellerRequest(
@@ -544,7 +542,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _approveStore(Map<String, dynamic> request) async {
     try {
-      final adminId = _userManager.userId;
+      final adminId = '';
       if (adminId == null) return;
 
       final result = await _adminService.approveStoreRequest(
@@ -587,7 +585,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _rejectStore(Map<String, dynamic> request) async {
     try {
-      final adminId = _userManager.userId;
+      final adminId = '';
       if (adminId == null) return;
 
       final result = await _adminService.rejectStoreRequest(

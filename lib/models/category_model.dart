@@ -42,8 +42,8 @@ class CategoryModel {
       displayOrder: data['displayOrder'] ?? 0,
       type: data['type'],
       description: data['description'],
-      createdAt: (data['createdAt'] as dynamic?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as dynamic?)?.toDate(),
+      createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as dynamic)?.toDate(),
     );
   }
 

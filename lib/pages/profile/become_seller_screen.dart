@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/seller_service.dart';
 
 class BecomeSellersScreen extends StatefulWidget {
   const BecomeSellersScreen({super.key});
@@ -10,8 +9,6 @@ class BecomeSellersScreen extends StatefulWidget {
 }
 
 class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
-  final _userManager = UserManager();
-  final _sellerRequestService = SellerRequestService();
 
   bool _isLoading = false;
   bool _hasActiveRequest = false;
@@ -29,40 +26,22 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
   }
 
   Future<void> _checkExistingRequest() async {
-    final userId = _userManager.userId;
+    final userId = null;
     if (userId == null) return;
     
     // Check for pending request
-    final pending = _sellerRequestService.hasPendingSellerRequest(userId);
-    if (pending) {
-      setState(() {
-        _hasActiveRequest = true;
-        _requestStatus = {'status': 'pending', 'message': 'Your seller request is being reviewed by admin'};
-      });
-      return;
-    }
+    final pending = false; // TODO: check via SellerService in PHASE 2
 
     // Check for approved request
-    final approved = _sellerRequestService.hasApprovedSellerRequest(userId);
-    if (approved) {
-      setState(() {
-        _hasActiveRequest = true;
-        _requestStatus = {'status': 'approved', 'message': 'Your seller request has been approved!'};
-      });
-      return;
-    }
+    final approved = false; // TODO: check via SellerService in PHASE 2
   }
 
   Future<void> _submitSellerRequest() async {
     setState(() => _isLoading = true);
 
     try {
-      await _sellerRequestService.submitSellerRequest(
-        userId: _userManager.userId ?? '',
-        userName: _userManager.name,
-        userEmail: _userManager.email,
-        userPhone: _userManager.phone,
-      );
+      // TODO: submit seller request via SellerService in PHASE 2
+      // await sellerService.submitSellerRequest(userId, userName, userEmail, ...);
 
       if (!mounted) return;
 

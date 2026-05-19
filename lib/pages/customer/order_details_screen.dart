@@ -1,8 +1,10 @@
+import 'package:madpractical/pages/customer/order_chat_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/customer/order_chat_screen.dart';
 
-class OrderDetailsScreen extends StatefulWidget {
+class OrderDetailsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> order;
 
   const OrderDetailsScreen({
@@ -11,26 +13,13 @@ class OrderDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+  ConsumerState<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
 }
 
-class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
-  final OrderManager _orderManager = OrderManager();
-
+class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _orderManager.addListener(_onOrderChanged);
-  }
-
-  @override
-  void dispose() {
-    _orderManager.removeListener(_onOrderChanged);
-    super.dispose();
-  }
-
-  void _onOrderChanged() {
-    setState(() {});
   }
 
   String _formatPrice(dynamic price) {
@@ -379,7 +368,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             ),
                             TextButton(
                               onPressed: () {
-                                _orderManager.cancelOrder(widget.order['id']);
+                                ref.read(orderProvider.notifier).cancelOrder(widget.order['id']);
                                 Navigator.pop(context); // Close dialog
                                 Navigator.pop(context); // Go back to orders list
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -510,8 +499,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   Widget _buildApprovalStatusCard() {
     final approvalStatus =
-        _orderManager.getApprovalStatus(widget.order['id']);
-    final order = _orderManager.getOrderById(widget.order['id']) ??
+        /* TODO: _orderManager */(widget.order['id']);
+    final order = /* TODO: _orderManager */(widget.order['id']) ??
         widget.order;
 
     Color statusColor;
@@ -607,14 +596,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => OrderChatScreen(
-          orderId: widget.order['id'],
-          customerName: widget.order['customerName'] ?? 'You',
-          customerPhone: widget.order['customerPhone'] ?? 'N/A',
-          shippingAddress:
-              widget.order['shippingAddress'] ?? 'Address not provided',
-          currentUserId: 'customer_1',
-          currentUserName: 'You (Buyer)',
-          userRole: 'buyer',
+          orderId: widget.order['id'] ?? '',
+          sellerId: widget.order['sellerId'] ?? '',
         ),
       ),
     );

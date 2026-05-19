@@ -1,30 +1,19 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
-class NotificationsListScreen extends StatefulWidget {
+class NotificationsListScreen extends ConsumerStatefulWidget {
   const NotificationsListScreen({super.key});
 
   @override
-  State<NotificationsListScreen> createState() => _NotificationsListScreenState();
+  ConsumerState<NotificationsListScreen> createState() => _NotificationsListScreenState();
 }
 
-class _NotificationsListScreenState extends State<NotificationsListScreen> {
-  final NotificationManager _notificationManager = NotificationManager();
-
+class _NotificationsListScreenState extends ConsumerState<NotificationsListScreen> {
   @override
   void initState() {
     super.initState();
-    _notificationManager.addListener(_onNotificationsChanged);
-  }
-
-  @override
-  void dispose() {
-    _notificationManager.removeListener(_onNotificationsChanged);
-    super.dispose();
-  }
-
-  void _onNotificationsChanged() {
-    setState(() {});
   }
 
   Color _getColorFromString(dynamic colorName) {
@@ -61,15 +50,15 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
     }
   }
 
-  int get unreadCount => _notificationManager.unreadCount;
-  List<Map<String, dynamic>> get _notifications => _notificationManager.notifications;
+  int get unreadCount => ref.watch(notificationProvider).unreadCount;
+  List<Map<String, dynamic>> get _notifications => ref.watch(notificationProvider).notifications;
 
   void _markAsRead(String id) {
-    _notificationManager.markAsRead(id);
+    ref.read(notificationProvider.notifier).markAsRead(id);
   }
 
   void _markAllAsRead() {
-    _notificationManager.markAllAsRead();
+    ref.read(notificationProvider.notifier).markAllAsRead();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('All notifications marked as read'),
@@ -81,7 +70,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
   }
 
   void _deleteNotification(String id) {
-    _notificationManager.deleteNotification(id);
+    ref.read(notificationProvider.notifier).deleteNotification(id);
   }
 
   void _clearAll() {
@@ -98,7 +87,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              _notificationManager.clearAll();
+              ref.read(notificationProvider.notifier).clearAll();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

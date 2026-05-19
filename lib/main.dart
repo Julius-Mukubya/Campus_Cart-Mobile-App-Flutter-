@@ -37,7 +37,6 @@ import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
-import 'package:madpractical/providers/order_provider.dart';
 // Services
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/services/preferences_service.dart';
