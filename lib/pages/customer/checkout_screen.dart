@@ -25,7 +25,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _cityController    = TextEditingController();
 
   // Saved addresses from Firebase
-  List<Map<String, dynamic>> _savedAddresses = [];
+  final List<Map<String, dynamic>> _savedAddresses = [];
   String? _selectedAddressId;
   bool _loadingAddresses = true;
   @override
@@ -465,8 +465,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 if (!formKey.currentState!.validate()) return;
                                 setSheet(() => saving = true);
 
-                                final uid = null ??
-                                    null;
+                                final uid = null;
 
                                 if (uid != null) {
                                   // TODO Phase 9: await userService.addAddress(...);

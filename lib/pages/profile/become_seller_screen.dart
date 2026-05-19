@@ -29,11 +29,7 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
     final userId = null;
     if (userId == null) return;
     
-    // Check for pending request
-    final pending = false; // TODO: check via SellerService in PHASE 2
-
-    // Check for approved request
-    final approved = false; // TODO: check via SellerService in PHASE 2
+    // TODO: check via SellerService in PHASE 2
   }
 
   Future<void> _submitSellerRequest() async {

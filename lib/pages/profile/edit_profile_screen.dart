@@ -112,13 +112,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final StorageService storageService = StorageService();
-      final String downloadUrl = await storageService.uploadProfileImage(
+      await storageService.uploadProfileImage(
         File(pickedFile.path),
         userId,
       );
-
-      // Update UserManager
-      // ''(profileImage: downloadUrl);
 
       setState(() {
         _isUploading = false;
@@ -228,26 +225,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ],
                       ),
-                      child: false /* TODO Phase 9: profileImage != null && profileImage.startsWith('http') */
-                          ? CircleAvatar(
-                              radius: 50,
-                              backgroundImage: const NetworkImage(''),
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                            )
-                          : CircleAvatar(
-                              radius: 50,
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: Text(
-                                ''.isNotEmpty 
-                                    ? ''[0].toUpperCase()
-                                    : 'U',
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
+                      child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          child: Text(
+                            ''.isNotEmpty 
+                                ? ''[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
                             ),
+                          ),
+                        ),
                     ),
                     if (_isUploading)
                       Positioned.fill(

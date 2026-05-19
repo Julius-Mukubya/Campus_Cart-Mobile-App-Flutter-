@@ -30,11 +30,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (mounted) setState(() {});
   }
 
-  void _wishlistRemove(String name) {
-    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
-    if (mounted) setState(() {});
-  }
-
   bool _cartIsInCart(String name) =>
       ref.read(cartProvider.notifier).isInCart(name);
 
@@ -42,9 +37,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     ref.read(cartProvider.notifier).addToCart(product);
     if (mounted) setState(() {});
   }
-
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
   // ────────────────────────────────────────────────────────────────────────────
 
   final ReviewService _reviewService = ReviewService();
@@ -136,14 +128,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         _loadReviews(); // Refresh
       }
     }
-  }
-
-  void _onWishlistChanged() {
-    setState(() {});
-  }
-
-  void _onCartChanged() {
-    setState(() {});
   }
 
   double _extractPrice(String priceString) {

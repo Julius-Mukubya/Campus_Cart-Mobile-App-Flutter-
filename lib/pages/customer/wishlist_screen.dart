@@ -17,24 +17,6 @@ class WishlistScreen extends ConsumerStatefulWidget {
 
 class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   // ── Provider helpers (replaces old manager methods) ────────────────────────
-  bool _wishlistIsInWishlist(String name) =>
-      ref.read(wishlistProvider.notifier).isInWishlist(name);
-
-  void _wishlistToggle(Map<String, dynamic> product) {
-    final n = ref.read(wishlistProvider.notifier);
-    if (n.isInWishlist(product['name'] as String)) {
-      n.removeFromWishlist(product['name'] as String);
-    } else {
-      n.addToWishlist(product);
-    }
-    if (mounted) setState(() {});
-  }
-
-  void _wishlistRemove(String name) {
-    ref.read(wishlistProvider.notifier).removeFromWishlist(name);
-    if (mounted) setState(() {});
-  }
-
   bool _cartIsInCart(String name) =>
       ref.read(cartProvider.notifier).isInCart(name);
 
@@ -64,16 +46,6 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
     super.dispose();
   }
 
-  void _onWishlistChanged() {
-    setState(() {
-      _filterItems();
-    });
-  }
-
-  void _onCartChanged() {
-    setState(() {});
-  }
-
   void _filterItems() {
     if (_searchQuery.isEmpty) {
       _filteredItems = ref.watch(wishlistProvider).items;
@@ -95,7 +67,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   }
 
   void removeItem(String productName) {
-    _wishlistRemove(productName);
+    ref.read(wishlistProvider.notifier).removeFromWishlist(productName);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Item removed from wishlist'),
