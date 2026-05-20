@@ -40,8 +40,6 @@ import 'package:madpractical/providers/notification_provider.dart';
 // Services
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/services/preferences_service.dart';
-// Sample Data
-import 'package:madpractical/utils/helpers/sample_data_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,9 +66,6 @@ void main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Seed sample data (categories, products, suppliers, orders)
-  await SampleDataHelper.addSampleData();
-
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -88,7 +83,11 @@ class _MyAppState extends ConsumerState<MyApp> {
   void initState() {
     super.initState();
     _settings.addListener(_onSettingsChanged);
-    _initializeProviders();
+    // Defer provider initialization to after the first frame is built,
+    // preventing the ProviderScope element from being rebuilt mid-mount.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeProviders();
+    });
   }
 
   void _initializeProviders() {

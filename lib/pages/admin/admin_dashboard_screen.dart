@@ -452,91 +452,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
     );
   }
-
-  Future<void> _approveSeller(Map<String, dynamic> request) async {
-    try {
-      final adminId = '';
-
-      final result = await _adminService.approveSellerRequest(
-        requestId: request['requestId'],
-        userId: request['userId'],
-        adminId: adminId,
-        adminNotes: 'Approved by admin',
-      );
-
-      if (mounted) {
-        if (result['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-          _loadDashboardData(); // Refresh data
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error approving seller'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectSeller(Map<String, dynamic> request) async {
-    try {
-      final adminId = '';
-
-      final result = await _adminService.rejectSellerRequest(
-        requestId: request['requestId'],
-        userId: request['userId'],
-        adminId: adminId,
-        rejectionReason: 'Application does not meet requirements',
-        adminNotes: 'Rejected by admin',
-      );
-
-      if (mounted) {
-        if (result['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-          _loadDashboardData(); // Refresh data
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error rejecting seller'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
+  // Seller request management methods are below (after store methods)
 
   Future<void> _approveStore(Map<String, dynamic> request) async {
     try {
@@ -621,6 +537,122 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       }
     }
+  }
+
+  Future<void> _approveSeller(Map<String, dynamic> request) async {
+    try {
+      final adminId = ''; // TODO: Get from auth provider
+
+      final result = await _adminService.approveSeller(
+        request['requestId'] ?? request['id'],
+        adminId,
+      );
+
+      if (mounted) {
+        if (result) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${request['userName'] ?? request['name']} approved as seller'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+          _loadDashboardData();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error approving seller'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error approving seller'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectSeller(Map<String, dynamic> request) async {
+    final TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Seller Request'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Rejecting ${request['userName'] ?? request['name']}\'s seller request'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Reason for rejection (optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final adminId = ''; // TODO: Get from auth provider
+                final result = await _adminService.rejectSeller(
+                  request['requestId'] ?? request['id'],
+                  adminId,
+                  reasonController.text.isNotEmpty
+                      ? reasonController.text
+                      : 'Seller request rejected',
+                );
+
+                if (mounted) {
+                  if (result) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${request['userName'] ?? request['name']} request rejected'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                    Navigator.pop(context);
+                    _loadDashboardData();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error rejecting seller'),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Error rejecting seller'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

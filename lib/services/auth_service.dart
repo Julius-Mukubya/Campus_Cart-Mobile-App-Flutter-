@@ -471,24 +471,23 @@ class AuthService {
   // Helper method to create seller approval request
   Future<void> _createSellerApprovalRequest(String userId, String name, String email) async {
     try {
-      await _firestore.collection('seller_approval_requests').add({
+      // Get user phone if available
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      final userPhone = userDoc.data()?['phone'] as String?;
+
+      await _firestore.collection('sellerRequests').add({
         'userId': userId,
-        'name': name,
-        'email': email,
-        'status': 'pending', // pending, approved, rejected
-        'requestedAt': FieldValue.serverTimestamp(),
-        'processedAt': null,
-        'processedBy': null,
-        'adminNotes': '',
-        'businessName': '',
-        'businessDescription': '',
-        'businessCategory': '',
-        'businessPhone': '',
-        'businessAddress': '',
-        'documents': [], // Array of document URLs
+        'userName': name,
+        'userEmail': email,
+        'userPhone': userPhone,
+        'status': 'pending',
+        'rejectionReason': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'reviewedAt': null,
+        'reviewedBy': null,
       });
     } catch (e) {
-      AppLogger.error('Error creating seller approval request', error: e);
+      AppLogger.error('Error creating seller request', error: e);
     }
   }
 

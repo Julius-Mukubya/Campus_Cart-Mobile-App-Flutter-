@@ -48,8 +48,9 @@ class AdminService {
   Future<List<Map<String, dynamic>>> getPendingSellerRequests() async {
     try {
       QuerySnapshot snapshot = await _firestore
-          .collection('seller_approval_requests')
+          .collection('sellerRequests')
           .where('status', isEqualTo: 'pending')
+          .orderBy('createdAt', descending: true)
           .get();
 
       final results = snapshot.docs.map((doc) {
@@ -57,13 +58,6 @@ class AdminService {
         data['requestId'] = doc.id;
         return data;
       }).toList();
-
-      results.sort((a, b) {
-        final aTime = a['requestedAt'];
-        final bTime = b['requestedAt'];
-        if (aTime == null || bTime == null) return 0;
-        return bTime.compareTo(aTime);
-      });
 
       return results;
     } catch (e) {
@@ -570,9 +564,85 @@ class AdminService {
   }
 
   /// Stream settings for real-time updates
-  Stream<AdminSettings> watchSettings() {
+  /// Approve a seller request and update user role
+  Future<bool> approveSeller(String requestId, String adminId) async {
+    try {
+      // Get the request to find userId
+      final requestDoc =
+          await _firestore.collection('sellerRequests').doc(requestId).get();
+
+      if (!requestDoc.exists) {
+        AppLogger.warning('Seller request not found: $requestId');
+        return false;
+      }
+
+      final userId = requestDoc['userId'] as String?;
+      if (userId == null) {
+        AppLogger.warning('User ID not found in seller request');
+        return false;
+      }
+
+      // Update seller request status
+      await _firestore.collection('sellerRequests').doc(requestId).update({
+        'status': 'approved',
+        'reviewedAt': FieldValue.serverTimestamp(),
+        'reviewedBy': adminId,
+      });
+
+      // Update user role to seller
+      await _firestore.collection('users').doc(userId).update({
+        'role': 'seller',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      AppLogger.info('Seller request approved: $requestId for user: $userId');
+      return true;
+    } catch (e) {
+      AppLogger.error('Error approving seller request', error: e);
+      return false;
+    }
+  }
+
+  /// Reject a seller request with a reason
+  Future<bool> rejectSeller(
+      String requestId, String adminId, String reason) async {
+    try {
+      // Get the request to find userId
+      final requestDoc =
+          await _firestore.collection('sellerRequests').doc(requestId).get();
+
+      if (!requestDoc.exists) {
+        AppLogger.warning('Seller request not found: $requestId');
+        return false;
+      }
+
+      final userId = requestDoc['userId'] as String?;
+      if (userId == null) {
+        AppLogger.warning('User ID not found in seller request');
+        return false;
+      }
+
+      // Update seller request status
+      await _firestore.collection('sellerRequests').doc(requestId).update({
+        'status': 'rejected',
+        'rejectionReason': reason,
+        'reviewedAt': FieldValue.serverTimestamp(),
+        'reviewedBy': adminId,
+      });
+
+      // User role stays as customer
+
+      AppLogger.info('Seller request rejected: $requestId for user: $userId');
+      return true;
+    } catch (e) {
+      AppLogger.error('Error rejecting seller request', error: e);
+      return false;
+    }
+  }
+
+  Stream<AdminSettings> getAdminSettings() {
     return _firestore
-        .collection('admin_settings')
+        .collection('admin')
         .doc('seller_config')
         .snapshots()
         .map((doc) {
