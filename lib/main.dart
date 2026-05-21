@@ -6,40 +6,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 
-// Auth screens
-import 'package:madpractical/pages/auth/sign_in_screen.dart';
-import 'package:madpractical/pages/auth/sign_up_screen.dart';
-import 'package:madpractical/pages/auth/forgot_password_screen.dart';
-import 'package:madpractical/pages/auth/otp_verification_screen.dart';
-import 'package:madpractical/pages/auth/reset_password_screen.dart';
-import 'package:madpractical/pages/auth/access_denied_screen.dart';
-// Customer screens
-import 'package:madpractical/pages/customer/cart_screen.dart';
-import 'package:madpractical/pages/customer/home_screen.dart';
-import 'package:madpractical/pages/customer/product_details.dart';
-import 'package:madpractical/pages/customer/categories_screen.dart';
-import 'package:madpractical/pages/customer/wishlist_screen.dart';
-import 'package:madpractical/pages/customer/my_orders_screen.dart';
-// Profile screens
-import 'package:madpractical/pages/profile/profile_screen.dart';
-// Splash
-import 'package:madpractical/pages/splash_screen.dart';
-// Seller screens
-import 'package:madpractical/pages/seller/seller_dashboard_screen.dart';
-import 'package:madpractical/pages/seller/my_products_screen.dart';
-import 'package:madpractical/pages/seller/add_product_screen.dart';
-import 'package:madpractical/pages/seller/edit_product_screen.dart';
-import 'package:madpractical/pages/seller/seller_orders_screen.dart';
-import 'package:madpractical/pages/seller/seller_order_details_screen.dart';
 import 'package:madpractical/constants/app_colors.dart';
-// Providers
+import 'package:madpractical/services/app_settings.dart';
+import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
-// Services
-import 'package:madpractical/services/app_settings.dart';
-import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +39,12 @@ void main() async {
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
+
+  // Initialize router auth state
+  routerAuthNotifier.update(RouterUserState(
+    isLoggedIn: false,
+    role: 'customer',
+  ));
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -268,9 +248,18 @@ class _MyAppState extends ConsumerState<MyApp> {
         ), dialogTheme: DialogThemeData(backgroundColor: AppColors.darkCards),
       );
 
-  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // Sync user provider changes to router auth notifier
+    ref.listen(userProvider, (prev, next) {
+      routerAuthNotifier.update(RouterUserState(
+        isLoggedIn: next.userId != null && next.userId!.isNotEmpty,
+        role: next.role,
+      ));
+    });
+
+    final router = buildRouter();
+
+    return MaterialApp.router(
       title: 'Campus Cart',
       debugShowCheckedModeBanner: false,
       theme: _buildLightTheme(),
@@ -285,6 +274,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      routerConfig: router,
       builder: (context, child) {
         // Wrap entire app so all Text widgets inherit the correct color for the theme
         final isDark = _settings.isDark;
@@ -301,66 +291,6 @@ class _MyAppState extends ConsumerState<MyApp> {
             child: child!,
           ),
         );
-      },
-      // Start on a splash screen which will redirect to sign in
-      initialRoute: '/splash',
-      onGenerateRoute: (settings) {
-        // Get user role from app settings or use a shared reference
-        // NOTE: This is a temporary solution. In TASK 4, we'll implement GoRouter
-        // which has better support for accessing providers during routing
-        String userRole = 'customer'; // Default role
-        
-        // Role-based route protection - only allow sellers and admins to access seller/admin routes
-        if (settings.name?.startsWith('/seller/') == true && userRole != 'seller' && userRole != 'admin') {
-          return MaterialPageRoute(builder: (context) => const AccessDeniedScreen());
-        }
-        
-        // Handle product details route
-        if (settings.name == '/product_details' || settings.name == '/product-details') {
-          final product = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          );
-        }
-        
-        // Handle edit product route
-        if (settings.name == '/seller/edit-product') {
-          final product = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => EditProductScreen(product: product),
-          );
-        }
-        
-        // Handle order details route
-        if (settings.name == '/seller/order-details') {
-          final order = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => OrderDetailsScreen(order: order),
-          );
-        }
-        
-        return null;
-      },
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/': (context) => SignInScreen(),
-        '/signup': (context) => SignUpScreen(),
-        '/signin': (context) => SignInScreen(),
-        '/forgot-password': (context) => const ForgotPasswordScreen(),
-        '/otp-verification': (context) => const OtpVerificationScreen(),
-        '/reset-password': (context) => const ResetPasswordScreen(),
-        '/home': (context) => HomeScreen(),
-        '/cart': (context) => CartScreen(),
-        '/categories': (context) => const CategoriesScreen(),
-        '/wishlist': (context) => const WishlistScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/my-orders': (context) => const MyOrdersScreen(),
-        '/access-denied': (context) => const AccessDeniedScreen(),
-        // Seller routes
-        '/seller/dashboard': (context) => const SellerDashboardScreen(),
-        '/seller/products': (context) => const MyProductsScreen(),
-        '/seller/add-product': (context) => const AddProductScreen(),
-        '/seller/orders': (context) => const SellerOrdersScreen(),
       },
     );
   }

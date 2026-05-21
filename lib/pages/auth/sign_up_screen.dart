@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
+import 'package:madpractical/router.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,7 +19,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _agree = false;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   String _selectedRole = 'customer'; // Default role
+
+  void _signInWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    final result = await _authService.signInWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isGoogleLoading = false;
+    });
+
+    if (result['success']) {
+      _showSuccessMessage(result['message'] ?? 'Signed in with Google!');
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Update router auth state
+      routerAuthNotifier.update(RouterUserState(
+        isLoggedIn: true,
+        role: 'customer',
+      ));
+
+      if (mounted) {
+        context.go('/customer/home');
+      }
+    } else {
+      _showErrorMessage(result['message']);
+    }
+  }
 
   void _signUp() async {
     final name = _usernameController.text.trim();
@@ -70,9 +103,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (mounted) {
         if (_selectedRole == 'seller') {
           // Redirect to sign in for sellers (they need approval first)
-          Navigator.pushReplacementNamed(context, '/signin');
+          context.go('/signin');
         } else {
-          Navigator.pushReplacementNamed(context, '/home');
+          // Update router auth state
+          routerAuthNotifier.update(RouterUserState(
+            isLoggedIn: true,
+            role: 'customer',
+          ));
+          context.go('/customer/home');
         }
       }
     } else {
@@ -172,20 +210,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       backgroundColor: AppColors.white,
                     ),
-                    onPressed: () {
-                      // Google sign up logic
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
-                    icon: Image.network(
-                      "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.g_mobiledata, size: 24);
-                      },
-                    ),
-                    label: const Text(
-                      "Continue with Google",
-                      style: TextStyle(
+                    onPressed: _isGoogleLoading ? null : () => _signInWithGoogle(),
+                    icon: _isGoogleLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            ),
+                          )
+                        : Image.network(
+                            "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
+                            height: 24,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.g_mobiledata, size: 24);
+                            },
+                          ),
+                    label: Text(
+                      _isGoogleLoading ? "Signing in..." : "Continue with Google",
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -355,6 +399,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     color: AppColors.white,
                   ),
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _selectedRole,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
@@ -368,11 +413,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     items: const [
                       DropdownMenuItem(
                         value: 'customer',
-                        child: Text('Customer - Shop and buy products'),
+                        child: Text('Customer'),
                       ),
                       DropdownMenuItem(
                         value: 'seller',
-                        child: Text('Seller - Sell products (requires approval)'),
+                        child: Text('Seller (requires approval)'),
                       ),
                     ],
                     onChanged: (String? newValue) {
@@ -483,7 +528,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context);
+                        context.go('/signin');
                       },
                       child: const Text(
                         "Log in here",

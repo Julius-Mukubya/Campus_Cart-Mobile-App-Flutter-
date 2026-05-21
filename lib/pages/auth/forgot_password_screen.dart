@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     // Navigate to OTP verification screen
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
-        Navigator.pushNamed(context, '/otp-verification');
+        context.push('/otp-verification');
       }
     });
   }
@@ -193,7 +194,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context);
+                        context.go('/signin');
                       },
                       child: const Text(
                         "Sign In",

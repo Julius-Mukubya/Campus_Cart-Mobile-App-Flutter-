@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
@@ -10,8 +9,6 @@ import 'package:madpractical/pages/profile/edit_profile_screen.dart';
 import 'package:madpractical/pages/customer/notifications_screen.dart';
 import 'package:madpractical/pages/profile/privacy_security_screen.dart';
 import 'package:madpractical/pages/profile/become_seller_screen.dart';
-import 'package:madpractical/widgets/common/notification_icon.dart';
-import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
@@ -107,23 +104,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: AppColors.text,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        centerTitle: false,
-        actions: const [
-          DarkModeToggle(),
-          NotificationIcon(),
-        ],
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -218,11 +198,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 4,
-        wishlistCount: wishlistState.itemCount,
-        cartCount: cartState.itemCount,
       ),
     );
   }

@@ -1,16 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
-import 'package:madpractical/providers/notification_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
-import 'package:madpractical/pages/customer/notifications_list_screen.dart';
-
-import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -993,69 +988,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
-      appBar: AppBar(
-        backgroundColor: AppColors.getBackground(context),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: 'Welcome, ',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-              TextSpan(
-                text: 'User',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          const DarkModeToggle(),
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/customer/orders');
-            },
-            icon: Icon(
-              Icons.shopping_bag_outlined,
-              color: Theme.of(context).iconTheme.color,
-            ),
-            tooltip: 'My Orders',
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsListScreen(),
-                ),
-              );
-            },
-            icon: ref.watch(notificationProvider).unreadCount > 0
-                ? Badge(
-                    label: Text('${ref.watch(notificationProvider).unreadCount}'),
-                    backgroundColor: AppColors.error,
-                    child: Icon(
-                      Icons.notifications_outlined,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
-                  )
-                : Icon(
-                    Icons.notifications_outlined,
-                    color: Theme.of(context).iconTheme.color,
-                  ),
-          ),
-        ],
-      ),
       body: _isLoading
           ? const Center(
               child: Column(
@@ -1460,12 +1392,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 0,
-        wishlistCount: _wishlistItemCount,
-        cartCount: _cartItemCount,
-      ),
     );
   }
 }

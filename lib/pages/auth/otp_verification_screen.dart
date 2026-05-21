@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -54,7 +55,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/reset-password');
+          context.go('/reset-password');
         }
       });
     } else {
@@ -246,11 +247,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/signin',
-                          (route) => false,
-                        );
+                        context.go('/customer/home');
                       },
                       child: const Text(
                         "Sign In",

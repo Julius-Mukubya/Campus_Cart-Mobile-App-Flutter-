@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
@@ -962,11 +961,6 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
               ),
       ),
 
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 2,
-        wishlistCount: _wishlistItemCount,
-        cartCount: _cartItemCount,
-      ),
     );
   }
 }

@@ -108,3 +108,87 @@ I/OpenGLRenderer(17421): Davey! duration=1083ms; Flags=1, FrameTimelineVsyncId=7
 ════════ Exception caught by scheduler library ═════════════════════════════════
 'package:flutter/src/widgets/heroes.dart': Failed assertion: line 983 pos 12: 'navigatorRenderObject.hasSize': is not true.
 ════════════════════════════════════════════════════════════════════════════════
+Reloaded 1 of 1248 libraries in 6,766ms (compile: 1309 ms, reload: 3006 ms, reassemble: 1037 ms).
+
+════════ Exception caught by rendering library ═════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 25 pixels on the right.
+
+The relevant error-causing widget was:
+    DropdownButtonFormField<String> DropdownButtonFormField:file:///C:/Users/AMINAH%20NAKAZIBWE/Desktop/Campus_Cart-Mobile-App-Flutter-/lib/pages/auth/sign_up_screen.dart:357:26
+
+: To inspect this widget in Flutter DevTools, visit: http://127.0.0.1:9100/#/inspector?uri=http%3A%2F%2F127.0.0.1%3A52408%2FD7UzjFopO8A%3D%2F&inspectorRef=inspector-11
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be seen. If the content is legitimately bigger than the available space, consider clipping it with a ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex, like a ListView.
+The specific RenderFlex in question is: RenderFlex#cd2ba OVERFLOWING
+    parentData: offset=Offset(0.0, 0.0) (can use size)
+    constraints: BoxConstraints(w=222.0, h=24.0)
+    size: Size(222.0, 24.0)
+    direction: horizontal
+    mainAxisAlignment: spaceBetween
+    mainAxisSize: min
+    crossAxisAlignment: center
+    textDirection: ltr
+    verticalDirection: down
+    spacing: 0.0
+    child 1: RenderIndexedStack#2cb64 relayoutBoundary=up1
+        parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
+        constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+        size: Size(247.3, 24.0)
+        alignment: AlignmentDirectional.centerStart
+        textDirection: ltr
+        fit: loose
+        index: 0
+        child 1: _RenderVisibility#2870f relayoutBoundary=up2
+            parentData: not positioned; offset=Offset(0.0, 0.0) (can use size)
+            constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+            size: Size(214.7, 24.0)
+            child: RenderIgnorePointer#9af01 relayoutBoundary=up3
+                parentData: <none> (can use size)
+                constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                size: Size(214.7, 24.0)
+                ignoring: false
+                ignoringSemantics: null
+                child: RenderSemanticsAnnotations#52e2f relayoutBoundary=up4
+                    parentData: <none> (can use size)
+                    constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                    size: Size(214.7, 24.0)
+        child 2: _RenderVisibility#17697 relayoutBoundary=up2 NEEDS-PAINT
+            parentData: not positioned; offset=Offset(0.0, 0.0) (can use size)
+            constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+            size: Size(247.3, 24.0)
+            child: RenderIgnorePointer#96da5 relayoutBoundary=up3 NEEDS-PAINT
+                parentData: <none> (can use size)
+                constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                size: Size(247.3, 24.0)
+                ignoring: false
+                ignoringSemantics: null
+                child: RenderSemanticsAnnotations#ddc32 relayoutBoundary=up4 NEEDS-PAINT
+                    parentData: <none> (can use size)
+                    constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                    size: Size(247.3, 24.0)
+        child 3: _RenderVisibility#79d7f relayoutBoundary=up2 NEEDS-PAINT
+            parentData: not positioned; offset=Offset(0.0, 0.0) (can use size)
+            constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+            size: Size(122.2, 24.0)
+            child: RenderIgnorePointer#af24f relayoutBoundary=up3 NEEDS-PAINT
+                parentData: <none> (can use size)
+                constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                size: Size(122.2, 24.0)
+                ignoring: false
+                ignoringSemantics: null
+                child: RenderIgnorePointer#283e2 relayoutBoundary=up4 NEEDS-PAINT
+                    parentData: <none> (can use size)
+                    constraints: BoxConstraints(0.0<=w<=Infinity, 0.0<=h<=24.0)
+                    size: Size(122.2, 24.0)
+                    ignoring: true
+                    ignoringSemantics: null
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════
+
+════════ Exception caught by scheduler library ═════════════════════════════════
+'package:flutter/src/widgets/heroes.dart': Failed assertion: line 983 pos 12: 'navigatorRenderObject.hasSize': is not true.
+════════════════════════════════════════════════════════════════════════════════

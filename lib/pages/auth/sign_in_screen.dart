@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/router.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -61,9 +63,59 @@ class _SignInScreenState extends State<SignInScreen> {
       String roleDisplay = userData['role'] ?? 'customer';
       _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
 
-      // Always navigate to home screen after login
+      // Update router auth state so GoRouter redirect guard sees logged in
+      routerAuthNotifier.update(RouterUserState(
+        isLoggedIn: true,
+        role: userData['role'] ?? 'customer',
+      ));
+
+      // Navigate to role-based home (GoRouter redirect guard handles role)
       if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        context.go('/customer/home');
+      }
+    } else {
+      _showErrorMessage(result['message']);
+    }
+  }
+
+  void _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await _authService.signInWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      final userData = result['userData'] as Map<String, dynamic>;
+
+      // Persist session to SharedPreferences
+      await PreferencesService.saveUser(
+        userId: result['user']?.uid ?? '',
+        name: userData['name'] ?? 'User',
+        email: userData['email'] ?? '',
+        phone: userData['phone'] ?? '',
+        role: userData['role'] ?? 'customer',
+        storeId: userData['storeId'],
+        profileImage: userData['profileImage'] ?? '',
+      );
+
+      final role = userData['role'] ?? 'customer';
+      _showSuccessMessage('Welcome ${userData['name']}!');
+
+      // Update router auth state so GoRouter redirect guard sees logged in
+      routerAuthNotifier.update(RouterUserState(
+        isLoggedIn: true,
+        role: role,
+      ));
+
+      if (mounted) {
+        context.go('/customer/home');
       }
     } else {
       _showErrorMessage(result['message']);
@@ -239,7 +291,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/forgot-password');
+                    context.push('/forgot-password');
                   },
                   child: const Text(
                     "Forgot Password?",
@@ -304,13 +356,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
               const SizedBox(height: 18),
 
-              // Google button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
+                // Google button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : () => _signInWithGoogle(),
+                    style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -347,7 +399,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   const Text("Don't have an account? "),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, '/signup');
+                      context.push('/signup');
                     },
                     child: const Text(
                       "Sign up here",

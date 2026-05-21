@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -71,7 +72,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     // Navigate back to sign in
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/signin');
+        context.go('/signin');
       }
     });
   }
@@ -267,7 +268,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacementNamed(context, '/signin');
+                        context.go('/signin');
                       },
                       child: const Text(
                         "Sign In",

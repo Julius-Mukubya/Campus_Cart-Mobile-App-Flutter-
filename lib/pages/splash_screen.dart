@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/providers/user_provider.dart';
@@ -20,6 +21,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
     // Wait then navigate to sign in
     Timer(const Duration(milliseconds: 1800), () async {
+      if (!mounted) return;
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final authService = AuthService();
@@ -34,12 +36,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             role: userData['role'] ?? 'customer',
             storeId: userData['storeId'],
           );
-          Navigator.pushReplacementNamed(context, '/home');
+          // GoRouter's redirect guard will route to the correct role home
+          context.go('/customer/home');
         } else {
-          Navigator.pushReplacementNamed(context, '/signin');
+          context.go('/signin');
         }
       } else {
-        Navigator.pushReplacementNamed(context, '/signin');
+        context.go('/signin');
       }
     });
   }

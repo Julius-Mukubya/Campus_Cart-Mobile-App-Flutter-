@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
-import 'package:madpractical/widgets/common/notification_icon.dart';
-
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
@@ -425,20 +422,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        title: Text(
-          'My Cart',
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        centerTitle: false,
-        actions: const [NotificationIcon()],
-      ),
       body: SafeArea(
         child: cart.items.isEmpty
             ? _buildEmptyCart()
@@ -538,11 +521,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   ],
                 ),
               ),
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 3,
-        wishlistCount: wishlist.itemCount,
-        cartCount: cart.itemCount,
       ),
     );
   }

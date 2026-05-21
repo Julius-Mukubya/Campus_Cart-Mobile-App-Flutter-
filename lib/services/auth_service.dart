@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../utils/app_logger.dart';
 import 'package:madpractical/repositories/user_repository.dart';
 
@@ -8,20 +9,125 @@ class AuthService {
   final UserRepository? _userRepository;
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
 
   AuthService({
     UserRepository? userRepository,
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
   })  : _userRepository = userRepository,
         _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
 
   // Get current user stream
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Sign in with Google — call this from both sign-in and sign-up screens
+  Future<Map<String, dynamic>> signInWithGoogle() async {
+    try {
+      // Attempt silent sign-in first (reuses cached credentials)
+      GoogleSignInAccount? googleAccount = await _googleSignIn.signInSilently();
+
+      // If no cached session, do interactive sign-in
+      googleAccount ??= await _googleSignIn.signIn();
+
+      if (googleAccount == null) {
+        return {
+          'success': false,
+          'message': 'Google sign-in was cancelled.',
+        };
+      }
+
+      // Get the authentication token
+      final GoogleSignInAuthentication authResult =
+          await googleAccount.authentication;
+
+      if (authResult.idToken == null) {
+        return {
+          'success': false,
+          'message': 'Failed to get Google authentication token.',
+        };
+      }
+
+      // Create Firebase credential with the Google idToken
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        idToken: authResult.idToken,
+      );
+
+      // Sign in to Firebase with the credential
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+
+      // Check if this is a new user or returning user
+      final DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        // New user — create Firestore document with default role 'customer'
+        final String name = googleAccount.displayName ??
+            userCredential.user!.displayName ??
+            googleAccount.email.split('@').first;
+        final String photoUrl = googleAccount.photoUrl ?? '';
+
+        final Map<String, dynamic> newUserData = {
+          'userId': userCredential.user!.uid,
+          'email': googleAccount.email,
+          'name': name,
+          'phone': '',
+          'role': 'customer',
+          'profileImage': photoUrl,
+          'isActive': true,
+          'isEmailVerified': userCredential.user!.emailVerified,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'totalOrders': 0,
+          'totalSpent': 0,
+          'rating': 0,
+          'storeId': null,
+        };
+
+        await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set(newUserData);
+
+        return {
+          'success': true,
+          'message': 'Account created and signed in with Google!',
+          'user': userCredential.user,
+          'userData': newUserData,
+        };
+      }
+
+      // Returning user — fetch data from Firestore
+      final Map<String, dynamic> userData =
+          userDoc.data() as Map<String, dynamic>;
+
+      return {
+        'success': true,
+        'message': 'Signed in with Google!',
+        'user': userCredential.user,
+        'userData': userData,
+      };
+    } on FirebaseAuthException catch (e) {
+      return {
+        'success': false,
+        'message': _getAuthErrorMessage(e.code),
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Google sign-in failed: ${e.toString()}',
+      };
+    }
+  }
 
   // Sign up with email and password
   Future<Map<String, dynamic>> signUp({

@@ -2,12 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:madpractical/widgets/navigation/app_bottom_navigation.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/services/product_service.dart';
-import 'package:madpractical/widgets/common/notification_icon.dart';
-import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 import '../../utils/app_logger.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
@@ -551,23 +548,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        title: const Text(
-          'Categories',
-          style: TextStyle(
-            color: AppColors.text,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        centerTitle: false,
-        actions: const [
-          DarkModeToggle(),
-          NotificationIcon(),
-        ],
-      ),
       body: _isLoading
           ? const Center(
               child: Column(
@@ -765,11 +745,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         ),
       ),
 
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 1,
-        wishlistCount: _wishlistItemCount,
-        cartCount: _cartItemCount,
-      ),
     );
   }
 }
