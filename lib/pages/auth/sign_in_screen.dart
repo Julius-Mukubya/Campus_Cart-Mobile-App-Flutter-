@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/auth_service.dart';
-import 'package:madpractical/services/preferences_service.dart';
-import 'package:madpractical/router.dart';
+import 'package:madpractical/providers/auth_provider.dart';
 
-class SignInScreen extends StatefulWidget {
+class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends ConsumerState<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
-  void _signIn() async {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _signIn() {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -28,98 +32,11 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Sign in with Firebase
-    final result = await _authService.signIn(
-      email: email,
-      password: password,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result['success']) {
-      // Get user data from result
-      final userData = result['userData'] as Map<String, dynamic>;
-      
-      // Persist session to SharedPreferences
-      await PreferencesService.saveUser(
-        userId: result['user']?.uid ?? '',
-        name: userData['name'] ?? 'User',
-        email: userData['email'] ?? email,
-        phone: userData['phone'] ?? '',
-        role: userData['role'] ?? 'customer',
-        storeId: userData['storeId'],
-        profileImage: userData['profileImage'] ?? '',
-      );
-
-      // Show success message
-      String roleDisplay = userData['role'] ?? 'customer';
-      _showSuccessMessage('Welcome ${userData['name']}! Logged in as $roleDisplay');
-
-      // Update router auth state so GoRouter redirect guard sees logged in
-      routerAuthNotifier.update(RouterUserState(
-        isLoggedIn: true,
-        role: userData['role'] ?? 'customer',
-      ));
-
-      // Navigate to role-based home (GoRouter redirect guard handles role)
-      if (mounted) {
-        context.go('/customer/home');
-      }
-    } else {
-      _showErrorMessage(result['message']);
-    }
+    ref.read(authProvider.notifier).signIn(email, password);
   }
 
-  void _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final result = await _authService.signInWithGoogle();
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result['success']) {
-      final userData = result['userData'] as Map<String, dynamic>;
-
-      // Persist session to SharedPreferences
-      await PreferencesService.saveUser(
-        userId: result['user']?.uid ?? '',
-        name: userData['name'] ?? 'User',
-        email: userData['email'] ?? '',
-        phone: userData['phone'] ?? '',
-        role: userData['role'] ?? 'customer',
-        storeId: userData['storeId'],
-        profileImage: userData['profileImage'] ?? '',
-      );
-
-      final role = userData['role'] ?? 'customer';
-      _showSuccessMessage('Welcome ${userData['name']}!');
-
-      // Update router auth state so GoRouter redirect guard sees logged in
-      routerAuthNotifier.update(RouterUserState(
-        isLoggedIn: true,
-        role: role,
-      ));
-
-      if (mounted) {
-        context.go('/customer/home');
-      }
-    } else {
-      _showErrorMessage(result['message']);
-    }
+  void _signInWithGoogle() {
+    ref.read(authProvider.notifier).signInWithGoogle();
   }
 
   void _showErrorMessage(String message) {
@@ -146,6 +63,25 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    // Handle navigation when auth state changes to logged in
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.isLoggedIn && (previous == null || !previous.isLoggedIn)) {
+        _showSuccessMessage('Welcome back!');
+        Future.microtask(() {
+          if (mounted) {
+            context.go('/customer/home');
+          }
+        });
+      } else if (next.error != null && next.error!.isNotEmpty && !next.isLoggedIn) {
+        // Show error if there's no success
+        if (next.error != 'Account created. Your seller application is pending approval.') {
+          _showErrorMessage(next.error!);
+        }
+      }
+    });
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -311,7 +247,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
+                  onPressed: authState.isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
@@ -319,7 +255,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     elevation: 4,
                   ),
-                  child: _isLoading
+                  child: authState.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -361,7 +297,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => _signInWithGoogle(),
+                    onPressed: authState.isLoading ? null : () => _signInWithGoogle(),
                     style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary, width: 1.5),
                     shape: RoundedRectangleBorder(
@@ -422,4 +358,3 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 }
-

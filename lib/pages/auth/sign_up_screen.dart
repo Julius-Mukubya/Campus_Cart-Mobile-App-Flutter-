@@ -1,58 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/auth_service.dart';
-import 'package:madpractical/router.dart';
+import 'package:madpractical/providers/auth_provider.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _obscurePassword = true;
   bool _agree = false;
-  bool _isLoading = false;
-  bool _isGoogleLoading = false;
   String _selectedRole = 'customer'; // Default role
 
-  void _signInWithGoogle() async {
-    setState(() {
-      _isGoogleLoading = true;
-    });
-
-    final result = await _authService.signInWithGoogle();
-
-    if (!mounted) return;
-
-    setState(() {
-      _isGoogleLoading = false;
-    });
-
-    if (result['success']) {
-      _showSuccessMessage(result['message'] ?? 'Signed in with Google!');
-      await Future.delayed(const Duration(milliseconds: 500));
-      // Update router auth state
-      routerAuthNotifier.update(RouterUserState(
-        isLoggedIn: true,
-        role: 'customer',
-      ));
-
-      if (mounted) {
-        context.go('/customer/home');
-      }
-    } else {
-      _showErrorMessage(result['message']);
-    }
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  void _signUp() async {
+  void _signInWithGoogle() {
+    ref.read(authProvider.notifier).signInWithGoogle();
+  }
+
+  void _signUp() {
     final name = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -73,49 +52,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Sign up with Firebase
-    final result = await _authService.signUp(
+    ref.read(authProvider.notifier).signUp(
       email: email,
       password: password,
       name: name,
       role: _selectedRole,
     );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result['success']) {
-      if (_selectedRole == 'seller') {
-        _showSuccessMessage('Account created successfully! Your seller application is pending admin approval.');
-      } else {
-        _showSuccessMessage(result['message']);
-      }
-      
-      // Navigate to appropriate screen after a short delay
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        if (_selectedRole == 'seller') {
-          // Redirect to sign in for sellers (they need approval first)
-          context.go('/signin');
-        } else {
-          // Update router auth state
-          routerAuthNotifier.update(RouterUserState(
-            isLoggedIn: true,
-            role: 'customer',
-          ));
-          context.go('/customer/home');
-        }
-      }
-    } else {
-      _showErrorMessage(result['message']);
-    }
   }
 
   void _showErrorMessage(String message) {
@@ -142,6 +84,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    // Handle auth state changes
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.isLoggedIn && (previous == null || !previous.isLoggedIn)) {
+        _showSuccessMessage('Account created successfully!');
+        Future.microtask(() {
+          if (mounted) {
+            context.go('/customer/home');
+          }
+        });
+      } else if (next.error != null && next.error!.isNotEmpty && !next.isLoggedIn) {
+        if (next.error == 'Account created. Your seller application is pending approval.') {
+          _showSuccessMessage(next.error!);
+          Future.microtask(() {
+            if (mounted) {
+              context.go('/signin');
+            }
+          });
+        } else {
+          _showErrorMessage(next.error!);
+        }
+      }
+    });
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -210,8 +177,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       backgroundColor: AppColors.white,
                     ),
-                    onPressed: _isGoogleLoading ? null : () => _signInWithGoogle(),
-                    icon: _isGoogleLoading
+                    onPressed: authState.isLoading ? null : () => _signInWithGoogle(),
+                    icon: authState.isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
@@ -228,7 +195,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             },
                           ),
                     label: Text(
-                      _isGoogleLoading ? "Signing in..." : "Continue with Google",
+                      authState.isLoading ? "Signing in..." : "Continue with Google",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -426,7 +393,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       });
                     },
                     dropdownColor: AppColors.white,
-                    style: TextStyle(color: AppColors.text),
+                    style: const TextStyle(color: AppColors.text),
                   ),
                 ),
 
@@ -496,8 +463,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: (_agree && !_isLoading) ? _signUp : null,
-                    child: _isLoading
+                    onPressed: (_agree && !authState.isLoading) ? _signUp : null,
+                    child: authState.isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
@@ -550,4 +517,3 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
-

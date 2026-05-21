@@ -33,6 +33,23 @@ class UserRepository {
     }
   }
 
+  /// Create a new user document.
+  Future<void> createUser(String userId, Map<String, dynamic> data) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .set(data);
+    } catch (e) {
+      AppLogger.error('UserRepository.createUser failed', error: e);
+      throw RepositoryException(
+        'Failed to create user',
+        operation: 'createUser',
+        originalError: e,
+      );
+    }
+  }
+
   /// Update a user document.
   Future<void> updateUser(String userId, Map<String, dynamic> data) async {
     try {

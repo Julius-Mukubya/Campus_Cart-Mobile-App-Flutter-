@@ -2,11 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../utils/app_logger.dart';
+import '../utils/exceptions.dart';
 import 'package:madpractical/repositories/user_repository.dart';
 
 class AuthService {
-  // ignore: unused_field
-  final UserRepository? _userRepository;
+  final UserRepository _userRepository;
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
@@ -16,7 +16,7 @@ class AuthService {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _userRepository = userRepository,
+  })  : _userRepository = userRepository ?? UserRepository(),
         _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
         _googleSignIn = googleSignIn ?? GoogleSignIn();
@@ -64,57 +64,47 @@ class AuthService {
           await _auth.signInWithCredential(credential);
 
       // Check if this is a new user or returning user
-      final DocumentSnapshot userDoc = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-
-      if (!userDoc.exists) {
-        // New user — create Firestore document with default role 'customer'
-        final String name = googleAccount.displayName ??
-            userCredential.user!.displayName ??
-            googleAccount.email.split('@').first;
-        final String photoUrl = googleAccount.photoUrl ?? '';
-
-        final Map<String, dynamic> newUserData = {
-          'userId': userCredential.user!.uid,
-          'email': googleAccount.email,
-          'name': name,
-          'phone': '',
-          'role': 'customer',
-          'profileImage': photoUrl,
-          'isActive': true,
-          'isEmailVerified': userCredential.user!.emailVerified,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'totalOrders': 0,
-          'totalSpent': 0,
-          'rating': 0,
-          'storeId': null,
-        };
-
-        await _firestore
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set(newUserData);
-
+      try {
+        final userData = await _userRepository.getUser(userCredential.user!.uid);
         return {
           'success': true,
-          'message': 'Account created and signed in with Google!',
+          'message': 'Signed in with Google!',
           'user': userCredential.user,
-          'userData': newUserData,
+          'userData': userData,
         };
+      } on RepositoryException {
+        // New user — create Firestore document with default role 'customer'
       }
 
-      // Returning user — fetch data from Firestore
-      final Map<String, dynamic> userData =
-          userDoc.data() as Map<String, dynamic>;
+      final String name = googleAccount.displayName ??
+          userCredential.user!.displayName ??
+          googleAccount.email.split('@').first;
+      final String photoUrl = googleAccount.photoUrl ?? '';
+
+      final Map<String, dynamic> newUserData = {
+        'userId': userCredential.user!.uid,
+        'email': googleAccount.email,
+        'name': name,
+        'phone': '',
+        'role': 'customer',
+        'profileImage': photoUrl,
+        'isActive': true,
+        'isEmailVerified': userCredential.user!.emailVerified,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'totalOrders': 0,
+        'totalSpent': 0,
+        'rating': 0,
+        'storeId': null,
+      };
+
+      await _userRepository.createUser(userCredential.user!.uid, newUserData);
 
       return {
         'success': true,
-        'message': 'Signed in with Google!',
+        'message': 'Account created and signed in with Google!',
         'user': userCredential.user,
-        'userData': userData,
+        'userData': newUserData,
       };
     } on FirebaseAuthException catch (e) {
       return {
@@ -147,8 +137,8 @@ class AuthService {
       // Update display name
       await userCredential.user?.updateDisplayName(name);
 
-      // Create user document in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      // Create user document in Firestore via repository
+      await _userRepository.createUser(userCredential.user!.uid, {
         'userId': userCredential.user!.uid,
         'email': email,
         'name': name,
@@ -170,21 +160,15 @@ class AuthService {
         'totalOrders': 0,
         'totalSpent': 0,
         'rating': 0,
-        'completedDeliveries': 0,
         
-        // Seller-specific fields
+        // Reference fields
         'storeId': null,
-        'defaultAddressId': null,
-        'defaultPaymentMethodId': null,
       });
 
       // If user is signing up as seller, create a seller approval request
       if (role == 'seller') {
         await _createSellerApprovalRequest(userCredential.user!.uid, name, email);
       }
-
-      // Initialize user subcollections
-      await _initializeUserSubcollections(userCredential.user!.uid, role);
 
       // Send email verification
       await userCredential.user?.sendEmailVerification();
@@ -218,16 +202,14 @@ class AuthService {
         password: password,
       );
 
-      // Get user data from Firestore
-      DocumentSnapshot userDoc = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-
-      if (!userDoc.exists) {
+      // Get user data from repository
+      Map<String, dynamic> userData;
+      try {
+        userData = await _userRepository.getUser(userCredential.user!.uid);
+      } on RepositoryException {
         // User exists in Firebase Auth but not in Firestore
         // Allow login and create a basic profile
-        final basicUserData = {
+        userData = {
           'userId': userCredential.user!.uid,
           'email': email,
           'name': userCredential.user!.displayName ?? email.split('@').first,
@@ -236,8 +218,8 @@ class AuthService {
           'isActive': true,
           'storeId': null,
         };
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          ...basicUserData,
+        await _userRepository.createUser(userCredential.user!.uid, {
+          ...userData,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
@@ -245,11 +227,9 @@ class AuthService {
           'success': true,
           'message': 'Login successful!',
           'user': userCredential.user,
-          'userData': basicUserData,
+          'userData': userData,
         };
       }
-
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
       // Check if user is active — treat null/missing as active
       if (userData['isActive'] == false) {
@@ -342,14 +322,10 @@ class AuthService {
     }
   }
 
-  // Get user data from Firestore
+  // Get user data from Firestore via repository
   Future<Map<String, dynamic>?> getUserData(String userId) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(userId).get();
-      if (doc.exists) {
-        return doc.data() as Map<String, dynamic>;
-      }
-      return null;
+      return await _userRepository.getUser(userId);
     } catch (e) {
       return null;
     }
@@ -371,7 +347,7 @@ class AuthService {
       if (phone != null) updates['phone'] = phone;
       if (profileImage != null) updates['profileImage'] = profileImage;
 
-      await _firestore.collection('users').doc(userId).update(updates);
+      await _userRepository.updateUser(userId, updates);
 
       // Update display name in Firebase Auth if name is provided
       if (name != null) {
@@ -384,202 +360,15 @@ class AuthService {
     }
   }
 
-  // Address management methods
-  Future<String?> addUserAddress({
-    required String userId,
-    required String label,
-    required String fullName,
-    required String phone,
-    required String addressLine1,
-    String? addressLine2,
-    required String city,
-    required String state,
-    required String postalCode,
-    String country = 'Uganda',
-    double? latitude,
-    double? longitude,
-    bool isDefault = false,
-  }) async {
-    try {
-      // If this is set as default, update other addresses to not be default
-      if (isDefault) {
-        await _updateDefaultAddress(userId, null);
-      }
-
-      DocumentReference docRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('addresses')
-          .add({
-        'label': label,
-        'fullName': fullName,
-        'phone': phone,
-        'addressLine1': addressLine1,
-        'addressLine2': addressLine2 ?? '',
-        'city': city,
-        'state': state,
-        'postalCode': postalCode,
-        'country': country,
-        'latitude': latitude,
-        'longitude': longitude,
-        'isDefault': isDefault,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Update user's defaultAddressId if this is the default address
-      if (isDefault) {
-        await _firestore.collection('users').doc(userId).update({
-          'defaultAddressId': docRef.id,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      return docRef.id;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<bool> _updateDefaultAddress(String userId, String? newDefaultId) async {
-    try {
-      // Get all addresses and update them
-      QuerySnapshot addresses = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('addresses')
-          .get();
-
-      WriteBatch batch = _firestore.batch();
-
-      for (QueryDocumentSnapshot doc in addresses.docs) {
-        batch.update(doc.reference, {
-          'isDefault': doc.id == newDefaultId,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      await batch.commit();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Payment method management methods
-  Future<String?> addUserPaymentMethod({
-    required String userId,
-    required String type,
-    required String provider,
-    required String accountNumber,
-    required String accountName,
-    bool isDefault = false,
-  }) async {
-    try {
-      // If this is set as default, update other payment methods to not be default
-      if (isDefault) {
-        await _updateDefaultPaymentMethod(userId, null);
-      }
-
-      DocumentReference docRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('paymentMethods')
-          .add({
-        'type': type,
-        'provider': provider,
-        'accountNumber': accountNumber,
-        'accountName': accountName,
-        'isDefault': isDefault,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Update user's defaultPaymentMethodId if this is the default payment method
-      if (isDefault) {
-        await _firestore.collection('users').doc(userId).update({
-          'defaultPaymentMethodId': docRef.id,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      return docRef.id;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<bool> _updateDefaultPaymentMethod(String userId, String? newDefaultId) async {
-    try {
-      // Get all payment methods and update them
-      QuerySnapshot paymentMethods = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('paymentMethods')
-          .get();
-
-      WriteBatch batch = _firestore.batch();
-
-      for (QueryDocumentSnapshot doc in paymentMethods.docs) {
-        batch.update(doc.reference, {
-          'isDefault': doc.id == newDefaultId,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      await batch.commit();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Get user addresses
-  Future<List<Map<String, dynamic>>> getUserAddresses(String userId) async {
-    try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('addresses')
-          .orderBy('createdAt', descending: false)
-          .get();
-
-      return snapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        data['addressId'] = doc.id;
-        return data;
-      }).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Get user payment methods
-  Future<List<Map<String, dynamic>>> getUserPaymentMethods(String userId) async {
-    try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('paymentMethods')
-          .orderBy('createdAt', descending: false)
-          .get();
-
-      return snapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        data['paymentMethodId'] = doc.id;
-        return data;
-      }).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
   // Helper method to create seller approval request
   Future<void> _createSellerApprovalRequest(String userId, String name, String email) async {
     try {
       // Get user phone if available
-      final userDoc = await _firestore.collection('users').doc(userId).get();
-      final userPhone = userDoc.data()?['phone'] as String?;
+      Map<String, dynamic>? userData;
+      try {
+        userData = await _userRepository.getUser(userId);
+      } catch (_) {}
+      final userPhone = userData?['phone'] as String?;
 
       await _firestore.collection('sellerRequests').add({
         'userId': userId,
@@ -594,35 +383,6 @@ class AuthService {
       });
     } catch (e) {
       AppLogger.error('Error creating seller request', error: e);
-    }
-  }
-
-  // Helper method to initialize user subcollections
-  Future<void> _initializeUserSubcollections(String userId, String role) async {
-    try {
-      // Initialize payment methods subcollection with default mobile money for customers
-      if (role == 'customer') {
-        await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('paymentMethods')
-            .add({
-          'type': 'mobile_money',
-          'provider': 'MTN',
-          'accountNumber': '',
-          'accountName': '',
-          'isDefault': true,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      // Initialize empty wishlist and cart subcollections (these will be populated as needed)
-      // We don't need to add documents here as they'll be created when items are added
-      
-    } catch (e) {
-      // Log error but don't fail the signup process
-      AppLogger.error('Error initializing user subcollections', error: e);
     }
   }
 
