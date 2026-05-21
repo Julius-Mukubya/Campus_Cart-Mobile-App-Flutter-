@@ -27,10 +27,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
-  void _signInWithGoogle() {
-    ref.read(authProvider.notifier).signInWithGoogle();
-  }
-
   void _signUp() {
     final name = _usernameController.text.trim();
     final email = _emailController.text.trim();
@@ -163,68 +159,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 32),
-
-                // Google Sign Up Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.text,
-                      side: const BorderSide(color: AppColors.lightGrey, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: AppColors.white,
-                    ),
-                    onPressed: authState.isLoading ? null : () => _signInWithGoogle(),
-                    icon: authState.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                            ),
-                          )
-                        : Image.network(
-                            "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
-                            height: 24,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.g_mobiledata, size: 24);
-                            },
-                          ),
-                    label: Text(
-                      authState.isLoading ? "Signing in..." : "Continue with Google",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Divider
-                Row(
-                  children: [
-                    const Expanded(child: Divider(color: AppColors.lightGrey)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        "OR",
-                        style: TextStyle(
-                          color: AppColors.grey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const Expanded(child: Divider(color: AppColors.lightGrey)),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
 
                 // Username label
                 const Align(
