@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/seller_request_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/models/seller_request_model.dart';
+
 class ManageSellersScreen extends ConsumerStatefulWidget {
   const ManageSellersScreen({super.key});
 
@@ -272,6 +274,16 @@ class _ManageSellersScreenState extends ConsumerState<ManageSellersScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
+      appBar: AppBar(
+        title: const Text('Manage Sellers'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [

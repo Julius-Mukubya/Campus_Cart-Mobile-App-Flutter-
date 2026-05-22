@@ -253,7 +253,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
                     if (_pendingSellerRequests.isNotEmpty)
                       GestureDetector(
-                        onTap: () => context.go('/admin/sellers'),
+                        onTap: () => context.push('/admin/sellers'),
                         child: _buildAlertCard(
                           'Pending Seller Approvals',
                           '${_pendingSellerRequests.length} sellers waiting for approval',
@@ -288,10 +288,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       childAspectRatio: 1.3,
                       children: [
                         _buildQuickAction('Seller Approvals', Icons.how_to_reg, AppColors.primary, () {
-                          context.go('/admin/sellers');
+                          context.push('/admin/sellers');
                         }),
                         _buildQuickAction('Manage Sellers', Icons.people, AppColors.success, () {
-                          context.go('/admin/sellers');
+                          context.push('/admin/sellers');
                         }),
                         _buildQuickAction('View Orders', Icons.shopping_bag, AppColors.accent, () {
                           // Navigate to orders view if needed

@@ -228,16 +228,16 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 childAspectRatio: 1.3,
                 children: [
                   _buildQuickAction('My Products', Icons.inventory_2, AppColors.primary, () {
-                    context.go('/seller/products');
+                    context.push('/seller/products');
                   }),
                   _buildQuickAction('Orders', Icons.receipt_long, AppColors.accent, () {
-                    context.go('/seller/orders');
+                    context.push('/seller/orders');
                   }),
                   _buildQuickAction('Add Product', Icons.add_box, AppColors.success, () {
-                    context.go('/seller/add-product');
+                    context.push('/seller/add-product');
                   }),
                   _buildQuickAction('Earnings', Icons.account_balance_wallet, Colors.green, () {
-                    context.go('/seller/earnings');
+                    // Earnings not available yet
                   }),
                 ],
               ),

@@ -31,24 +31,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'color': AppColors.primary,
         'onTap': () => context.push('/my-orders'),
       },
-      {
-        'icon': Icons.location_on_outlined,
-        'title': 'Addresses',
-        'subtitle': 'Manage delivery addresses',
-        'color': AppColors.accent,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Address management not available in this version')),
-        ),
-      },
-      {
-        'icon': Icons.payment_outlined,
-        'title': 'Payment Methods',
-        'subtitle': 'Manage payment options',
-        'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment methods not available in this version')),
-        ),
-      },
     ];
 
     final settingsItems = [
