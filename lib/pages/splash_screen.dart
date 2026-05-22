@@ -37,7 +37,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             storeId: userData['storeId'],
           );
           // GoRouter's redirect guard will route to the correct role home
-          context.go('/customer/home');
+          context.go('/home');
         } else {
           context.go('/signin');
         }

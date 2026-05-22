@@ -666,28 +666,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'title': 'Seller Dashboard',
             'subtitle': 'Sales overview',
             'color': AppColors.primary,
-            'onTap': () => context.go('/seller/dashboard'),
+            'onTap': () => context.push('/seller/dashboard'),
           },
           {
             'icon': Icons.inventory_2,
             'title': 'My Products',
             'subtitle': 'Manage product list',
             'color': AppColors.accent,
-            'onTap': () => context.go('/seller/products'),
+            'onTap': () => context.push('/seller/products'),
           },
           {
             'icon': Icons.add_box,
             'title': 'Add Product',
             'subtitle': 'Create a new product',
             'color': AppColors.success,
-            'onTap': () => context.go('/seller/add-product'),
+            'onTap': () => context.push('/seller/add-product'),
           },
           {
             'icon': Icons.receipt_long,
             'title': 'Seller Orders',
             'subtitle': 'Manage customer orders',
             'color': Colors.blue,
-            'onTap': () => context.go('/seller/orders'),
+            'onTap': () => context.push('/seller/orders'),
           },
         ];
       case 'admin':
@@ -697,14 +697,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'title': 'Admin Dashboard',
             'subtitle': 'Platform overview',
             'color': AppColors.primary,
-            'onTap': () => context.go('/admin/dashboard'),
+            'onTap': () => context.push('/admin/dashboard'),
           },
           {
             'icon': Icons.store,
             'title': 'Manage Sellers',
             'subtitle': 'Approve/suspend sellers',
             'color': AppColors.accent,
-            'onTap': () => context.go('/admin/sellers'),
+            'onTap': () => context.push('/admin/sellers'),
           },
         ];
       default:

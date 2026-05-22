@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/providers/seller_request_provider.dart';
 
-class BecomeSellersScreen extends StatefulWidget {
+class BecomeSellersScreen extends ConsumerStatefulWidget {
   const BecomeSellersScreen({super.key});
 
   @override
-  State<BecomeSellersScreen> createState() => _BecomeSellersScreenState();
+  ConsumerState<BecomeSellersScreen> createState() => _BecomeSellersScreenState();
 }
 
-class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
+class _BecomeSellersScreenState extends ConsumerState<BecomeSellersScreen> {
 
   bool _isLoading = false;
   bool _hasActiveRequest = false;
@@ -26,32 +29,73 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
   }
 
   Future<void> _checkExistingRequest() async {
-    final userId = null;
-    if (userId == null) return;
-    
-    // TODO: check via SellerService in PHASE 2
+    final userState = ref.read(userProvider);
+    final userId = userState.userId;
+    if (userId == null || userId.isEmpty) return;
+
+    final existingRequest = await ref.read(userSellerRequestProvider(userId).future);
+    if (mounted && existingRequest != null) {
+      setState(() {
+        _hasActiveRequest = true;
+        _requestStatus = {
+          'status': existingRequest.status,
+          'message': existingRequest.status == 'pending'
+              ? 'Your seller request is pending review.'
+              : existingRequest.status == 'approved'
+                  ? 'Your seller request was approved!'
+                  : 'Your seller request was rejected. Reason: ${existingRequest.rejectionReason ?? "N/A"}',
+        };
+      });
+    }
   }
 
   Future<void> _submitSellerRequest() async {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: submit seller request via SellerService in PHASE 2
-      // await sellerService.submitSellerRequest(userId, userName, userEmail, ...);
+      final userState = ref.read(userProvider);
+      final userId = userState.userId;
+      if (userId == null || userId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You must be logged in to submit a seller request'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      final result = await ref.read(sellerRequestNotifierProvider.notifier).submitRequest(
+        userId: userId,
+        userName: userState.name,
+        userEmail: userState.email,
+        userPhone: userState.phone,
+      );
 
       if (!mounted) return;
 
-      setState(() {
-        _hasActiveRequest = true;
-        _requestStatus = {'status': 'pending', 'message': 'Your seller request has been submitted!'};
-      });
+      if (result['success'] == true) {
+        setState(() {
+          _hasActiveRequest = true;
+          _requestStatus = {'status': 'pending', 'message': result['message'] ?? 'Your seller request has been submitted!'};
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Seller request submitted successfully! Admin will review it shortly.'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Seller request submitted successfully! Admin will review it shortly.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] as String? ?? 'Failed to submit request'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,18 +214,22 @@ class _BecomeSellersScreenState extends State<BecomeSellersScreen> {
                             Text(
                               _requestStatus!['status'] == 'pending'
                                   ? 'Request Pending'
-                                  : 'Request Approved',
+                                  : _requestStatus!['status'] == 'approved'
+                                      ? 'Request Approved'
+                                      : 'Request Rejected',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: _requestStatus!['status'] == 'pending'
                                     ? Colors.orange
-                                    : Colors.green,
+                                    : _requestStatus!['status'] == 'approved'
+                                        ? Colors.green
+                                        : AppColors.error,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _requestStatus!['message'],
+                              _requestStatus!['message'] ?? '',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.text.withValues(alpha: 0.7),

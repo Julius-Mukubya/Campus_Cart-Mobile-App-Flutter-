@@ -22,15 +22,16 @@ import 'package:madpractical/pages/customer/store_page.dart';
 // Seller screens
 import 'package:madpractical/pages/seller/seller_dashboard_screen.dart';
 import 'package:madpractical/pages/seller/my_products_screen.dart';
+import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
-import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/seller_order_details_screen.dart' as seller_order;
 
 // Admin screens
 import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
 import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
 import 'package:madpractical/pages/admin/seller_management_screen.dart';
+
 
 // Profile screens
 import 'package:madpractical/pages/profile/profile_screen.dart';
@@ -42,10 +43,8 @@ import 'package:madpractical/pages/profile/become_seller_screen.dart';
 import 'package:madpractical/pages/chat/chat_list_screen.dart';
 import 'package:madpractical/pages/chat/chat_screen.dart';
 
-// Shell screens
-import 'package:madpractical/pages/customer/customer_shell.dart';
-import 'package:madpractical/pages/seller/seller_shell.dart';
-import 'package:madpractical/pages/admin/admin_shell.dart';
+// Shell screen
+import 'package:madpractical/widgets/navigation/main_shell.dart';
 
 // Splash
 import 'package:madpractical/pages/splash_screen.dart';
@@ -77,15 +76,9 @@ class RouterAuthNotifier extends ChangeNotifier {
 final routerAuthNotifier = RouterAuthNotifier();
 
 /// Role-based home route helper.
+/// All roles use the same home route now.
 String _getRoleHome(String role) {
-  switch (role) {
-    case 'admin':
-      return '/admin/dashboard';
-    case 'seller':
-      return '/seller/dashboard';
-    default:
-      return '/customer/home';
-  }
+  return '/home';
 }
 
 /// Build the GoRouter configuration.
@@ -139,70 +132,70 @@ GoRouter buildRouter() {
       GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
       GoRoute(path: '/access-denied', builder: (context, state) => const AccessDeniedScreen()),
 
-      // ── Customer Shell ──────────────────────────────────────────
+      // ── Unified Main Shell (same bottom nav for all roles) ─────
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => CustomerShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => MainShell(navigationShell: navigationShell),
         branches: [
+          // Tab 0: Home
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customer/home', builder: (context, state) => HomeScreen()),
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const _HomeTab(),
+            ),
           ]),
+          // Tab 1: Categories / My Products / Manage Sellers
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customer/categories', builder: (context, state) => const CategoriesScreen()),
+            GoRoute(
+              path: '/browse',
+              builder: (context, state) => const _BrowseTab(),
+            ),
           ]),
+          // Tab 2: Cart
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customer/cart', builder: (context, state) => CartScreen()),
+            GoRoute(
+              path: '/cart',
+              builder: (context, state) => CartScreen(),
+            ),
           ]),
+          // Tab 3: Chats
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customer/chats', builder: (context, state) => const ChatListScreen()),
+            GoRoute(
+              path: '/chats',
+              builder: (context, state) => const ChatListScreen(),
+            ),
           ]),
+          // Tab 4: Profile
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customer/profile', builder: (context, state) => const ProfileScreen()),
-          ]),
-        ],
-      ),
-
-      // ── Seller Shell ────────────────────────────────────────────
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => SellerShell(navigationShell: navigationShell),
-        branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/seller/dashboard', builder: (context, state) => const SellerDashboardScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/seller/products', builder: (context, state) => const MyProductsScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/seller/orders', builder: (context, state) => const SellerOrdersScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/seller/chats', builder: (context, state) => const ChatListScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/seller/profile', builder: (context, state) => const ProfileScreen()),
-          ]),
-        ],
-      ),
-
-      // ── Admin Shell ─────────────────────────────────────────────
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => AdminShell(navigationShell: navigationShell),
-        branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/admin/dashboard', builder: (context, state) => const AdminDashboardScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/admin/sellers', builder: (context, state) => const ManageSellersScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/admin/chats', builder: (context, state) => const ChatListScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/admin/profile', builder: (context, state) => const ProfileScreen()),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
           ]),
         ],
       ),
 
       // ── Push routes (outside shell) ─────────────────────────────
+      // Role-specific dashboards (accessed from Profile screen)
+      GoRoute(
+        path: '/seller/dashboard',
+        builder: (context, state) => const SellerDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/seller/products',
+        builder: (context, state) => const MyProductsScreen(),
+      ),
+      GoRoute(
+        path: '/seller/orders',
+        builder: (context, state) => const SellerOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/dashboard',
+        builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/sellers',
+        builder: (context, state) => const ManageSellersScreen(),
+      ),
       GoRoute(
         path: '/product-details',
         builder: (context, state) {
@@ -307,4 +300,25 @@ GoRouter buildRouter() {
       ),
     ),
   );
+}
+
+/// Tab 0: Home — same product browsing for ALL roles.
+/// Sellers and admins access their dashboards from the Profile screen.
+class _HomeTab extends StatelessWidget {
+  const _HomeTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const HomeScreen();
+  }
+}
+
+/// Tab 1: Browse — same categories for ALL roles.
+class _BrowseTab extends StatelessWidget {
+  const _BrowseTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CategoriesScreen();
+  }
 }

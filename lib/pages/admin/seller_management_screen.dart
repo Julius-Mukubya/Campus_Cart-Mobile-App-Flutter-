@@ -1,23 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/admin/admin_seller_chat_screen.dart';
+import 'package:madpractical/providers/seller_request_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/models/seller_request_model.dart';
 
-class SellerManagementScreen extends StatefulWidget {
+class SellerManagementScreen extends ConsumerStatefulWidget {
   const SellerManagementScreen({super.key});
 
   @override
-  State<SellerManagementScreen> createState() =>
+  ConsumerState<SellerManagementScreen> createState() =>
       _SellerManagementScreenState();
 }
 
-class _SellerManagementScreenState extends State<SellerManagementScreen> {
+class _SellerManagementScreenState extends ConsumerState<SellerManagementScreen> {
   String _filter = 'pending';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sellerRequestNotifierProvider.notifier).loadPendingRequests();
+    });
+  }
+
+  Color _getStatusColor(String status) {
+    if (status == 'approved') return AppColors.success;
+    if (status == 'rejected') return AppColors.error;
+    return Colors.orange;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final requests = ref.watch(sellerRequestNotifierProvider);
+    final isLoading = ref.watch(pendingSellerRequestsProvider).isLoading;
+
+    final filteredRequests = _filter == 'all'
+        ? requests
+        : requests.where((r) => r.status == _filter).toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Sellers'),
+        title: const Text('Seller Requests'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -33,31 +57,28 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
                 _filterButton('Approved', 'approved'),
                 const SizedBox(width: 8),
                 _filterButton('Rejected', 'rejected'),
+                const SizedBox(width: 8),
+                _filterButton('All', 'all'),
               ],
             ),
           ),
           // Requests list
           Expanded(
-            child: ListenableBuilder(
-              listenable: ValueNotifier(null),
-              builder: (context, _) {
-                final requests = _getRequests();
-                if (requests.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No $_filter seller requests',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: requests.length,
-                  itemBuilder: (context, index) =>
-                      _buildRequestTile(requests[index]),
-                );
-              },
-            ),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredRequests.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No $_filter seller requests',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredRequests.length,
+                        itemBuilder: (context, index) =>
+                            _buildRequestTile(filteredRequests[index]),
+                      ),
           ),
         ],
       ),
@@ -85,18 +106,12 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
     );
   }
 
-  Widget _buildRequestTile(Map<String, dynamic> req) {
+  Widget _buildRequestTile(SellerRequestModel req) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -113,19 +128,28 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            req['userName'],
+                            req.userName,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
+                          const SizedBox(height: 4),
                           Text(
-                            req['storeName'],
+                            req.userEmail,
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 12,
                             ),
                           ),
+                          if (req.userPhone != null && req.userPhone!.isNotEmpty)
+                            Text(
+                              req.userPhone!,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -135,34 +159,24 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(req['status'])
-                            .withValues(alpha: 0.2),
+                        color: _getStatusColor(req.status).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        req['status'].toUpperCase(),
+                        req.status.toUpperCase(),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: _getStatusColor(req['status']),
+                          color: _getStatusColor(req.status),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Email: ${req['userEmail']}',
-                  style: const TextStyle(fontSize: 11),
-                ),
-                Text(
-                  'Phone: ${req['userPhone']}',
-                  style: const TextStyle(fontSize: 11),
-                ),
               ],
             ),
           ),
-          if (req['status'] == 'pending')
+          if (req.status == 'pending')
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -189,99 +203,70 @@ class _SellerManagementScreenState extends State<SellerManagementScreen> {
                   ),
                 ],
               ),
-            )
-          else if (req['status'] == 'approved')
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _openChat(req),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                  ),
-                  child: const Text('Chat'),
-                ),
-              ),
             ),
         ],
       ),
     );
   }
 
-  List<Map<String, dynamic>> _getRequests() {
-    switch (_filter) {
-      case 'pending':
-        return [] /* TODO: SellerService.getPendingRequests() */;
-      case 'approved':
-        return [] /* TODO: SellerService.getApprovedRequests() */;
-      case 'rejected':
-        return [] /* TODO: SellerService.getRejectedRequests() */;
-      default:
-        return [];
+  Future<void> _approveRequest(SellerRequestModel request) async {
+    final adminId = ref.read(userProvider).userId;
+    if (adminId == null || adminId.isEmpty) return;
+
+    final result = await ref.read(sellerRequestNotifierProvider.notifier).approveSeller(
+      request.id,
+      adminId,
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] as String? ?? 'Request approved'),
+          backgroundColor: AppColors.success,
+        ),
+      );
     }
   }
 
-  Color _getStatusColor(String status) {
-    if (status == 'approved') return AppColors.success;
-    if (status == 'rejected') return AppColors.error;
-    return Colors.orange;
-  }
-
-  void _approveRequest(Map<String, dynamic> req) {
-    // TODO Phase 2: approveSellerRequest(requestId: req['id'], adminId: 'admin_1');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Seller approved!'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-  }
-
-  void _rejectRequest(Map<String, dynamic> req) {
+  void _rejectRequest(SellerRequestModel request) {
+    final reasonCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) {
-        final reasonCtrl = TextEditingController();
-        return AlertDialog(
-          title: const Text('Reject Request'),
-          content: TextField(
-            controller: reasonCtrl,
-            decoration: const InputDecoration(hintText: 'Reason...'),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // TODO Phase 2: rejectSellerRequest(requestId: req['id'], reason: reasonCtrl.text);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Request rejected')),
-                );
-              },
-              child: const Text('Reject'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _openChat(Map<String, dynamic> req) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AdminSellerChatScreen(
-          sellerId: req['userId'],
-          sellerName: req['userName'],
-          sellerEmail: req['userEmail'],
-          sellerPhone: req['userPhone'],
-          storeName: req['storeName'],
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reject Request'),
+        content: TextField(
+          controller: reasonCtrl,
+          decoration: const InputDecoration(hintText: 'Reason for rejection...'),
+          maxLines: 3,
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final reason = reasonCtrl.text.trim();
+              if (reason.isEmpty) return;
+              Navigator.pop(dialogContext);
+              final adminId = ref.read(userProvider).userId;
+              if (adminId == null || adminId.isEmpty) return;
+              final result = await ref.read(sellerRequestNotifierProvider.notifier).rejectSeller(
+                request.id,
+                adminId,
+                reason,
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result['message'] as String? ?? 'Request rejected'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+            },
+            child: const Text('Reject'),
+          ),
+        ],
       ),
     );
   }

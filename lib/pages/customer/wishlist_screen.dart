@@ -693,7 +693,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
           ),
           const SizedBox(height: 32),
           ElevatedButton(
-            onPressed: () => context.go('/customer/home'),
+            onPressed: () => context.go('/home'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.white,

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/admin_service.dart';
 
-class AdminDashboardScreen extends StatefulWidget {
+class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   final AdminService _adminService = AdminService();
-    Map<String, dynamic> _platformStats = {};
+  Map<String, dynamic> _platformStats = {};
   List<Map<String, dynamic>> _pendingSellerRequests = [];
-  List<Map<String, dynamic>> _pendingStoreRequests = [];
   bool _isLoading = true;
 
   @override
@@ -27,14 +27,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       final stats = await _adminService.getPlatformStats();
       final sellerRequests = await _adminService.getPendingSellerRequests();
-      final storeRequests = await _adminService.getPendingStoreRequests();
-      
-      setState(() {
-        _platformStats = stats;
-        _pendingSellerRequests = sellerRequests;
-        _pendingStoreRequests = storeRequests;
-        _isLoading = false;
-      });
+
+      if (mounted) {
+        setState(() {
+          _platformStats = stats;
+          _pendingSellerRequests = sellerRequests;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -43,6 +43,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       }
     }
   }
+
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -192,7 +193,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Manage your e-commerce platform',
+                                  'Manage your campus marketplace',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: AppColors.secondaryText,
@@ -216,16 +217,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Summary Cards
                     Text(
                       'Platform Statistics',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -237,22 +238,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         _buildSummaryCard('Total Users', '${_platformStats['totalUsers'] ?? 0}', Icons.people, AppColors.primary),
                         _buildSummaryCard('Active Sellers', '${_platformStats['activeSellers'] ?? 0}', Icons.store, AppColors.success),
                         _buildSummaryCard('Total Orders', '${_platformStats['totalOrders'] ?? 0}', Icons.shopping_bag, AppColors.accent),
-                        _buildSummaryCard('Pending Requests', '${(_platformStats['pendingSellerRequests'] ?? 0) + (_platformStats['pendingStoreRequests'] ?? 0)}', Icons.pending_actions, Colors.orange),
+                        _buildSummaryCard('Pending Requests', '${_platformStats['pendingSellerRequests'] ?? 0}', Icons.pending_actions, Colors.orange),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Alerts Section
                     Text(
                       'Alerts & Notifications',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     if (_pendingSellerRequests.isNotEmpty)
                       GestureDetector(
-                        onTap: () => _showSellerApprovalDialog(),
+                        onTap: () => context.go('/admin/sellers'),
                         child: _buildAlertCard(
                           'Pending Seller Approvals',
                           '${_pendingSellerRequests.length} sellers waiting for approval',
@@ -260,35 +261,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           AppColors.accent,
                         ),
                       ),
-                    
-                    if (_pendingStoreRequests.isNotEmpty)
-                      GestureDetector(
-                        onTap: () => _showStoreApprovalDialog(),
-                        child: _buildAlertCard(
-                          'Pending Store Approvals',
-                          '${_pendingStoreRequests.length} stores waiting for approval',
-                          Icons.store_mall_directory,
-                          AppColors.primary,
-                        ),
-                      ),
-                    
-                    if (_pendingSellerRequests.isEmpty && _pendingStoreRequests.isEmpty)
+
+                    if (_pendingSellerRequests.isEmpty)
                       _buildAlertCard(
                         'All Clear!',
                         'No pending approvals at this time',
                         Icons.check_circle,
                         AppColors.success,
                       ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Quick Actions
                     Text(
                       'Quick Actions',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -298,13 +288,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       childAspectRatio: 1.3,
                       children: [
                         _buildQuickAction('Seller Approvals', Icons.how_to_reg, AppColors.primary, () {
-                          _showSellerApprovalDialog();
-                        }),
-                        _buildQuickAction('Store Approvals', Icons.store, AppColors.accent, () {
-                          _showStoreApprovalDialog();
+                          context.go('/admin/sellers');
                         }),
                         _buildQuickAction('Manage Sellers', Icons.people, AppColors.success, () {
                           context.go('/admin/sellers');
+                        }),
+                        _buildQuickAction('View Orders', Icons.shopping_bag, AppColors.accent, () {
+                          // Navigate to orders view if needed
                         }),
                         _buildQuickAction('Refresh Data', Icons.refresh, Colors.grey, () {
                           setState(() {
@@ -314,7 +304,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         }),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -322,313 +312,4 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
     );
   }
-
-  void _showSellerApprovalDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Seller Approvals'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: _pendingSellerRequests.isEmpty
-              ? const Center(
-                  child: Text('No pending seller requests'),
-                )
-              : ListView.builder(
-                  itemCount: _pendingSellerRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = _pendingSellerRequests[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                          child: const Icon(Icons.person, color: AppColors.primary),
-                        ),
-                        title: Text(request['name'] ?? 'Unknown'),
-                        subtitle: Text(request['email'] ?? ''),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.check, color: AppColors.success),
-                              onPressed: () => _approveSeller(request),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: AppColors.error),
-                              onPressed: () => _rejectSeller(request),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showStoreApprovalDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Store Approvals'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: _pendingStoreRequests.isEmpty
-              ? const Center(
-                  child: Text('No pending store requests'),
-                )
-              : ListView.builder(
-                  itemCount: _pendingStoreRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = _pendingStoreRequests[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.accent.withValues(alpha: 0.1),
-                          child: const Icon(Icons.store, color: AppColors.accent),
-                        ),
-                        title: Text(request['storeName'] ?? 'Unknown Store'),
-                        subtitle: Text(request['storeCategory'] ?? ''),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.check, color: AppColors.success),
-                              onPressed: () => _approveStore(request),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: AppColors.error),
-                              onPressed: () => _rejectStore(request),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-  // Seller request management methods are below (after store methods)
-
-  Future<void> _approveStore(Map<String, dynamic> request) async {
-    try {
-      final adminId = '';
-
-      final result = await _adminService.approveStoreRequest(
-        requestId: request['requestId'],
-        storeId: request['storeId'],
-        adminId: adminId,
-        adminNotes: 'Store approved by admin',
-      );
-
-      if (mounted) {
-        if (result['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-          _loadDashboardData(); // Refresh data
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error approving store'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectStore(Map<String, dynamic> request) async {
-    try {
-      final adminId = '';
-
-      final result = await _adminService.rejectStoreRequest(
-        requestId: request['requestId'],
-        storeId: request['storeId'],
-        adminId: adminId,
-        rejectionReason: 'Store information incomplete or inappropriate',
-        adminNotes: 'Store rejected by admin',
-      );
-
-      if (mounted) {
-        if (result['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-          _loadDashboardData(); // Refresh data
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error rejecting store'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _approveSeller(Map<String, dynamic> request) async {
-    try {
-      final adminId = ''; // TODO: Get from auth provider
-
-      final result = await _adminService.approveSeller(
-        request['requestId'] ?? request['id'],
-        adminId,
-      );
-
-      if (mounted) {
-        if (result) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${request['userName'] ?? request['name']} approved as seller'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-          _loadDashboardData();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error approving seller'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error approving seller'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectSeller(Map<String, dynamic> request) async {
-    final TextEditingController reasonController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Seller Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Rejecting ${request['userName'] ?? request['name']}\'s seller request'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Reason for rejection (optional)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                final adminId = ''; // TODO: Get from auth provider
-                final result = await _adminService.rejectSeller(
-                  request['requestId'] ?? request['id'],
-                  adminId,
-                  reasonController.text.isNotEmpty
-                      ? reasonController.text
-                      : 'Seller request rejected',
-                );
-
-                if (mounted) {
-                  if (result) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${request['userName'] ?? request['name']} request rejected'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                    Navigator.pop(context);
-                    _loadDashboardData();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Error rejecting seller'),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Error rejecting seller'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Reject'),
-          ),
-        ],
-      ),
-    );
-  }
 }
-

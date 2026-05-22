@@ -88,7 +88,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _showSuccessMessage('Account created successfully!');
         Future.microtask(() {
           if (mounted) {
-            context.go('/customer/home');
+            context.go('/home');
           }
         });
       } else if (next.error != null && next.error!.isNotEmpty && !next.isLoggedIn) {

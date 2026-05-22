@@ -247,7 +247,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        context.go('/customer/home');
+                        context.go('/home');
                       },
                       child: const Text(
                         "Sign In",

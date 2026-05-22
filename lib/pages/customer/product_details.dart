@@ -515,7 +515,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                           );
                         } else {
-                          context.go('/customer/cart');
+                          context.go('/cart');
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -832,7 +832,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          context.go('/customer/home');
+                          context.go('/home');
                         },
                         child: const Text(
                           'View all',

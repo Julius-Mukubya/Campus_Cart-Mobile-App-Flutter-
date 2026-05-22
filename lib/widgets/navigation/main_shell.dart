@@ -3,27 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/widgets/navigation/app_header.dart';
 import 'package:madpractical/widgets/navigation/app_drawer.dart';
 
-/// Shell scaffold for Customer role with bottom navigation + drawer + header.
-/// Used by GoRouter's StatefulShellRoute.
-class CustomerShell extends ConsumerWidget {
+/// Unified shell scaffold for all roles (customer, seller, admin).
+/// Uses ONE bottom navigation bar layout for everyone.
+/// The drawer shows role-specific content.
+/// Each tab renders the appropriate screen based on the user's role.
+class MainShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
-  const CustomerShell({super.key, required this.navigationShell});
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartCount = ref.watch(cartProvider).itemCount;
+    final role = ref.watch(userProvider).role;
 
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       drawer: const AppDrawer(),
       appBar: AppHeader(
-        title: _getTitle(navigationShell.currentIndex),
+        title: _getTitle(navigationShell.currentIndex, role),
         showNotificationBell: true,
-        showCartBadge: false,
+        showCartBadge: true,
         showDarkModeToggle: false,
       ),
       body: navigationShell,
@@ -48,12 +52,12 @@ class CustomerShell extends ConsumerWidget {
             initialLocation: index == navigationShell.currentIndex,
           ),
           items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.home),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home),
               label: 'Home',
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.grid_view),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.grid_view),
               label: 'Categories',
             ),
             BottomNavigationBarItem(
@@ -66,12 +70,12 @@ class CustomerShell extends ConsumerWidget {
                   : const Icon(Icons.shopping_cart),
               label: 'Cart',
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.chat_bubble_outline),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline),
               label: 'Chats',
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
               label: 'Profile',
             ),
           ],
@@ -80,14 +84,20 @@ class CustomerShell extends ConsumerWidget {
     );
   }
 
-  String _getTitle(int index) {
+  String _getTitle(int index, String role) {
     switch (index) {
-      case 0: return 'Home';
-      case 1: return 'Categories';
-      case 2: return 'Cart';
-      case 3: return 'Chats';
-      case 4: return 'Profile';
-      default: return 'Home';
+      case 0:
+        return 'Home';
+      case 1:
+        return 'Categories';
+      case 2:
+        return 'Cart';
+      case 3:
+        return 'Chats';
+      case 4:
+        return 'Profile';
+      default:
+        return 'Home';
     }
   }
 }

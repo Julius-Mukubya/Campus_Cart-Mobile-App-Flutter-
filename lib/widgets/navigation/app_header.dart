@@ -100,7 +100,7 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: GestureDetector(
-            onTap: () => context.push('/customer/cart'),
+            onTap: () => context.push('/cart'),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

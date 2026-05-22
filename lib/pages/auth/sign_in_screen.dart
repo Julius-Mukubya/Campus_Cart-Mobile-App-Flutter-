@@ -71,7 +71,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         _showSuccessMessage('Welcome back!');
         Future.microtask(() {
           if (mounted) {
-            context.go('/customer/home');
+            context.go('/home');
           }
         });
       } else if (next.error != null && next.error!.isNotEmpty && !next.isLoggedIn) {

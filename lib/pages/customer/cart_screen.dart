@@ -391,7 +391,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
           const SizedBox(height: 32),
           ElevatedButton(
-            onPressed: () => context.go('/customer/home'),
+            onPressed: () => context.go('/home'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.white,
