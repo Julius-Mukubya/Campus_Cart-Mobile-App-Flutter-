@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/notifications_list_screen.dart';
@@ -20,12 +21,7 @@ class NotificationIcon extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const NotificationsListScreen(),
-          ),
-        );
+        context.push('/notifications');
       },
       child: Container(
         margin: const EdgeInsets.only(right: 16),

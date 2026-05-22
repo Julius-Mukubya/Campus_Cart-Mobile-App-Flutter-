@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/cart_provider.dart';
-import 'package:madpractical/providers/notification_provider.dart';
 import 'package:madpractical/widgets/navigation/app_header.dart';
 import 'package:madpractical/widgets/navigation/app_drawer.dart';
-import 'package:madpractical/providers/chat_provider.dart';
 
 /// Shell scaffold for Customer role with bottom navigation + drawer + header.
 /// Used by GoRouter's StatefulShellRoute.
@@ -25,7 +23,8 @@ class CustomerShell extends ConsumerWidget {
       appBar: AppHeader(
         title: _getTitle(navigationShell.currentIndex),
         showNotificationBell: true,
-        showCartBadge: true,
+        showCartBadge: false,
+        showDarkModeToggle: false,
       ),
       body: navigationShell,
       bottomNavigationBar: SizedBox(
@@ -83,12 +82,12 @@ class CustomerShell extends ConsumerWidget {
 
   String _getTitle(int index) {
     switch (index) {
-      case 0: return 'Campus Cart';
+      case 0: return 'Home';
       case 1: return 'Categories';
       case 2: return 'Cart';
       case 3: return 'Chats';
       case 4: return 'Profile';
-      default: return 'Campus Cart';
+      default: return 'Home';
     }
   }
 }

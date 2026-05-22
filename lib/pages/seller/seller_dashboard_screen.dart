@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class SellerDashboardScreen extends StatefulWidget {
@@ -227,16 +228,16 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 childAspectRatio: 1.3,
                 children: [
                   _buildQuickAction('My Products', Icons.inventory_2, AppColors.primary, () {
-                    Navigator.pushNamed(context, '/seller/products');
+                    context.go('/seller/products');
                   }),
                   _buildQuickAction('Orders', Icons.receipt_long, AppColors.accent, () {
-                    Navigator.pushNamed(context, '/seller/orders');
+                    context.go('/seller/orders');
                   }),
                   _buildQuickAction('Add Product', Icons.add_box, AppColors.success, () {
-                    Navigator.pushNamed(context, '/seller/add-product');
+                    context.go('/seller/add-product');
                   }),
                   _buildQuickAction('Earnings', Icons.account_balance_wallet, Colors.green, () {
-                    Navigator.pushNamed(context, '/seller/earnings');
+                    context.go('/seller/earnings');
                   }),
                 ],
               ),

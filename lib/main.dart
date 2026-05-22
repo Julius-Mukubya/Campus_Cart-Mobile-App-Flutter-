@@ -13,6 +13,7 @@ import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/router.dart';
 
 void main() async {
@@ -58,10 +59,12 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   final AppSettings _settings = AppSettings();
+  late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
+    _router = buildRouter();
     _settings.addListener(_onSettingsChanged);
     // Defer provider initialization to after the first frame is built,
     // preventing the ProviderScope element from being rebuilt mid-mount.
@@ -257,8 +260,6 @@ class _MyAppState extends ConsumerState<MyApp> {
       ));
     });
 
-    final router = buildRouter();
-
     return MaterialApp.router(
       title: 'Campus Cart',
       debugShowCheckedModeBanner: false,
@@ -274,7 +275,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      routerConfig: router,
+      routerConfig: _router,
       builder: (context, child) {
         // Wrap entire app so all Text widgets inherit the correct color for the theme
         final isDark = _settings.isDark;

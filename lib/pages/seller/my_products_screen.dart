@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class MyProductsScreen extends StatefulWidget {
@@ -606,11 +607,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             // Edit Button
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(
-                  context, 
-                  '/seller/edit-product',
-                  arguments: product,
-                );
+                context.push('/seller/edit-product', extra: product);
               },
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -723,7 +720,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/seller/add-product');
+                              context.go('/seller/add-product');
                             },
                             icon: const Icon(Icons.add),
                             label: const Text('Add Product'),
@@ -753,7 +750,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.pushNamed(context, '/seller/add-product');
+          context.go('/seller/add-product');
         },
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,

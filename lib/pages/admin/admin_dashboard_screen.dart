@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/admin_service.dart';
 
@@ -303,7 +304,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           _showStoreApprovalDialog();
                         }),
                         _buildQuickAction('Manage Sellers', Icons.people, AppColors.success, () {
-                          Navigator.pushNamed(context, '/admin/sellers');
+                          context.go('/admin/sellers');
                         }),
                         _buildQuickAction('Refresh Data', Icons.refresh, Colors.grey, () {
                           setState(() {

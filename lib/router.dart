@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:madpractical/providers/user_provider.dart';
-import 'package:madpractical/services/preferences_service.dart';
 
 // Auth screens
 import 'package:madpractical/pages/auth/sign_in_screen.dart';
 import 'package:madpractical/pages/auth/sign_up_screen.dart';
 import 'package:madpractical/pages/auth/forgot_password_screen.dart';
-import 'package:madpractical/pages/auth/otp_verification_screen.dart';
-import 'package:madpractical/pages/auth/reset_password_screen.dart';
 import 'package:madpractical/pages/auth/access_denied_screen.dart';
 
 // Customer screens
@@ -22,7 +18,6 @@ import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/pages/customer/checkout_screen.dart';
 import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 import 'package:madpractical/pages/customer/store_page.dart';
-import 'package:madpractical/pages/customer/review_product_screen.dart';
 
 // Seller screens
 import 'package:madpractical/pages/seller/seller_dashboard_screen.dart';
@@ -111,7 +106,7 @@ GoRouter buildRouter() {
       if (location == '/splash') return null;
 
       // Allow auth screens when not logged in
-      final authRoutes = ['/signin', '/signup', '/forgot-password', '/otp-verification', '/reset-password'];
+      final authRoutes = ['/signin', '/signup', '/forgot-password'];
       if (!authState.isLoggedIn) {
         if (authRoutes.contains(location) || location == '/access-denied') return null;
         return '/signin';
@@ -142,8 +137,6 @@ GoRouter buildRouter() {
       GoRoute(path: '/signin', builder: (context, state) => SignInScreen()),
       GoRoute(path: '/signup', builder: (context, state) => SignUpScreen()),
       GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
-      GoRoute(path: '/otp-verification', builder: (context, state) => const OtpVerificationScreen()),
-      GoRoute(path: '/reset-password', builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(path: '/access-denied', builder: (context, state) => const AccessDeniedScreen()),
 
       // ── Customer Shell ──────────────────────────────────────────
@@ -277,6 +270,33 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/admin/orders',
         builder: (context, state) => const SellerManagementScreen(),
+      ),
+
+      // ── Chat route ────────────────────────────────────────────────
+      GoRoute(
+        path: '/chat/:chatId',
+        builder: (context, state) {
+          final chatId = state.pathParameters['chatId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          return ChatScreen(
+            chatId: chatId,
+            otherParticipantName: extra?['name']?.toString() ?? 'User',
+            isOrderChat: extra?['isOrderChat'] == true,
+          );
+        },
+      ),
+
+      // ── Store route ───────────────────────────────────────────────
+      GoRoute(
+        path: '/store',
+        builder: (context, state) => const StorePage(),
+      ),
+      GoRoute(
+        path: '/store/:sellerId',
+        builder: (context, state) {
+          final sellerId = state.pathParameters['sellerId'];
+          return StorePage(sellerId: sellerId);
+        },
       ),
     ],
 

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/services/app_settings.dart';
-import 'package:madpractical/pages/customer/my_orders_screen.dart';
-import 'package:madpractical/pages/profile/edit_profile_screen.dart';
-import 'package:madpractical/pages/customer/notifications_screen.dart';
-import 'package:madpractical/pages/profile/privacy_security_screen.dart';
-import 'package:madpractical/pages/profile/become_seller_screen.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
@@ -33,10 +29,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'title': 'My Orders',
         'subtitle': 'Track your orders',
         'color': AppColors.primary,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
-        ),
+        'onTap': () => context.push('/my-orders'),
       },
       {
         'icon': Icons.location_on_outlined,
@@ -64,20 +57,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'title': 'Notifications',
         'subtitle': 'Manage notifications',
         'color': AppColors.primary,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-        ),
+        'onTap': () => context.push('/notifications'),
       },
       {
         'icon': Icons.security_outlined,
         'title': 'Privacy & Security',
         'subtitle': 'Account security settings',
         'color': AppColors.accent,
-        'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PrivacySecurityScreen()),
-        ),
+        'onTap': () => context.push('/privacy-security'),
       },
     ];
 
@@ -133,10 +120,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     'title': 'Become a Seller',
                     'subtitle': 'Start selling your products',
                     'color': Colors.green,
-                    'onTap': () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const BecomeSellersScreen()),
-                    ),
+                    'onTap': () => context.push('/become-seller'),
                   },
                 ]),
                 const SizedBox(height: 20),
@@ -202,6 +186,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'U';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return parts[0][0].toUpperCase();
+    }
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
   Widget _buildProfileHeader(UserState userState) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -240,15 +233,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   )
                 : CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.primary,
                     child: Text(
-                      userState.name.isNotEmpty
-                          ? userState.name[0].toUpperCase()
-                          : 'U',
+                      _getInitials(userState.name),
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -279,12 +270,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EditProfileScreen(),
-                ),
-              );
+              context.push('/edit-profile');
             },
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -501,7 +487,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               },
             ),
           ),
-          Divider(height: 1, color: isDark ? AppColors.darkSecondaryText.withValues(alpha: 0.2) : AppColors.lightGrey),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              height: 0.5,
+              color: isDark
+                  ? AppColors.darkSecondaryText.withValues(alpha: 0.12)
+                  : AppColors.grey.withValues(alpha: 0.12),
+            ),
+          ),
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             leading: Container(
@@ -602,7 +596,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             final item = entry.value;
             return Column(
               children: [
-                if (index > 0) Divider(height: 1, color: Theme.of(context).dividerColor),
+                if (index > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      height: 0.5,
+                      color: AppColors.grey.withValues(alpha: 0.12),
+                    ),
+                  ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   leading: Container(
@@ -665,28 +666,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'title': 'Seller Dashboard',
             'subtitle': 'Sales overview',
             'color': AppColors.primary,
-            'onTap': () => Navigator.pushNamed(context, '/seller/dashboard'),
+            'onTap': () => context.go('/seller/dashboard'),
           },
           {
             'icon': Icons.inventory_2,
             'title': 'My Products',
             'subtitle': 'Manage product list',
             'color': AppColors.accent,
-            'onTap': () => Navigator.pushNamed(context, '/seller/products'),
+            'onTap': () => context.go('/seller/products'),
           },
           {
             'icon': Icons.add_box,
             'title': 'Add Product',
             'subtitle': 'Create a new product',
             'color': AppColors.success,
-            'onTap': () => Navigator.pushNamed(context, '/seller/add-product'),
+            'onTap': () => context.go('/seller/add-product'),
           },
           {
             'icon': Icons.receipt_long,
             'title': 'Seller Orders',
             'subtitle': 'Manage customer orders',
             'color': Colors.blue,
-            'onTap': () => Navigator.pushNamed(context, '/seller/orders'),
+            'onTap': () => context.go('/seller/orders'),
           },
         ];
       case 'admin':
@@ -696,14 +697,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'title': 'Admin Dashboard',
             'subtitle': 'Platform overview',
             'color': AppColors.primary,
-            'onTap': () => Navigator.pushNamed(context, '/admin/dashboard'),
+            'onTap': () => context.go('/admin/dashboard'),
           },
           {
             'icon': Icons.store,
             'title': 'Manage Sellers',
             'subtitle': 'Approve/suspend sellers',
             'color': AppColors.accent,
-            'onTap': () => Navigator.pushNamed(context, '/admin/sellers'),
+            'onTap': () => context.go('/admin/sellers'),
           },
         ];
       default:
@@ -747,11 +748,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               await PreferencesService.clearWishlistItems();
               ref.read(userProvider.notifier).logout();
               if (!context.mounted) return;
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/signin',
-                (route) => false,
-              );
+              context.go('/signin');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

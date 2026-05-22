@@ -24,6 +24,7 @@ class SellerShell extends ConsumerWidget {
         title: _getTitle(navigationShell.currentIndex),
         showNotificationBell: true,
         showCartBadge: false,
+        showDarkModeToggle: false,
       ),
       body: navigationShell,
       bottomNavigationBar: SizedBox(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -11,6 +12,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -18,47 +21,56 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _sendResetLink() {
-    if (_emailController.text.isEmpty) {
+  Future<void> _sendResetEmail() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showError('Please enter your email address');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      _showError('Please enter a valid email address');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await _authService.resetPassword(email: email);
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please enter your email address'),
-          backgroundColor: AppColors.error,
+          content: const Text('Password reset email sent! Check your inbox.'),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
-      return;
+      // Navigate back to sign in after a brief delay
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          context.go('/signin');
+        }
+      });
+    } else {
+      _showError(result['message'] ?? 'Failed to send reset email. Please try again.');
     }
+  }
 
-    if (!_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter a valid email address'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-
-    // Show success message
+  void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('OTP sent! Check your email.'),
-        backgroundColor: AppColors.success,
+        content: Text(message),
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
-
-    // Navigate to OTP verification screen
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        context.push('/otp-verification');
-      }
-    });
   }
 
   @override
@@ -111,7 +123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 8),
 
                 const Text(
-                  "Enter your email and we'll send\nyou a link to reset your password",
+                  "Enter your email and we'll send you\na link to reset your password",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -171,14 +183,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       elevation: 2,
                     ),
-                    onPressed: _sendResetLink,
-                    child: const Text(
-                      "Reset Password",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : _sendResetEmail,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                            ),
+                          )
+                        : const Text(
+                            "Reset Password",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
 

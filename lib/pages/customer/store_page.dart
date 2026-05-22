@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/services/product_service.dart';
@@ -69,7 +70,7 @@ class _StorePageState extends ConsumerState<StorePage> {
         backgroundColor: AppColors.getBackground(context),
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -99,10 +100,12 @@ class _StorePageState extends ConsumerState<StorePage> {
           if (userState.role == 'customer')
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(
-                  context,
+                context.push(
                   '/chat/store_${widget.sellerId ?? 'unknown'}',
-                  arguments: {'name': _storeInfo['name']},
+                  extra: {
+                    'name': _storeInfo['name'],
+                    'isOrderChat': false,
+                  },
                 );
               },
               child: Container(

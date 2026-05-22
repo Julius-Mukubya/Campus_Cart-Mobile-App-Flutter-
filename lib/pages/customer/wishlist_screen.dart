@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
 
@@ -24,8 +24,6 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
     if (mounted) setState(() {});
   }
 
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
   // ────────────────────────────────────────────────────────────────────────────
 
   bool isGridView = true;
@@ -695,7 +693,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
           ),
           const SizedBox(height: 32),
           ElevatedButton(
-            onPressed: () => Navigator.pushNamed(context, '/home'),
+            onPressed: () => context.go('/customer/home'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.white,
@@ -920,13 +918,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                                             width: cardWidth,
                                             child: GestureDetector(
                                               onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        ProductDetailScreen(product: item),
-                                                  ),
-                                                );
+                                                context.push('/product-details', extra: item);
                                               },
                                               child: _buildGridCard(item),
                                             ),
@@ -943,13 +935,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                                     final item = _filteredItems[index];
                                     return GestureDetector(
                                       onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                ProductDetailScreen(product: item),
-                                          ),
-                                        );
+                                        context.push('/product-details', extra: item);
                                       },
                                       child: _buildListCard(item),
                                     );

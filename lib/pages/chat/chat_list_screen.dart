@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/providers/user_provider.dart';
 
 /// Chat list screen showing all conversations for any user.
 class ChatListScreen extends ConsumerStatefulWidget {
@@ -45,11 +45,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     ]);
   }
 
-  String _formatTimestamp(String time) => time;
-
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -188,10 +185,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ],
         ),
         onTap: () {
-          Navigator.pushNamed(
-            context,
+          context.push(
             '/chat/${chat['id']}',
-            arguments: {'name': chat['name']},
+            extra: {
+              'name': chat['name'],
+              'isOrderChat': chat['isOrder'] as bool,
+            },
           );
         },
       ),

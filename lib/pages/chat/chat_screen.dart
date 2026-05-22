@@ -391,12 +391,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             color: confirmed ? AppColors.success : AppColors.grey,
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: confirmed ? AppColors.success : AppColors.grey,
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: confirmed ? AppColors.success : AppColors.grey,
+              ),
             ),
           ),
         ],

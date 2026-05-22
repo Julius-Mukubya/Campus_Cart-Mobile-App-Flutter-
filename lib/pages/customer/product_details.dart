@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/review_service.dart';
 import 'package:madpractical/services/product_service.dart';
@@ -514,7 +515,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                           );
                         } else {
-                          Navigator.pushNamed(context, '/cart');
+                          context.go('/customer/cart');
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -831,7 +832,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/home');
+                          context.go('/customer/home');
                         },
                         child: const Text(
                           'View all',
@@ -853,12 +854,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         final product = _relatedProducts[index];
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProductDetailScreen(product: product),
-                              ),
-                            );
+                            context.push('/product-details', extra: product);
                           },
                           child: Container(
                             width: 160,

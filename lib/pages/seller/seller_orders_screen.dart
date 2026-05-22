@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/seller_service.dart';
 import 'package:madpractical/services/auth_service.dart';
@@ -144,7 +145,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/seller/order-details', arguments: order),
+              onTap: () => context.push('/seller/order-details', extra: order),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),

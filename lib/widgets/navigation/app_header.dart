@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
-import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 import 'package:madpractical/widgets/common/dark_mode_toggle.dart';
 
 /// Material 3–style header bar that adapts to context.
@@ -100,7 +100,7 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/cart'),
+            onTap: () => context.push('/customer/cart'),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -138,14 +138,7 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
     if (showNotificationBell) {
       actionList.add(
         GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const NotificationsListScreen(),
-              ),
-            );
-          },
+          onTap: () => context.push('/notifications'),
           child: Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.all(8),
