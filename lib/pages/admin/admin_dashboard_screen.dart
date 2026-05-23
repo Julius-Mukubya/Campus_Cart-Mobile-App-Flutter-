@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/seller_request_provider.dart';
 import 'package:madpractical/services/admin_service.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
@@ -149,6 +150,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch seller request state changes to refresh dashboard when requests are approved/rejected
+    ref.listen<int>(sellerRequestNotifierProvider.select((requests) => requests.length), (prev, next) {
+      if (prev != null && prev != next) {
+        _loadDashboardData();
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _isLoading
@@ -290,17 +298,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                         _buildQuickAction('Seller Approvals', Icons.how_to_reg, AppColors.primary, () {
                           context.push('/admin/sellers');
                         }),
-                        _buildQuickAction('Manage Sellers', Icons.people, AppColors.success, () {
-                          context.push('/admin/sellers');
+                        _buildQuickAction('Manage Users', Icons.people, AppColors.success, () {
+                          context.push('/admin/users');
                         }),
                         _buildQuickAction('View Orders', Icons.shopping_bag, AppColors.accent, () {
-                          // Navigate to orders view if needed
+                          context.push('/admin/orders');
                         }),
-                        _buildQuickAction('Refresh Data', Icons.refresh, Colors.grey, () {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          _loadDashboardData();
+                        _buildQuickAction('Manage Categories', Icons.category, AppColors.accent, () {
+                          context.push('/admin/categories');
                         }),
                       ],
                     ),

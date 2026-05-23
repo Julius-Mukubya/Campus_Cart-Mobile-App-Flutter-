@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/auth_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -66,8 +68,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final authState = ref.watch(authProvider);
 
     // Handle navigation when auth state changes to logged in
-    ref.listen<AuthState>(authProvider, (previous, next) {
+    ref.listen<AuthState>(authProvider, (previous, AuthState next) {
       if (next.isLoggedIn && (previous == null || !previous.isLoggedIn)) {
+        // Immediately sync user provider so profile shows real user
+        ref.read(userProvider.notifier).updateProfile(
+          userId: next.userId,
+          name: PreferencesService.userName,
+          email: next.email ?? PreferencesService.userEmail,
+          phone: PreferencesService.userPhone,
+          role: next.userRole ?? PreferencesService.userRole,
+          storeId: PreferencesService.storeId,
+          profileImage: PreferencesService.profileImage,
+        );
         _showSuccessMessage('Welcome back!');
         Future.microtask(() {
           if (mounted) {

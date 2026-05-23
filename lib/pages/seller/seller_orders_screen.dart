@@ -1,72 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/seller_service.dart';
-import 'package:madpractical/services/auth_service.dart';
-import 'package:madpractical/widgets/common/notification_icon.dart';
+import 'package:madpractical/providers/seller_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
 
-class SellerOrdersScreen extends StatefulWidget {
+class SellerOrdersScreen extends ConsumerStatefulWidget {
   const SellerOrdersScreen({super.key});
 
   @override
-  State<SellerOrdersScreen> createState() => _SellerOrdersScreenState();
+  ConsumerState<SellerOrdersScreen> createState() => _SellerOrdersScreenState();
 }
 
-class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
-  final SellerService _sellerService = SellerService();
-  final AuthService _authService = AuthService();
-
+class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
   String _searchQuery = '';
   String _selectedStatus = 'All';
-  List<Map<String, dynamic>> _orders = [];
-  bool _isLoading = true;
 
-  final List<String> _statusFilters = ['All', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-  final List<String> _statusLabels = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+  // New order statuses matching the simplified flow
+  final List<String> _statusFilters = ['All', 'pending', 'accepted', 'rejected', 'cancelled', 'completed'];
+  final List<String> _statusLabels = ['All', 'Pending', 'Accepted', 'Rejected', 'Cancelled', 'Completed'];
 
   @override
   void initState() {
     super.initState();
-    _loadOrders();
-  }
-
-  Future<void> _loadOrders() async {
-    setState(() => _isLoading = true);
-    final uid = _authService.currentUser?.uid;
-    if (uid == null) {
-      setState(() => _isLoading = false);
-      return;
-    }
-    final orders = await _sellerService.getSellerOrders(uid);
-    setState(() {
-      _orders = orders;
-      _isLoading = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadOrders();
     });
   }
 
+  Future<void> _loadOrders() async {
+    final uid = ref.read(userProvider).userId;
+    if (uid == null || uid.isEmpty) return;
+    ref.read(sellerProvider.notifier).loadDashboard(uid);
+  }
+
   List<Map<String, dynamic>> get _filteredOrders {
-    var orders = _orders;
+    final orders = ref.watch(sellerProvider).orders;
+    var filtered = orders;
     if (_searchQuery.isNotEmpty) {
-      orders = orders.where((o) =>
+      filtered = filtered.where((o) =>
         (o['orderId'] ?? o['id'] ?? '').toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
         (o['customerName'] ?? o['customer'] ?? '').toString().toLowerCase().contains(_searchQuery.toLowerCase())
       ).toList();
     }
     if (_selectedStatus != 'All') {
-      orders = orders.where((o) =>
+      filtered = filtered.where((o) =>
         (o['status'] ?? '').toString().toLowerCase() == _selectedStatus.toLowerCase()
       ).toList();
     }
-    return orders;
+    return filtered;
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':    return Colors.orange;
-      case 'processing': return AppColors.primary;
-      case 'shipped':    return Colors.blue;
-      case 'delivered':  return AppColors.success;
-      case 'cancelled':  return AppColors.error;
+      case 'accepted':   return AppColors.primary;
+      case 'rejected':   return AppColors.error;
+      case 'cancelled':  return Colors.grey;
+      case 'completed':  return AppColors.success;
       default:           return AppColors.grey;
     }
   }
@@ -92,64 +83,150 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
     final customer = (order['customerName'] ?? order['customer'] ?? 'Customer').toString();
     final total = order['totalAmount'] ?? order['total'] ?? 0;
     final itemCount = (order['items'] as List?)?.length ?? order['itemCount'] ?? 0;
-    final address = (order['deliveryAddress']?['addressLine1'] ?? order['address'] ?? '').toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 50, height: 50,
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('#${orderId.length > 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase()}',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text)),
-                  const SizedBox(height: 2),
-                  Text(customer, style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
-                  if (address.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Row(children: [
-                      const Icon(Icons.location_on, size: 12, color: AppColors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(child: Text(address, style: TextStyle(fontSize: 10, color: AppColors.secondaryText), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                    ]),
-                  ],
-                  const SizedBox(height: 6),
-                  Text('UGX $total', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
-                  const SizedBox(height: 6),
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(color: _getStatusColor(status).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Text(_formatStatus(status), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _getStatusColor(status))),
+            // Header row with status badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '#${orderId.length > 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase()}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        customer,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _formatStatus(status),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _getStatusColor(status),
                     ),
-                    const SizedBox(width: 8),
-                    Text('$itemCount items • ${_formatDate(order['createdAt'])}',
-                        style: TextStyle(fontSize: 10, color: AppColors.secondaryText)),
-                  ]),
-                ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Order info row
+            Row(
+              children: [
+                Icon(Icons.inventory_2, size: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
+                const SizedBox(width: 6),
+                Text(
+                  '$itemCount items',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.calendar_today, size: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
+                const SizedBox(width: 6),
+                Text(
+                  _formatDate(order['createdAt']),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+              ],
+            ),
+
+            // Total amount
+            const SizedBox(height: 6),
+            Text(
+              'UGX ${total.toString()}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
               ),
             ),
-            GestureDetector(
-              onTap: () => context.push('/seller/order-details', extra: order),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.visibility_outlined, color: AppColors.primary, size: 18),
+
+            // Rejection reason
+            if (status == 'rejected' && order['rejectionReason'] != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 14, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        order['rejectionReason'],
+                        style: const TextStyle(fontSize: 12, color: AppColors.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 12),
+
+            // View button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/seller/order-details', extra: order),
+                icon: const Icon(Icons.visibility, size: 16),
+                label: const Text('View Details'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
               ),
             ),
           ],
@@ -160,87 +237,138 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sellerState = ref.watch(sellerProvider);
+    final isLoading = sellerState.isLoading;
+    final filteredOrders = _filteredOrders;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))]),
-              child: TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Search orders...',
-                  hintStyle: const TextStyle(color: AppColors.grey),
-                  prefixIcon: const Icon(Icons.search, color: AppColors.grey),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(icon: const Icon(Icons.clear, color: AppColors.grey), onPressed: () => setState(() => _searchQuery = ''))
-                      : null,
+      backgroundColor: AppColors.getBackground(context),
+      appBar: AppBar(
+        title: const Text('Seller Orders'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.getSurface(context),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: 'Search orders by ID or customer...',
+                    hintStyle: const TextStyle(color: AppColors.grey, fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.grey, size: 20),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: AppColors.grey, size: 18),
+                            onPressed: () => setState(() => _searchQuery = ''),
+                          )
+                        : null,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _statusFilters.length,
-              itemBuilder: (context, i) {
-                final isSelected = _selectedStatus == _statusFilters[i];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedStatus = _statusFilters[i]),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.white,
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.lightGrey),
+
+            // Status Filter Chips
+            SizedBox(
+              height: 60,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: List.generate(_statusFilters.length, (i) {
+                  final isSelected = _selectedStatus == _statusFilters[i];
+                  return Container(
+                    margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+                    child: FilterChip(
+                      label: Text(_statusLabels[i]),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() => _selectedStatus = _statusFilters[i]);
+                      },
+                      backgroundColor: AppColors.getSurface(context),
+                      selectedColor: AppColors.primary.withValues(alpha: 0.1),
+                      labelStyle: TextStyle(
+                        color: isSelected ? AppColors.primary : Theme.of(context).textTheme.bodyLarge?.color,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 13,
                       ),
-                      child: Text(_statusLabels[i],
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                              color: isSelected ? AppColors.white : AppColors.text)),
+                      side: BorderSide(
+                        color: isSelected ? AppColors.primary : AppColors.lightGrey,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                }),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColors.primary)))
-                : _filteredOrders.isEmpty
-                    ? Center(
-                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          const Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.grey),
-                          const SizedBox(height: 16),
-                          Text(_selectedStatus == 'All' ? 'No orders yet' : 'No $_selectedStatus orders',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text)),
-                          const SizedBox(height: 8),
-                          const Text('Orders will appear here when customers place them',
-                              style: TextStyle(fontSize: 14, color: AppColors.secondaryText), textAlign: TextAlign.center),
-                        ]),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadOrders,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredOrders.length,
-                          itemBuilder: (context, i) => _buildOrderCard(_filteredOrders[i]),
-                        ),
+
+            // Orders List
+            Expanded(
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                       ),
-          ),
-        ],
+                    )
+                  : filteredOrders.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 64,
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _selectedStatus == 'All' ? 'No orders yet' : 'No $_selectedStatus orders',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Orders will appear here when customers place them',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadOrders,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredOrders.length,
+                            itemBuilder: (context, i) => _buildOrderCard(filteredOrders[i]),
+                          ),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-

@@ -520,17 +520,26 @@ class SellerService {
   /// Get seller's orders
   Future<List<Map<String, dynamic>>> getSellerOrders(String sellerId) async {
     try {
+      // Fetch all orders sorted by creation date, then filter by sellerId in items array
+      // (sellerId is nested inside the items array, not a top-level field)
       QuerySnapshot snapshot = await _firestore
           .collection('orders')
-          .where('sellerId', isEqualTo: sellerId)
           .orderBy('createdAt', descending: true)
           .get();
 
-      return snapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        data['orderId'] = doc.id;
-        return data;
-      }).toList();
+      return snapshot.docs
+          .where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final items = data['items'] as List<dynamic>? ?? [];
+            return items.any((item) =>
+                (item is Map<String, dynamic>) && item['sellerId'] == sellerId);
+          })
+          .map((doc) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            data['orderId'] = doc.id;
+            return data;
+          })
+          .toList();
     } catch (e) {
       AppLogger.error('Error fetching seller orders', error: e);
       return [];
@@ -574,16 +583,27 @@ class SellerService {
   /// Get seller earnings summary and payout history
   Future<Map<String, dynamic>> getSellerEarnings(String sellerId) async {
     try {
+      // Fetch all orders, then filter by sellerId in items array
       final ordersSnap = await _firestore
           .collection('orders')
-          .where('sellerId', isEqualTo: sellerId)
           .get();
-
+      
+      // Filter orders that contain this seller's items
+      final orderDocs = ordersSnap.docs.where((doc) {
+        final data = doc.data();
+        final items = data['items'] as List<dynamic>? ?? [];
+        return items.any((item) =>
+            (item is Map<String, dynamic>) && item['sellerId'] == sellerId);
+      });
+      
+      // Now use the filtered list instead of ordersSnap.docs
+      final filteredOrders = orderDocs.toList();
+      
       double totalEarnings = 0;
       double availableBalance = 0;
       final List<Map<String, dynamic>> recentOrders = [];
 
-      for (final doc in ordersSnap.docs) {
+      for (final doc in filteredOrders) {
         final data = doc.data();
         final status = (data['status'] ?? '').toString().toLowerCase();
         final amount = (data['totalAmount'] ?? data['total'] ?? 0).toDouble();
@@ -591,7 +611,39 @@ class SellerService {
         if (status == 'delivered') availableBalance += amount;
         recentOrders.add({...data, 'orderId': doc.id});
       }
+      
+      // Use a setter instead of redeclaring
+      final ordersCount = filteredOrders.length;
+      
+      /// Inline the rest and use ordersCount
+      return _buildEarningsResponse(
+        sellerId: sellerId,
+        totalEarnings: totalEarnings,
+        availableBalance: availableBalance,
+        recentOrders: recentOrders,
+        ordersCount: ordersCount,
+      );
+    } catch (e) {
+      AppLogger.error('Error fetching seller earnings', error: e);
+      return {
+        'totalEarnings': 0.0,
+        'totalPayouts': 0.0,
+        'availableBalance': 0.0,
+        'payouts': <Map<String, dynamic>>[],
+        'orderCount': 0,
+      };
+    }
+  }
 
+  /// Helper to build earnings response (fetches payouts from Firestore)
+  Future<Map<String, dynamic>> _buildEarningsResponse({
+    required String sellerId,
+    required double totalEarnings,
+    required double availableBalance,
+    required List<Map<String, dynamic>> recentOrders,
+    required int ordersCount,
+  }) async {
+    try {
       final payoutsSnap = await _firestore
           .collection('payouts')
           .where('sellerId', isEqualTo: sellerId)
@@ -610,16 +662,16 @@ class SellerService {
         'totalPayouts': totalPayouts,
         'availableBalance': availableBalance - totalPayouts,
         'payouts': payouts,
-        'orderCount': ordersSnap.docs.length,
+        'orderCount': ordersCount,
       };
     } catch (e) {
       AppLogger.error('Error fetching seller earnings', error: e);
       return {
-        'totalEarnings': 0.0,
+        'totalEarnings': totalEarnings,
         'totalPayouts': 0.0,
-        'availableBalance': 0.0,
+        'availableBalance': availableBalance,
         'payouts': <Map<String, dynamic>>[],
-        'orderCount': 0,
+        'orderCount': ordersCount,
       };
     }
   }

@@ -199,6 +199,10 @@ class _ManageSellersScreenState extends ConsumerState<ManageSellersScreen> {
     if (mounted) {
       _showSnackBar(result['message'] as String? ?? 'Request processed', isError: !(result['success'] as bool));
     }
+    // Pop back to dashboard so it can refresh
+    if (mounted && result['success'] == true) {
+      context.pop();
+    }
   }
 
   void _showRejectDialog(SellerRequestModel request) {
@@ -240,9 +244,13 @@ class _ManageSellersScreenState extends ConsumerState<ManageSellersScreen> {
                 _showSnackBar('You must be logged in as admin', isError: true);
                 return;
               }
-              final result = await ref.read(sellerRequestNotifierProvider.notifier).rejectSeller(request.id, adminId, reason);
+      final result = await ref.read(sellerRequestNotifierProvider.notifier).rejectSeller(request.id, adminId, reason);
               if (mounted) {
                 _showSnackBar(result['message'] as String? ?? 'Request processed', isError: !(result['success'] as bool));
+              }
+              // Pop back to dashboard so it can refresh
+              if (mounted && result['success'] == true) {
+                context.pop();
               }
             },
             child: const Text('Reject'),

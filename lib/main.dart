@@ -10,6 +10,7 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/providers/auth_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
@@ -258,6 +259,22 @@ class _MyAppState extends ConsumerState<MyApp> {
         isLoggedIn: next.userId != null && next.userId!.isNotEmpty,
         role: next.role,
       ));
+    });
+
+    // Sync auth provider changes to user provider (fix guest user after login)
+    ref.listen<AuthState>(authProvider, (AuthState? prev, AuthState next) {
+      final justLoggedIn = next.isLoggedIn && !(prev?.isLoggedIn ?? false);
+      if (justLoggedIn) {
+        ref.read(userProvider.notifier).updateProfile(
+          userId: next.userId,
+          email: next.email ?? PreferencesService.userEmail,
+          name: PreferencesService.userName,
+          phone: PreferencesService.userPhone,
+          role: next.userRole ?? PreferencesService.userRole,
+          storeId: PreferencesService.storeId,
+          profileImage: PreferencesService.profileImage,
+        );
+      }
     });
 
     return MaterialApp.router(

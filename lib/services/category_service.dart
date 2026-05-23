@@ -1,29 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:madpractical/utils/app_logger.dart';
+import 'package:madpractical/repositories/category_repository.dart';
 
 class CategoryService extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CategoryRepository _repository;
 
   List<Map<String, dynamic>> _categories = [];
 
   List<Map<String, dynamic>> get categories => _categories;
 
+  CategoryService({CategoryRepository? repository})
+      : _repository = repository ?? CategoryRepository();
+
   // Fetch all categories from Firestore
   Future<List<Map<String, dynamic>>> fetchCategories() async {
     try {
-      final snapshot = await _firestore
-          .collection('categories')
-          .orderBy('order')
-          .get();
-
-      _categories = snapshot.docs
-          .map((doc) => {
-                ...doc.data(),
-                'id': doc.id,
-              })
-          .toList();
-
+      _categories = await _repository.getCategories();
       notifyListeners();
       return _categories;
     } catch (e) {
@@ -35,16 +27,7 @@ class CategoryService extends ChangeNotifier {
   // Get a single category by ID
   Future<Map<String, dynamic>?> getCategoryById(String categoryId) async {
     try {
-      final doc =
-          await _firestore.collection('categories').doc(categoryId).get();
-
-      if (doc.exists) {
-        return {
-          ...doc.data() as Map<String, dynamic>,
-          'id': doc.id,
-        };
-      }
-      return null;
+      return await _repository.getCategoryById(categoryId);
     } catch (e) {
       AppLogger.error('Error fetching category: $e', error: e);
       return null;
@@ -54,18 +37,11 @@ class CategoryService extends ChangeNotifier {
   // Get a single category by name
   Future<Map<String, dynamic>?> getCategoryByName(String name) async {
     try {
-      final snapshot = await _firestore
-          .collection('categories')
-          .where('name', isEqualTo: name)
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        final doc = snapshot.docs.first;
-        return {
-          ...doc.data(),
-          'id': doc.id,
-        };
+      final categories = await _repository.getCategories();
+      for (final cat in categories) {
+        if ((cat['name'] ?? '').toString().toLowerCase() == name.toLowerCase()) {
+          return cat;
+        }
       }
       return null;
     } catch (e) {
@@ -80,22 +56,23 @@ class CategoryService extends ChangeNotifier {
     required String description,
     required String icon,
     required int order,
+    String? image,
   }) async {
     try {
-      final docRef = await _firestore.collection('categories').add({
+      final docId = await _repository.addCategory({
         'name': name,
         'description': description,
         'icon': icon,
+        'image': image ?? '',
         'order': order,
+        'displayOrder': order,
         'isActive': true,
         'productCount': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       AppLogger.info('Category added successfully: $name');
       await fetchCategories(); // Refresh the list
-      return docRef.id;
+      return docId;
     } catch (e) {
       AppLogger.error('Error adding category: $e', error: e);
       return null;
@@ -110,19 +87,21 @@ class CategoryService extends ChangeNotifier {
     String? icon,
     int? order,
     bool? isActive,
+    String? image,
   }) async {
     try {
-      final data = <String, dynamic>{};
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (description != null) updates['description'] = description;
+      if (icon != null) updates['icon'] = icon;
+      if (image != null) updates['image'] = image;
+      if (order != null) {
+        updates['order'] = order;
+        updates['displayOrder'] = order;
+      }
+      if (isActive != null) updates['isActive'] = isActive;
 
-      if (name != null) data['name'] = name;
-      if (description != null) data['description'] = description;
-      if (icon != null) data['icon'] = icon;
-      if (order != null) data['order'] = order;
-      if (isActive != null) data['isActive'] = isActive;
-
-      data['updatedAt'] = FieldValue.serverTimestamp();
-
-      await _firestore.collection('categories').doc(categoryId).update(data);
+      await _repository.updateCategory(categoryId, updates);
 
       AppLogger.info('Category updated successfully: $categoryId');
       await fetchCategories(); // Refresh the list
@@ -134,7 +113,7 @@ class CategoryService extends ChangeNotifier {
   // Delete a category
   Future<void> deleteCategory(String categoryId) async {
     try {
-      await _firestore.collection('categories').doc(categoryId).delete();
+      await _repository.deleteCategory(categoryId);
 
       AppLogger.info('Category deleted successfully: $categoryId');
       await fetchCategories(); // Refresh the list
@@ -147,10 +126,8 @@ class CategoryService extends ChangeNotifier {
   Future<void> addSampleCategories() async {
     try {
       // Check if categories already exist
-      final existing =
-          await _firestore.collection('categories').limit(1).get();
-
-      if (existing.docs.isNotEmpty) {
+      final existing = await _repository.getCategories();
+      if (existing.isNotEmpty) {
         AppLogger.info('Categories already exist. Skipping sample data.');
         return;
       }
@@ -161,75 +138,68 @@ class CategoryService extends ChangeNotifier {
           'description': 'Electronic devices and accessories',
           'icon': 'devices',
           'order': 1,
+          'displayOrder': 1,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Fashion',
           'description': 'Clothing, shoes, and accessories',
           'icon': 'checkroom',
           'order': 2,
+          'displayOrder': 2,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Books',
           'description': 'Textbooks and study materials',
           'icon': 'menu_book',
           'order': 3,
+          'displayOrder': 3,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Food & Beverages',
           'description': 'Snacks, drinks, and meals',
           'icon': 'restaurant',
           'order': 4,
+          'displayOrder': 4,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Stationery',
           'description': 'Pens, notebooks, and office supplies',
           'icon': 'edit',
           'order': 5,
+          'displayOrder': 5,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Sports',
           'description': 'Sports equipment and activewear',
           'icon': 'sports_soccer',
           'order': 6,
+          'displayOrder': 6,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
         {
           'name': 'Home & Garden',
           'description': 'Home decor and gardening supplies',
           'icon': 'home',
           'order': 7,
+          'displayOrder': 7,
           'isActive': true,
           'productCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
         },
       ];
 
       for (var category in sampleCategories) {
-        await _firestore.collection('categories').add(category);
+        await _repository.addCategory(category);
       }
 
       AppLogger.info('Sample categories added successfully!');

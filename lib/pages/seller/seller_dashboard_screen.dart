@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/seller_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
 
-class SellerDashboardScreen extends StatefulWidget {
+class SellerDashboardScreen extends ConsumerStatefulWidget {
   const SellerDashboardScreen({super.key});
 
   @override
-  State<SellerDashboardScreen> createState() => _SellerDashboardScreenState();
+  ConsumerState<SellerDashboardScreen> createState() => _SellerDashboardScreenState();
 }
 
-class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
+class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDashboard();
+    });
+  }
+
+  Future<void> _loadDashboard() async {
+    final uid = ref.read(userProvider).userId;
+    if (uid == null || uid.isEmpty) return;
+    ref.read(sellerProvider.notifier).loadDashboard(uid);
+  }
+
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -115,138 +132,192 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sellerState = ref.watch(sellerProvider);
+    final isLoading = sellerState.isLoading;
+    final totalOrders = sellerState.totalOrders;
+    final totalProducts = sellerState.products.length;
+    final rating = sellerState.rating;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.1),
-                      AppColors.secondary.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    // Welcome Section
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.secondary.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            'Welcome back!',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome back!',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Manage your store and track your sales',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Manage your store and track your sales',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.secondaryText,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Chat icon button
+                              GestureDetector(
+                                onTap: () => context.push('/chat-list'),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                child: Icon(
+                                  Icons.chat_bubble_outline,
+                                  color: AppColors.secondary,
+                                  size: 22,
+                                ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(
+                                  Icons.store,
+                                  color: AppColors.primary,
+                                  size: 32,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.store,
-                        color: AppColors.primary,
-                        size: 32,
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Summary Cards
+                    Text(
+                      'Overview',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.0,
+                      children: [
+                        _buildSummaryCard(
+                          'Orders',
+                          totalOrders.toString(),
+                          Icons.shopping_bag,
+                          AppColors.primary,
+                        ),
+                        _buildSummaryCard(
+                          'Products',
+                          totalProducts.toString(),
+                          Icons.inventory,
+                          AppColors.accent,
+                        ),
+                        _buildSummaryCard(
+                          'Rating',
+                          rating > 0 ? rating.toStringAsFixed(1) : 'N/A',
+                          Icons.star,
+                          Colors.amber,
+                        ),
+                        _buildSummaryCard(
+                          'Chats',
+                          '0',
+                          Icons.chat_bubble_outline,
+                          AppColors.secondary,
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Quick Actions
+                    Text(
+                      'Quick Actions',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.3,
+                      children: [
+                        _buildQuickAction('My Products', Icons.inventory_2, AppColors.primary, () {
+                          context.push('/seller/products');
+                        }),
+                        _buildQuickAction('Orders', Icons.receipt_long, AppColors.accent, () {
+                          context.push('/seller/orders');
+                        }),
+                        _buildQuickAction('Add Product', Icons.add_box, AppColors.success, () {
+                          context.push('/seller/add-product');
+                        }),
+                        _buildQuickAction('Chats', Icons.chat, AppColors.secondary, () {
+                          context.push('/chat-list');
+                        }),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
-              
-              const SizedBox(height: 24),
-              
-              // Summary Cards
-              Text(
-                'Overview',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.0,
-                children: [
-                  _buildSummaryCard('Total Sales', 'UGX 2.5M', Icons.trending_up, AppColors.success),
-                  _buildSummaryCard('Orders', '156', Icons.shopping_bag, AppColors.primary),
-                  _buildSummaryCard('Products', '24', Icons.inventory, AppColors.accent),
-                  _buildSummaryCard('Rating', '4.8', Icons.star, Colors.amber),
-                ],
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Quick Actions
-              Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.3,
-                children: [
-                  _buildQuickAction('My Products', Icons.inventory_2, AppColors.primary, () {
-                    context.push('/seller/products');
-                  }),
-                  _buildQuickAction('Orders', Icons.receipt_long, AppColors.accent, () {
-                    context.push('/seller/orders');
-                  }),
-                  _buildQuickAction('Add Product', Icons.add_box, AppColors.success, () {
-                    context.push('/seller/add-product');
-                  }),
-                  _buildQuickAction('Earnings', Icons.account_balance_wallet, Colors.green, () {
-                    // Earnings not available yet
-                  }),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

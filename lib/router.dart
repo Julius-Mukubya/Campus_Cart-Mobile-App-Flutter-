@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:madpractical/constants/app_colors.dart';
 
 // Auth screens
 import 'package:madpractical/pages/auth/sign_in_screen.dart';
@@ -30,7 +31,10 @@ import 'package:madpractical/pages/seller/seller_order_details_screen.dart' as s
 // Admin screens
 import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
 import 'package:madpractical/pages/admin/manage_sellers_screen.dart';
-import 'package:madpractical/pages/admin/seller_management_screen.dart';
+import 'package:madpractical/pages/admin/manage_users_screen.dart';
+import 'package:madpractical/pages/admin/admin_orders_screen.dart';
+import 'package:madpractical/pages/admin/manage_categories_screen.dart';
+import 'package:madpractical/pages/admin/add_category_screen.dart';
 
 
 // Profile screens
@@ -38,6 +42,8 @@ import 'package:madpractical/pages/profile/profile_screen.dart';
 import 'package:madpractical/pages/profile/edit_profile_screen.dart';
 import 'package:madpractical/pages/profile/privacy_security_screen.dart';
 import 'package:madpractical/pages/profile/become_seller_screen.dart';
+import 'package:madpractical/pages/profile/faq_screen.dart';
+import 'package:madpractical/pages/profile/contact_us_screen.dart';
 
 // Chat screens
 import 'package:madpractical/pages/chat/chat_list_screen.dart';
@@ -258,11 +264,51 @@ GoRouter buildRouter() {
       ),
       GoRoute(
         path: '/admin/users',
-        builder: (context, state) => const ManageSellersScreen(),
+        builder: (context, state) => const ManageUsersScreen(),
       ),
       GoRoute(
         path: '/admin/orders',
-        builder: (context, state) => const SellerManagementScreen(),
+        builder: (context, state) => const AdminOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/categories',
+        builder: (context, state) => const ManageCategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/categories/edit',
+        builder: (context, state) {
+          final category = state.extra as Map<String, dynamic>?;
+          return AddCategoryScreen(category: category);
+        },
+      ),
+
+      // ── FAQ & Contact Us ──────────────────────────────────────────
+      GoRoute(
+        path: '/faq',
+        builder: (context, state) => const FaqScreen(),
+      ),
+      GoRoute(
+        path: '/contact-us',
+        builder: (context, state) => const ContactUsScreen(),
+      ),
+
+      // ── Chat list route (standalone with back button) ─────────────
+      GoRoute(
+        path: '/chat-list',
+        builder: (context, state) => Scaffold(
+          backgroundColor: AppColors.getBackground(context),
+          appBar: AppBar(
+            title: const Text('Chats'),
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.text,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
+              onPressed: () => context.pop(),
+            ),
+          ),
+          body: const ChatListScreen(),
+        ),
       ),
 
       // ── Chat route ────────────────────────────────────────────────

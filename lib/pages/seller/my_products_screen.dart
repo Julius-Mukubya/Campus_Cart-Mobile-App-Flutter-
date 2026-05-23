@@ -631,7 +631,17 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
+      appBar: AppBar(
+        title: const Text('My Products'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [

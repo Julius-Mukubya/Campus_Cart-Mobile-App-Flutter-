@@ -70,4 +70,52 @@ class CategoryRepository {
       throw RepositoryException('Unexpected error: $e');
     }
   }
+
+  /// Add a new category
+  Future<String> addCategory(Map<String, dynamic> categoryData) async {
+    try {
+      final docRef = await _firestore.collection('categories').add({
+        ...categoryData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.info('Category added: ${docRef.id}');
+      return docRef.id;
+    } on FirebaseException catch (e) {
+      AppLogger.error('Failed to add category', error: e);
+      throw RepositoryException('Failed to add category: ${e.message}');
+    } catch (e) {
+      AppLogger.error('Unexpected error adding category', error: e);
+      throw RepositoryException('Unexpected error: $e');
+    }
+  }
+
+  /// Update an existing category
+  Future<void> updateCategory(String categoryId, Map<String, dynamic> updates) async {
+    try {
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+      await _firestore.collection('categories').doc(categoryId).update(updates);
+      AppLogger.info('Category updated: $categoryId');
+    } on FirebaseException catch (e) {
+      AppLogger.error('Failed to update category', error: e);
+      throw RepositoryException('Failed to update category: ${e.message}');
+    } catch (e) {
+      AppLogger.error('Unexpected error updating category', error: e);
+      throw RepositoryException('Unexpected error: $e');
+    }
+  }
+
+  /// Delete a category
+  Future<void> deleteCategory(String categoryId) async {
+    try {
+      await _firestore.collection('categories').doc(categoryId).delete();
+      AppLogger.info('Category deleted: $categoryId');
+    } on FirebaseException catch (e) {
+      AppLogger.error('Failed to delete category', error: e);
+      throw RepositoryException('Failed to delete category: ${e.message}');
+    } catch (e) {
+      AppLogger.error('Unexpected error deleting category', error: e);
+      throw RepositoryException('Unexpected error: $e');
+    }
+  }
 }

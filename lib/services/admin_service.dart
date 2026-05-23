@@ -45,12 +45,12 @@ class AdminService {
   // ======================================================================
 
   // Get all pending seller approval requests
+  // Uses simple query without orderBy to avoid needing a composite index
   Future<List<Map<String, dynamic>>> getPendingSellerRequests() async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection('sellerRequests')
           .where('status', isEqualTo: 'pending')
-          .orderBy('createdAt', descending: true)
           .get();
 
       final results = snapshot.docs.map((doc) {
@@ -67,11 +67,11 @@ class AdminService {
   }
 
   // Get all seller approval requests (for admin dashboard)
+  // Uses no orderBy to avoid needing a composite index
   Future<List<Map<String, dynamic>>> getAllSellerRequests() async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection('seller_approval_requests')
-          .orderBy('requestedAt', descending: true)
           .get();
 
       return snapshot.docs.map((doc) {
@@ -367,33 +367,32 @@ class AdminService {
       QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
       int totalUsers = usersSnapshot.docs.length;
 
+      // Fetch all users, filter active sellers in Dart to avoid composite index
       QuerySnapshot sellersSnapshot = await _firestore
           .collection('users')
           .where('role', isEqualTo: 'seller')
-          .where('isActive', isEqualTo: true)
           .get();
-      int activeSellers = sellersSnapshot.docs.length;
-
+      final int activeSellersCount = sellersSnapshot.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>?;
+        final isActive = data?['isActive'];
+        return isActive == true || isActive == null;
+      }).length;
+      
+      // Use sellerRequests collection for pending count instead of seller_approval_requests
       QuerySnapshot pendingSellerSnapshot = await _firestore
-          .collection('seller_approval_requests')
+          .collection('sellerRequests')
           .where('status', isEqualTo: 'pending')
           .get();
-      int pendingSellerRequests = pendingSellerSnapshot.docs.length;
-
-      QuerySnapshot pendingStoreSnapshot = await _firestore
-          .collection('store_approval_requests')
-          .where('status', isEqualTo: 'pending')
-          .get();
-      int pendingStoreRequests = pendingStoreSnapshot.docs.length;
+      final pendingSellerRequests = pendingSellerSnapshot.docs.length;
 
       QuerySnapshot ordersSnapshot = await _firestore.collection('orders').get();
       int totalOrders = ordersSnapshot.docs.length;
 
       return {
         'totalUsers': totalUsers,
-        'activeSellers': activeSellers,
+        'activeSellers': activeSellersCount,
         'pendingSellerRequests': pendingSellerRequests,
-        'pendingStoreRequests': pendingStoreRequests,
+        'pendingStoreRequests': 0, // store approval not needed for current flow
         'totalOrders': totalOrders,
       };
     } catch (e) {

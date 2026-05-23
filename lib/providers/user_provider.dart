@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/services/preferences_service.dart';
 
 /// User state model - represents user data
 class UserState {
@@ -14,12 +15,11 @@ class UserState {
 
   const UserState({
     this.userId,
-    this.name = 'John Doe',
-    this.email = 'johndoe@example.com',
-    this.phone = '+256 700 123 456',
-    this.profileImage =
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-    this.isPremium = true,
+    this.name = 'Guest User',
+    this.email = 'guest@example.com',
+    this.phone = '',
+    this.profileImage = '',
+    this.isPremium = false,
     this.role = 'customer',
     this.storeId,
     this.showContactInfo = true,
@@ -52,7 +52,31 @@ class UserState {
 
 /// UserNotifier - handles user state updates
 class UserNotifier extends StateNotifier<UserState> {
-  UserNotifier() : super(const UserState());
+  UserNotifier() : super(const UserState()) {
+    // Load from SharedPreferences if user is logged in
+    _loadFromPrefs();
+  }
+
+  void _loadFromPrefs() {
+    try {
+      final userId = PreferencesService.userId;
+      if (userId != null && userId.isNotEmpty) {
+        state = UserState(
+          userId: userId,
+          name: PreferencesService.userName,
+          email: PreferencesService.userEmail,
+          phone: PreferencesService.userPhone,
+          profileImage: PreferencesService.profileImage,
+          role: PreferencesService.userRole,
+          storeId: PreferencesService.storeId,
+          isPremium: false,
+          showContactInfo: true,
+        );
+      }
+    } catch (_) {
+      // PreferencesService not initialized yet, use defaults
+    }
+  }
 
   void updateProfile({
     String? userId,

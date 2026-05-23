@@ -93,13 +93,18 @@ class AppDrawer extends ConsumerWidget {
                 ),
               ],
             ),
-            child: CircleAvatar(
-              radius: 32,
-              backgroundColor: AppColors.white.withValues(alpha: 0.25),
-              backgroundImage: _resolveAvatarImage(userState),
-              onBackgroundImageError: (_, __) {},
-              child: _buildAvatarFallback(userState),
-            ),
+            child: _resolveAvatarImage(userState) != null
+                ? CircleAvatar(
+                    radius: 32,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.25),
+                    backgroundImage: _resolveAvatarImage(userState),
+                    onBackgroundImageError: (_, __) {},
+                  )
+                : CircleAvatar(
+                    radius: 32,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.25),
+                    child: _buildAvatarFallback(userState),
+                  ),
           ),
           const SizedBox(height: 14),
 

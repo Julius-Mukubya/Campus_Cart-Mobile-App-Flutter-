@@ -6,8 +6,6 @@ import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/providers/user_provider.dart';
-import 'package:madpractical/providers/cart_provider.dart';
-import 'package:madpractical/providers/wishlist_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -20,8 +18,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
-    final cartState = ref.watch(cartProvider);
-    final wishlistState = ref.watch(wishlistProvider);
 
     final accountItems = [
       {
@@ -56,18 +52,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'title': 'FAQ',
         'subtitle': 'Frequently asked questions',
         'color': AppColors.success,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('FAQ not available in this version')),
-        ),
+        'onTap': () => context.push('/faq'),
       },
       {
         'icon': Icons.contact_support_outlined,
         'title': 'Contact Us',
         'subtitle': 'Get in touch with support',
         'color': Colors.blue,
-        'onTap': () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact us feature not available in this version')),
-        ),
+        'onTap': () => context.push('/contact-us'),
       },
     ];
 
@@ -82,12 +74,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               // Profile Header
               _buildProfileHeader(userState),
 
-              const SizedBox(height: 24),
-
-              // Stats Row
-              _buildStatsRow(userState, cartState, wishlistState),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Account Section
               _buildMenuSection('Account', accountItems),
@@ -168,16 +155,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  String _getInitials(String name) {
-    if (name.isEmpty) return 'U';
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.length == 1) {
-      return parts[0][0].toUpperCase();
-    }
-    return (parts.first[0] + parts.last[0]).toUpperCase();
-  }
-
   Widget _buildProfileHeader(UserState userState) {
+    final hasValidImage = userState.profileImage.isNotEmpty &&
+        userState.profileImage.startsWith('http');
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -191,244 +171,91 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.getSurface(context),
-              borderRadius: BorderRadius.circular(50),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+          // Avatar
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.getSurface(context),
+                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: userState.profileImage.isNotEmpty &&
-                    userState.profileImage.startsWith('http')
-                ? CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(userState.profileImage),
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  )
-                : CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      _getInitials(userState.name),
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
+                child: hasValidImage
+                    ? CircleAvatar(
+                        radius: 45,
+                        backgroundImage: NetworkImage(userState.profileImage),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      )
+                    : CircleAvatar(
+                        radius: 45,
+                        backgroundColor: AppColors.primary,
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: AppColors.white,
+                        ),
                       ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => context.push('/edit-profile'),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: AppColors.white,
+                      size: 16,
                     ),
                   ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  userState.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  userState.email,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.secondaryText,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          GestureDetector(
-            onTap: () {
-              context.push('/edit-profile');
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.getSurface(context),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.edit,
-                color: AppColors.primary,
-                size: 20,
-              ),
+          const SizedBox(height: 16),
+          // Name
+          Text(
+            userState.name,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          // Email
+          Text(
+            userState.email,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.secondaryText,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatsRow(UserState userState, CartState cartState, WishlistState wishlistState) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.getSurface(context),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.shopping_bag,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${cartState.items.length}',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                Text(
-                  'Cart',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.getSurface(context),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.favorite,
-                    color: AppColors.accent,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${wishlistState.items.length}',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                Text(
-                  'Wishlist',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.getSurface(context),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.star,
-                    color: AppColors.success,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '4.8',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                Text(
-                  'Rating',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 

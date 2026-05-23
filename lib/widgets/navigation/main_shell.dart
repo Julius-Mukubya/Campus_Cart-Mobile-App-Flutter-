@@ -27,7 +27,7 @@ class MainShell extends ConsumerWidget {
       appBar: AppHeader(
         title: _getTitle(navigationShell.currentIndex, role),
         showNotificationBell: true,
-        showCartBadge: true,
+        showCartBadge: false,
         showDarkModeToggle: false,
       ),
       body: navigationShell,

@@ -30,11 +30,8 @@ class AuthService {
   // Sign in with Google — call this from both sign-in and sign-up screens
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
-      // Attempt silent sign-in first (reuses cached credentials)
-      GoogleSignInAccount? googleAccount = await _googleSignIn.signInSilently();
-
-      // If no cached session, do interactive sign-in
-      googleAccount ??= await _googleSignIn.signIn();
+      // Always show account picker (no silent sign-in)
+      GoogleSignInAccount? googleAccount = await _googleSignIn.signIn();
 
       if (googleAccount == null) {
         return {
