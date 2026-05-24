@@ -6,6 +6,7 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/services/product_service.dart';
 import 'package:madpractical/services/preferences_service.dart';
+import 'package:madpractical/utils/icon_utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -37,8 +38,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (mounted) setState(() {});
   }
 
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
   // ────────────────────────────────────────────────────────────────────────────
 
   String selectedCategory = 'All';
@@ -241,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ...categoryList.map((cat) => {
           'icon': cat['icon'] is IconData
               ? cat['icon']
-              : _getIconFromString(cat['icon'].toString()),
+              : AppIcons.resolve(cat['icon']?.toString()),
           'title': cat['title'],
         }),
       ];
@@ -250,7 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final cats = products.map((p) => p['category'].toString()).toSet();
       categories = [
         {'icon': Icons.grid_view, 'title': 'All'},
-        ...cats.map((c) => {'icon': _getIconFromString(c.toLowerCase()), 'title': c}),
+        ...cats.map((c) => {'icon': AppIcons.resolve(c.toLowerCase()), 'title': c}),
       ];
     }
   }
@@ -297,23 +296,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
   }
 
-  IconData _getIconFromString(String iconName) {
-    switch (iconName) {
-      case 'devices': return Icons.devices;
-      case 'checkroom': return Icons.checkroom;
-      case 'home': return Icons.home;
-      case 'sports_soccer': return Icons.sports_soccer;
-      case 'local_grocery_store': return Icons.local_grocery_store;
-      case 'auto_stories': return Icons.auto_stories;
-      case 'spa': return Icons.spa;
-      case 'directions_car': return Icons.directions_car;
-      case 'toys': return Icons.toys;
-      case 'business_center': return Icons.business_center;
-      case 'category': return Icons.category;
-      default: return Icons.category;
-    }
-  }
-  
   void _autoScrollBanner() {
     if (!mounted) return;
     final nextPage = (_currentBannerPage + 1) % banners.length;
@@ -1173,7 +1155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: Icon(
                               category['icon'] is IconData
                                   ? category['icon'] as IconData
-                                  : _getIconFromString(category['icon'].toString()),
+                                  : AppIcons.resolve(category['icon']?.toString()),
                               color: isSelected
                                   ? AppColors.primary
                                   : Theme.of(context).iconTheme.color,

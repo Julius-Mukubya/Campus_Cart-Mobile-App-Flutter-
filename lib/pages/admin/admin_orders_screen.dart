@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/admin_service.dart';
 
-class AdminOrdersScreen extends StatefulWidget {
+/// Admin orders list using AdminService instead of FirebaseFirestore.instance directly.
+class AdminOrdersScreen extends ConsumerStatefulWidget {
   const AdminOrdersScreen({super.key});
 
   @override
-  State<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
+  ConsumerState<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
 }
 
-class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
+class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
+  final AdminService _adminService = AdminService();
   String _filterStatus = 'all';
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -128,10 +132,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             // Orders List
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('orders')
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
+                stream: _adminService.ordersStream(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
@@ -253,8 +254,6 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-
-                                  // Customer & Seller Info
                                   Row(
                                     children: [
                                       const Icon(Icons.person, size: 14, color: AppColors.grey),
@@ -288,10 +287,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
-
-                                  // Items Preview
                                   if (items.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
                                         const Icon(Icons.inventory_2, size: 14, color: AppColors.grey),
@@ -309,10 +306,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 4),
                                   ],
-
-                                  // Date & Total
+                                  const SizedBox(height: 4),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [

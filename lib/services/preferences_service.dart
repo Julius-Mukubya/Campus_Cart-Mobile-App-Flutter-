@@ -76,6 +76,22 @@ class PreferencesService {
   static String get profileImage => _instance.getString(_keyProfileImage) ?? '';
   static bool get isLoggedIn => userId != null && userId!.isNotEmpty;
 
+  /// Clear ALL stored preferences (user data, cart, wishlist, search history, etc.)
+  /// Called on logout to completely reset local state.
+  static Future<void> clearAll() async {
+    await clearUser();
+    await clearCartItems();
+    await clearWishlistItems();
+    await clearSearchHistory();
+    await clearRecentlyViewed();
+    await _instance.remove(_keyOnboardingSeen);
+    await _instance.remove(_keyLastCategory);
+    await _instance.remove(_keySortBy);
+    await _instance.remove(_keyNotificationsEnabled);
+    await _instance.remove(_keyThemeMode);
+    await _instance.remove(_keyLanguage);
+  }
+
   // ── App preferences ─────────────────────────────────────────────────────────
 
   static Future<void> setOnboardingSeen() async =>

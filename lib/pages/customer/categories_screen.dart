@@ -5,31 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/pages/customer/product_details.dart';
 import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/utils/icon_utils.dart';
 import '../../utils/app_logger.dart';
-
-// Top-level icon mapping for categories (consistent with admin ManageCategoriesScreen)
-IconData iconForCategory(String? iconName) {
-  const availableIcons = [
-    {'name': 'Electronics', 'icon': Icons.devices},
-    {'name': 'Fashion', 'icon': Icons.checkroom},
-    {'name': 'Books', 'icon': Icons.menu_book},
-    {'name': 'Food', 'icon': Icons.restaurant},
-    {'name': 'Stationery', 'icon': Icons.edit},
-    {'name': 'Sports', 'icon': Icons.sports_soccer},
-    {'name': 'Home', 'icon': Icons.home},
-    {'name': 'Beauty', 'icon': Icons.face},
-    {'name': 'Music', 'icon': Icons.music_note},
-    {'name': 'Pets', 'icon': Icons.pets},
-    {'name': 'Toys', 'icon': Icons.toys},
-    {'name': 'Health', 'icon': Icons.local_hospital},
-    {'name': 'Accessories', 'icon': Icons.watch},
-    {'name': 'General', 'icon': Icons.category},
-  ];
-  for (final entry in availableIcons) {
-    if (entry['name'] == iconName) return entry['icon'] as IconData;
-  }
-  return Icons.category;
-}
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -126,9 +103,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   void dispose() {
     super.dispose();
   }
-
-  int get _wishlistItemCount => ref.watch(wishlistProvider).itemCount;
-  int get _cartItemCount => ref.watch(cartProvider).itemCount;
 
   int _getProductCount(String categoryTitle) {
     // Find matching category and return its product count
@@ -410,7 +384,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                           ),
                           child: Center(
                             child: Icon(
-                              iconForCategory(category['icon']),
+                              AppIcons.resolveLegacy(category['icon']?.toString()),
                               size: 50,
                               color: AppColors.primary,
                             ),
@@ -482,7 +456,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      iconForCategory(category['icon']),
+                      AppIcons.resolveLegacy(category['icon']?.toString()),
                       size: 20,
                       color: AppColors.primary,
                     ),
@@ -1226,7 +1200,7 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        iconForCategory(widget.category['icon']),
+                        AppIcons.resolveLegacy(widget.category['icon']?.toString()),
                         color: AppColors.primary,
                         size: 24,
                       ),

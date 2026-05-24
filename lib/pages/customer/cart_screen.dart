@@ -419,7 +419,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
-    final wishlist = ref.watch(wishlistProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,

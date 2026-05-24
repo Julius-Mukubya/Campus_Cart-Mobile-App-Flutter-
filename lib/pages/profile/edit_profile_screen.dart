@@ -1,29 +1,40 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/services/auth_service.dart';
 import 'package:madpractical/services/storage_service.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   bool _isUploading = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: '');
-    _emailController = TextEditingController(text: '');
-    _phoneController = TextEditingController(text: '');
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+
+    // Populate fields with user data after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userState = ref.read(userProvider);
+      _nameController.text = userState.name;
+      _emailController.text = userState.email;
+      _phoneController.text = userState.phone;
+    });
   }
 
   @override
@@ -81,7 +92,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       if (pickedFile == null) {
-        // User cancelled or permission denied
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -112,9 +122,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final StorageService storageService = StorageService();
-      await storageService.uploadProfileImage(
+      final String imageUrl = await storageService.uploadProfileImage(
         File(pickedFile.path),
         userId,
+      );
+
+      // Update user provider with new profile image
+      ref.read(userProvider.notifier).updateProfile(
+        profileImage: imageUrl,
+      );
+
+      // Also update Firestore
+      await authService.updateUserProfile(
+        userId: userId,
+        profileImage: imageUrl,
       );
 
       setState(() {
@@ -149,23 +170,64 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _saveProfile() {
-    // TODO: save profile via userProvider in PHASE 9
-    // ref.read(userProvider.notifier).updateProfile(name: ..., email: ..., phone: ...);
+  Future<void> _saveProfile() async {
+    setState(() => _isSaving = true);
     
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Profile updated successfully'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    try {
+      final authService = AuthService();
+      final userId = authService.currentUser?.uid;
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Update Firestore
+      await authService.updateUserProfile(
+        userId: userId,
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+
+      // Update local state
+      ref.read(userProvider.notifier).updateProfile(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+
+      setState(() => _isSaving = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile updated successfully'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final userState = ref.watch(userProvider);
+    final hasValidImage = userState.profileImage.isNotEmpty &&
+        userState.profileImage.startsWith('http');
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -225,20 +287,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ],
                       ),
-                      child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                          child: Text(
-                            ''.isNotEmpty 
-                                ? ''[0].toUpperCase()
-                                : 'U',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                      child: hasValidImage
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundImage: NetworkImage(userState.profileImage),
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            )
+                          : CircleAvatar(
+                              radius: 50,
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              child: Text(
+                                userState.name.isNotEmpty
+                                    ? userState.name[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
                     ),
                     if (_isUploading)
                       Positioned.fill(
@@ -286,7 +354,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               
               const SizedBox(height: 32),
               
-              // Form Fields
+              // Personal Information Card
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.white,
@@ -334,6 +402,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: true, // Email shouldn't be changed here
+                        style: TextStyle(color: AppColors.secondaryText),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -352,13 +422,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               
               // Save Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saveProfile,
+                  onPressed: _isSaving ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
@@ -368,15 +438,95 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: AppColors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Change Password Link
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  onTap: () => Navigator.pushNamed(context, '/change-password'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.lock_outline,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Change Password',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Update your account password',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: AppColors.secondaryText,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -384,4 +534,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
-

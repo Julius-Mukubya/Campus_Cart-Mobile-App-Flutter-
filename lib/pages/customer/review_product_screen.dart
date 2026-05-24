@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/review_service.dart';
 
 /// Review screen for leaving a star rating and text review after order completion.
 class ReviewProductScreen extends ConsumerStatefulWidget {
@@ -28,7 +29,9 @@ class _ReviewProductScreenState extends ConsumerState<ReviewProductScreen> {
     super.dispose();
   }
 
-  void _submitReview() {
+  final ReviewService _reviewService = ReviewService();
+
+  Future<void> _submitReview() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -41,22 +44,41 @@ class _ReviewProductScreenState extends ConsumerState<ReviewProductScreen> {
       return;
     }
 
-    setState(() {
-      _isSubmitted = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Review submitted successfully! Thank you.'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+    final result = await _reviewService.submitReview(
+      productId: widget.productId,
+      rating: _rating.toDouble(),
+      comment: _reviewController.text.trim(),
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.pop(context);
-    });
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      setState(() {
+        _isSubmitted = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Review submitted!'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) Navigator.pop(context);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Failed to submit review'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   @override

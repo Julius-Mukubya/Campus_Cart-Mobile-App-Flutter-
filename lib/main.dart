@@ -13,7 +13,6 @@ import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/auth_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
-import 'package:madpractical/providers/notification_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/router.dart';
 
@@ -79,8 +78,6 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.read(cartProvider.notifier).loadFromPrefs();
     // Initialize wishlist from preferences
     ref.read(wishlistProvider.notifier).loadFromPrefs();
-    // Initialize notifications (will be connected to Firestore in TASK 6)
-    ref.read(notificationProvider.notifier).loadFromPrefs();
 
     // Restore user session from SharedPreferences into user provider
     if (PreferencesService.isLoggedIn) {
@@ -252,6 +249,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         ), dialogTheme: DialogThemeData(backgroundColor: AppColors.darkCards),
       );
 
+  @override
   Widget build(BuildContext context) {
     // Sync user provider changes to router auth notifier
     ref.listen(userProvider, (prev, next) {

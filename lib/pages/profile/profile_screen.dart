@@ -550,11 +550,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
-              // Sign out from Firebase Auth and clear local state
+              // Sign out from Firebase Auth and clear ALL local state
               await AuthService().signOut();
-              await PreferencesService.clearUser();
-              await PreferencesService.clearCartItems();
-              await PreferencesService.clearWishlistItems();
+              await PreferencesService.clearAll();
               ref.read(userProvider.notifier).logout();
               if (!context.mounted) return;
               context.go('/signin');

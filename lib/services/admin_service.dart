@@ -639,6 +639,56 @@ class AdminService {
     }
   }
 
+
+
+
+  /// Submit a contact message from users
+  Future<void> submitContactMessage(String name, String email, String message) async {
+    try {
+      await _firestore.collection('contact_messages').add({
+        'name': name,
+        'email': email,
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'unread',
+      });
+    } catch (e) {
+      AppLogger.error('Error submitting contact message', error: e);
+      rethrow;
+    }
+  }
+
+  /// Toggle a user's active status
+  Future<void> toggleUserStatus(String userId, bool currentActive) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'isActive': !currentActive,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.info('User $userId ${currentActive ? 'suspended' : 'activated'}');
+    } catch (e) {
+      AppLogger.error('Error toggling user status', error: e);
+      rethrow;
+    }
+  }
+
+
+  /// Stream all users for admin view
+  Stream<QuerySnapshot> usersStream() {
+    return _firestore
+        .collection('users')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  /// Stream all orders for admin view
+  Stream<QuerySnapshot> ordersStream() {
+    return _firestore
+        .collection('orders')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
   Stream<AdminSettings> getAdminSettings() {
     return _firestore
         .collection('admin')

@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/services/auth_service.dart';
+import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
-
-class MyOrdersScreen extends StatefulWidget {
+class MyOrdersScreen extends ConsumerStatefulWidget {
   const MyOrdersScreen({super.key});
 
   @override
-  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+  ConsumerState<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
-class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  final _authService = AuthService();
-
+class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Active', 'Delivered', 'Cancelled'];
+  final List<String> _filters = ['All', 'Pending', 'Accepted', 'Cancelled', 'Completed'];
 
   List<Map<String, dynamic>> _cachedOrders = [];
   bool _loadingCache = true;
@@ -28,29 +26,74 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   Future<void> _loadCachedOrders() async {
-    final uid = _authService.currentUser?.uid;
-    if (uid == null) { setState(() => _loadingCache = false); return; }
+    final uid = ref.read(userProvider).userId;
+    if (uid == null || uid.isEmpty) { setState(() => _loadingCache = false); return; }
     final List<Map<String, dynamic>> cached = [];
     if (mounted) {
       setState(() { _cachedOrders = cached; _loadingCache = false; });
     }
   }
 
+  // ── Actions ────────────────────────────────────────────────────────────
+  Future<void> _markComplete() async {
+    // Stub: will be wired to order provider in Phase C
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Mark as complete — will be available from order details'),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  void _cancelOrder(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Order'),
+        content: const Text('Are you sure you want to cancel this pending order?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('No')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Order cancelled'),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Yes, Cancel', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── status helpers ────────────────────────────────────────────────────────
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'delivered':   return AppColors.success;
-      case 'cancelled':   return AppColors.error;
-      case 'processing':  return Colors.orange;
-      case 'out for delivery':
-      case 'assigned_for_delivery': return AppColors.primary;
-      default:            return AppColors.grey;
+      case 'pending':    return Colors.orange;
+      case 'accepted':   return AppColors.primary;
+      case 'rejected':   return AppColors.error;
+      case 'cancelled':  return Colors.grey;
+      case 'completed':  return AppColors.success;
+      default:           return AppColors.grey;
     }
   }
 
   bool _isActive(String status) =>
-      status != 'Delivered' && status != 'delivered' &&
-      status != 'Cancelled' && status != 'cancelled';
+      status != 'completed' &&
+      status != 'Completed' &&
+      status != 'cancelled' &&
+      status != 'Cancelled' &&
+      status != 'rejected' &&
+      status != 'Rejected';
 
   bool _matchesFilter(String status) {
     if (_selectedFilter == 'All') return true;
@@ -60,8 +103,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   // ── Firestore stream ──────────────────────────────────────────────────────
   Stream<List<Map<String, dynamic>>> _ordersStream() {
-    final uid = _authService.currentUser?.uid;
-    if (uid == null) return const Stream.empty();
+    final uid = ref.read(userProvider).userId;
+    if (uid == null || uid.isEmpty) return const Stream.empty();
 
     return FirebaseFirestore.instance
         .collection('orders')
@@ -74,14 +117,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             return {
               'id': doc.id,
               'date': d['date'] ?? '',
-              'status': d['status'] ?? 'Processing',
+              'status': d['status'] ?? 'pending',
               'items': d['itemCount'] ?? 0,
               'total': 'UGX ${(d['total'] ?? 0).toStringAsFixed(0)}',
-              'shippingAddress': d['shippingAddress'] ?? '',
-              'paymentMethod': d['paymentMethod'] ?? '',
               'products': d['products'] ?? [],
               'subtotal': d['subtotal'] ?? 0,
-              'deliveryFee': d['deliveryFee'] ?? 0,
             };
           }).toList();
           // Write-through cache
@@ -196,24 +236,38 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             // Actions
             Row(
               children: [
-                if (active)
+          if (active && status.toLowerCase() == 'accepted')
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Order tracking coming soon')),
-                      ),
-                      icon: const Icon(Icons.location_on, size: 15),
-                      label: const Text('Track'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
+                    child: ElevatedButton.icon(
+                      onPressed: _markComplete,
+                      icon: const Icon(Icons.check_circle_outline, size: 15),
+                      label: const Text('Complete'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ),
-                if (active) const SizedBox(width: 8),
+                if (active && status.toLowerCase() == 'accepted') const SizedBox(width: 8),
+                if (status.toLowerCase() == 'pending')
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _cancelOrder(order),
+                      icon: const Icon(Icons.cancel_outlined, size: 15),
+                      label: const Text('Cancel'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                if (status.toLowerCase() == 'pending') const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _showDetails(order),

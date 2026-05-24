@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/category_service.dart';
+import 'package:madpractical/utils/icon_utils.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   const ManageCategoriesScreen({super.key});
@@ -14,31 +15,6 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   final CategoryService _categoryService = CategoryService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-
-  // Available Material icons for category selection
-  static const List<Map<String, dynamic>> _availableIcons = [
-    {'name': 'Electronics', 'icon': Icons.devices},
-    {'name': 'Fashion', 'icon': Icons.checkroom},
-    {'name': 'Books', 'icon': Icons.menu_book},
-    {'name': 'Food', 'icon': Icons.restaurant},
-    {'name': 'Stationery', 'icon': Icons.edit},
-    {'name': 'Sports', 'icon': Icons.sports_soccer},
-    {'name': 'Home', 'icon': Icons.home},
-    {'name': 'Beauty', 'icon': Icons.face},
-    {'name': 'Music', 'icon': Icons.music_note},
-    {'name': 'Pets', 'icon': Icons.pets},
-    {'name': 'Toys', 'icon': Icons.toys},
-    {'name': 'Health', 'icon': Icons.local_hospital},
-    {'name': 'Accessories', 'icon': Icons.watch},
-    {'name': 'General', 'icon': Icons.category},
-  ];
-
-  IconData _getIconForName(String? iconName) {
-    for (final entry in _availableIcons) {
-      if (entry['name'] == iconName) return entry['icon'] as IconData;
-    }
-    return Icons.category;
-  }
 
   @override
   void initState() {
@@ -166,7 +142,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                               color: AppColors.primary.withValues(alpha: 0.1),
                                             ),
                                             child: Icon(
-                                              _getIconForName(cat['icon']),
+                                              AppIcons.resolveLegacy(cat['icon']?.toString()),
                                               color: AppColors.primary,
                                               size: 24,
                                             ),
@@ -177,7 +153,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                             color: AppColors.primary.withValues(alpha: 0.1),
                                           ),
                                           child: Icon(
-                                            _getIconForName(cat['icon']),
+                                            AppIcons.resolveLegacy(cat['icon']?.toString()),
                                             color: AppColors.primary,
                                             size: 24,
                                           ),

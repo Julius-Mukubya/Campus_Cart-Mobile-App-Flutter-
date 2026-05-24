@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:madpractical/models/notification_model.dart';
 import 'package:madpractical/providers/notification_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
@@ -51,7 +52,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
   }
 
   int get unreadCount => ref.watch(notificationProvider).unreadCount;
-  List<Map<String, dynamic>> get _notifications => ref.watch(notificationProvider).notifications;
+  List<NotificationModel> get _notifications => ref.watch(notificationProvider).notifications;
 
   void _markAsRead(String id) {
     ref.read(notificationProvider.notifier).markAsRead(id);
@@ -273,7 +274,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                 itemBuilder: (context, index) {
                   final notification = _notifications[index];
                   return Dismissible(
-                    key: Key(notification['id']),
+                    key: Key(notification.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -289,7 +290,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                       ),
                     ),
                     onDismissed: (direction) {
-                      _deleteNotification(notification['id']);
+                      _deleteNotification(notification.id);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Notification deleted'),
@@ -303,13 +304,13 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                     },
                     child: InkWell(
                       onTap: () {
-                        if (!notification['isRead']) {
-                          _markAsRead(notification['id']);
+                        if (!notification.isRead) {
+                          _markAsRead(notification.id);
                         }
                         // Handle notification tap - navigate to relevant screen
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Opening ${notification['title']}'),
+                            content: Text('Opening ${notification.title}'),
                             backgroundColor: AppColors.primary,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
@@ -321,11 +322,11 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: notification['isRead'] 
+                          color: notification.isRead 
                               ? AppColors.white 
                               : AppColors.primary.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
-                          border: notification['isRead']
+                          border: notification.isRead
                               ? null
                               : Border.all(
                                   color: AppColors.primary.withValues(alpha: 0.2),
@@ -347,12 +348,12 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: _getColorFromString(notification['color']).withValues(alpha: 0.1),
+                                  color: _getColorFromString(notification.type).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
-                                  _getIconFromString(notification['icon']),
-                                  color: _getColorFromString(notification['color']),
+                                  _getIconFromString(notification.type),
+                                  color: _getColorFromString(notification.type),
                                   size: 24,
                                 ),
                               ),
@@ -365,17 +366,17 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            notification['title'],
+                                            notification.title,
                                             style: TextStyle(
                                               fontSize: 16,
-                                              fontWeight: notification['isRead']
+                                              fontWeight: notification.isRead
                                                   ? FontWeight.w600
                                                   : FontWeight.bold,
                                               color: AppColors.text,
                                             ),
                                           ),
                                         ),
-                                        if (!notification['isRead'])
+                                        if (!notification.isRead)
                                           Container(
                                             width: 8,
                                             height: 8,
@@ -388,7 +389,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      notification['message'],
+                                      notification.message,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: AppColors.secondaryText,
@@ -405,7 +406,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          notification['time'],
+                                          notification.createdAt.toString(),
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: AppColors.secondaryText,

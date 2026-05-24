@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/admin_service.dart';
 
 class ContactUsScreen extends StatefulWidget {
   const ContactUsScreen({super.key});
@@ -11,6 +11,7 @@ class ContactUsScreen extends StatefulWidget {
 }
 
 class _ContactUsScreenState extends State<ContactUsScreen> {
+  final AdminService _adminService = AdminService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
@@ -52,13 +53,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      await FirebaseFirestore.instance.collection('contact_messages').add({
-        'name': name,
-        'email': email,
-        'message': message,
-        'createdAt': FieldValue.serverTimestamp(),
-        'status': 'unread',
-      });
+      await _adminService.submitContactMessage(name, email, message);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

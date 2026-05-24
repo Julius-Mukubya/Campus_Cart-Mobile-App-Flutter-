@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 
 class PrivacySecurityScreen extends StatefulWidget {
@@ -9,101 +10,6 @@ class PrivacySecurityScreen extends StatefulWidget {
 }
 
 class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
-  bool _twoFactorAuth = false;
-  bool _biometricLogin = true;
-  bool _savePaymentInfo = true;
-
-  void _showChangePasswordDialog() {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Change Password',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'Current Password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock_outline),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'Confirm New Password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (newPasswordController.text == confirmPasswordController.text &&
-                  newPasswordController.text.isNotEmpty) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Password changed successfully'),
-                    backgroundColor: AppColors.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Passwords do not match'),
-                    backgroundColor: AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Change'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,23 +85,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                       'Change Password',
                       'Update your account password',
                       Icons.lock_outline,
-                      () => _showChangePasswordDialog(),
-                    ),
-                    const Divider(height: 1),
-                    _buildSwitchTile(
-                      'Two-Factor Authentication',
-                      'Add an extra layer of security',
-                      Icons.security,
-                      _twoFactorAuth,
-                      (value) => setState(() => _twoFactorAuth = value),
-                    ),
-                    const Divider(height: 1),
-                    _buildSwitchTile(
-                      'Biometric Login',
-                      'Use fingerprint or face ID',
-                      Icons.fingerprint,
-                      _biometricLogin,
-                      (value) => setState(() => _biometricLogin = value),
+                      () => context.push('/change-password'),
                     ),
                   ],
                 ),
@@ -230,14 +120,6 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                         ),
                       ),
                     ),
-                    _buildSwitchTile(
-                      'Save Payment Information',
-                      'Securely save payment details',
-                      Icons.payment,
-                      _savePaymentInfo,
-                      (value) => setState(() => _savePaymentInfo = value),
-                    ),
-                    const Divider(height: 1),
                     _buildActionTile(
                       'Privacy Policy',
                       'Read our privacy policy',
@@ -359,63 +241,6 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchTile(
-    String title,
-    String subtitle,
-    IconData icon,
-    bool value,
-    Function(bool) onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.secondaryText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-          ),
-        ],
       ),
     );
   }

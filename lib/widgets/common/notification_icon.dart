@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/pages/customer/notifications_list_screen.dart';
 import 'package:madpractical/providers/notification_provider.dart';
 
 class NotificationIcon extends ConsumerWidget {

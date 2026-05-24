@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/admin_service.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -34,12 +36,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     }
   }
 
+  final AdminService _adminService = AdminService();
+
   Future<void> _toggleUserStatus(String userId, bool currentActive) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'isActive': !currentActive,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _adminService.toggleUserStatus(userId, currentActive);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -139,10 +140,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             // Users List
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
+                stream: _adminService.usersStream(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
@@ -295,6 +293,35 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                       color: _getRoleColor(role),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+
+                                // Chat Button
+                                GestureDetector(
+                                  onTap: () {
+                                    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+                                    final sortedParticipants = [currentUserId, userId]..sort();
+                                    final chatId = 'direct_${sortedParticipants[0]}_${sortedParticipants[1]}';
+                                    context.push(
+                                      '/chat/$chatId',
+                                      extra: {
+                                        'name': name,
+                                        'isOrderChat': false,
+                                      },
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.message_outlined,
+                                      color: AppColors.primary,
+                                      size: 20,
                                     ),
                                   ),
                                 ),

@@ -1,32 +1,66 @@
-import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/app_logger.dart';
 
-/// Merged ChatService combining order_chat_service and admin_seller_chat_service
-class ChatService extends ChangeNotifier {
-  static final ChatService _instance = ChatService._internal();
+/// Firestore-backed chat service.
+/// Messages stored in: chats/{chatId}/messages/{messageId}
+/// Chats are scoped by order (order_{orderId}) or direct (direct_{userId1}_{userId2}).
+class ChatService {
+  final FirebaseFirestore _firestore;
 
-  factory ChatService() {
-    return _instance;
+  ChatService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  // ── Helpers ────────────────────────────────────────────────────────
+
+  /// Get the chat document reference for an order
+  DocumentReference _orderChatDoc(String orderId) {
+    return _firestore.collection('chats').doc('order_$orderId');
   }
 
-  ChatService._internal();
-
-  // Map of orderId -> List of messages (for order chats)
-  final Map<String, List<Map<String, dynamic>>> _orderChats = {};
-
-  // Map of sellerId -> List of messages (for admin-seller chats)
-  final Map<String, List<Map<String, dynamic>>> _adminSellerChats = {};
-
-  // ======================================================================
-  // ORDER CHAT METHODS (from order_chat_service.dart)
-  // ======================================================================
-
-  /// Get all messages for an order
-  List<Map<String, dynamic>> getOrderMessages(String orderId) {
-    return List.unmodifiable(_orderChats[orderId] ?? []);
+  /// Get the messages subcollection for an order chat
+  CollectionReference _orderMessagesRef(String orderId) {
+    return _orderChatDoc(orderId).collection('messages');
   }
 
-  /// Send a message in order chat
+  /// Get the chat document reference for a direct chat
+  DocumentReference _directChatDoc(String chatId) {
+    return _firestore.collection('chats').doc(chatId);
+  }
+
+  /// Get the messages subcollection for a direct chat
+  CollectionReference _directMessagesRef(String chatId) {
+    return _directChatDoc(chatId).collection('messages');
+  }
+
+  // ── Streams (real-time) ────────────────────────────────────────────
+
+  /// Stream messages for an order chat
+  Stream<List<Map<String, dynamic>>> orderMessagesStream(String orderId) {
+    return _orderMessagesRef(orderId)
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  /// Stream messages for a direct chat
+  Stream<List<Map<String, dynamic>>> directMessagesStream(String chatId) {
+    return _directMessagesRef(chatId)
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  // ── Send Messages ──────────────────────────────────────────────────
+
+  /// Send a message in an order chat
   Future<void> sendOrderMessage({
     required String orderId,
     required String senderId,
@@ -35,201 +69,141 @@ class ChatService extends ChangeNotifier {
     required String message,
   }) async {
     try {
-      final newMessage = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      // Ensure chat document exists
+      await _orderChatDoc(orderId).set({
+        'type': 'order',
         'orderId': orderId,
+        'lastMessage': message,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastSenderId': senderId,
+        'lastSenderName': senderName,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Add message
+      await _orderMessagesRef(orderId).add({
         'senderId': senderId,
         'senderName': senderName,
         'senderRole': senderRole,
         'message': message,
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
-      };
+      });
 
-      if (!_orderChats.containsKey(orderId)) {
-        _orderChats[orderId] = [];
-      }
-
-      _orderChats[orderId]!.add(newMessage);
-      notifyListeners();
-
-      AppLogger.info('Message sent in order $orderId: $message');
+      AppLogger.info('Order message sent: $orderId');
     } catch (e) {
-      AppLogger.error('Error sending message', error: e);
+      AppLogger.error('Error sending order message', error: e);
+      rethrow;
     }
   }
 
-  /// Mark order message as read
-  Future<void> markOrderMessageAsRead(String orderId, String messageId) async {
-    try {
-      final messages = _orderChats[orderId];
-      if (messages != null) {
-        final messageIndex =
-            messages.indexWhere((msg) => msg['id'] == messageId);
-        if (messageIndex != -1) {
-          messages[messageIndex]['isRead'] = true;
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      AppLogger.error('Error marking message as read', error: e);
-    }
-  }
-
-  /// Mark all messages as read for an order
-  Future<void> markAllOrderMessagesAsRead(String orderId) async {
-    try {
-      final messages = _orderChats[orderId];
-      if (messages != null) {
-        for (var message in messages) {
-          message['isRead'] = true;
-        }
-        notifyListeners();
-      }
-    } catch (e) {
-      AppLogger.error('Error marking messages as read', error: e);
-    }
-  }
-
-  /// Get unread message count for an order
-  int getOrderUnreadCount(String orderId) {
-    final messages = _orderChats[orderId] ?? [];
-    return messages.where((msg) => !msg['isRead']).length;
-  }
-
-  /// Get the last message for an order
-  Map<String, dynamic>? getLastOrderMessage(String orderId) {
-    final messages = _orderChats[orderId];
-    if (messages?.isNotEmpty ?? false) {
-      return messages!.last;
-    }
-    return null;
-  }
-
-  /// Initialize chat for a new order
-  void initializeOrderChat(String orderId) {
-    if (!_orderChats.containsKey(orderId)) {
-      _orderChats[orderId] = [];
-    }
-  }
-
-  /// Delete a specific order's chat
-  void deleteOrderChat(String orderId) {
-    _orderChats.remove(orderId);
-    notifyListeners();
-  }
-
-  // ======================================================================
-  // ADMIN-SELLER CHAT METHODS (from admin_seller_chat_service.dart)
-  // ======================================================================
-
-  /// Get all messages between admin and a seller
-  List<Map<String, dynamic>> getAdminSellerMessages(String sellerId) {
-    return List.unmodifiable(_adminSellerChats[sellerId] ?? []);
-  }
-
-  /// Send message from admin or seller
-  Future<void> sendAdminSellerMessage({
-    required String sellerId,
+  /// Send a message in a direct chat
+  Future<void> sendDirectMessage({
+    required String chatId,
     required String senderId,
     required String senderName,
     required String senderRole,
     required String message,
+    required List<String> participants,
   }) async {
     try {
-      final newMessage = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'sellerId': sellerId,
+      // Ensure chat document exists
+      await _directChatDoc(chatId).set({
+        'type': 'direct',
+        'participants': participants,
+        'lastMessage': message,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastSenderId': senderId,
+        'lastSenderName': senderName,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Add message
+      await _directMessagesRef(chatId).add({
         'senderId': senderId,
         'senderName': senderName,
         'senderRole': senderRole,
         'message': message,
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
-      };
+      });
 
-      if (!_adminSellerChats.containsKey(sellerId)) {
-        _adminSellerChats[sellerId] = [];
-      }
-
-      _adminSellerChats[sellerId]!.add(newMessage);
-      notifyListeners();
-
-      AppLogger.info('Message sent in admin-seller chat with $sellerId: $message');
+      AppLogger.info('Direct message sent: $chatId');
     } catch (e) {
-      AppLogger.error('Error sending message', error: e);
+      AppLogger.error('Error sending direct message', error: e);
+      rethrow;
     }
   }
 
-  /// Mark admin-seller message as read
-  Future<void> markAdminSellerMessageAsRead(String sellerId, String messageId) async {
+  // ── Fetch User Chats ──────────────────────────────────────────────
+
+  /// Get all chats for a user (both order and direct)
+  Stream<List<Map<String, dynamic>>> userChatsStream(String userId) {
+    return _firestore
+        .collection('chats')
+        .where('participants', arrayContains: userId)
+        .orderBy('lastMessageAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  // ── Mark as Read ──────────────────────────────────────────────────
+
+  /// Mark a message as read
+  Future<void> markAsRead({
+    required String chatId,
+    required String messageId,
+    bool isOrderChat = false,
+  }) async {
     try {
-      final messages = _adminSellerChats[sellerId];
-      if (messages != null) {
-        final messageIndex =
-            messages.indexWhere((msg) => msg['id'] == messageId);
-        if (messageIndex != -1) {
-          messages[messageIndex]['isRead'] = true;
-          notifyListeners();
-        }
-      }
+      final ref = isOrderChat
+          ? _orderMessagesRef(chatId).doc(messageId)
+          : _directMessagesRef(chatId).doc(messageId);
+      await ref.update({'isRead': true});
     } catch (e) {
       AppLogger.error('Error marking message as read', error: e);
     }
   }
 
-  /// Mark all messages as read for a seller
-  Future<void> markAllAdminSellerMessagesAsRead(String sellerId) async {
+  /// Mark all messages as read for a chat
+  Future<void> markAllAsRead({
+    required String chatId,
+    required String userId,
+    bool isOrderChat = false,
+  }) async {
     try {
-      final messages = _adminSellerChats[sellerId];
-      if (messages != null) {
-        for (var message in messages) {
-          message['isRead'] = true;
-        }
-        notifyListeners();
+      final ref = isOrderChat ? _orderMessagesRef(chatId) : _directMessagesRef(chatId);
+      final snapshot = await ref
+          .where('isRead', isEqualTo: false)
+          .where('senderId', isNotEqualTo: userId)
+          .get();
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.update(doc.reference, {'isRead': true});
       }
+      await batch.commit();
     } catch (e) {
-      AppLogger.error('Error marking messages as read', error: e);
+      AppLogger.error('Error marking all as read', error: e);
     }
   }
 
-  /// Get unread message count for a seller chat
-  int getAdminSellerUnreadCount(String sellerId) {
-    final messages = _adminSellerChats[sellerId] ?? [];
-    return messages.where((msg) => !msg['isRead']).length;
-  }
-
-  /// Get the last message for a seller
-  Map<String, dynamic>? getLastAdminSellerMessage(String sellerId) {
-    final messages = _adminSellerChats[sellerId];
-    if (messages?.isNotEmpty ?? false) {
-      return messages!.last;
+  /// Get unread count for a chat
+  Future<int> getUnreadCount(String chatId, String userId, {bool isOrderChat = false}) async {
+    try {
+      final ref = isOrderChat ? _orderMessagesRef(chatId) : _directMessagesRef(chatId);
+      final snapshot = await ref
+          .where('isRead', isEqualTo: false)
+          .where('senderId', isNotEqualTo: userId)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      AppLogger.error('Error getting unread count', error: e);
+      return 0;
     }
-    return null;
-  }
-
-  /// Initialize chat for a new seller
-  void initializeSellerChat(String sellerId) {
-    if (!_adminSellerChats.containsKey(sellerId)) {
-      _adminSellerChats[sellerId] = [];
-    }
-  }
-
-  /// Get all sellers with active chats
-  List<String> getActiveSellers() {
-    return _adminSellerChats.keys.toList();
-  }
-
-  /// Delete a specific seller's chat
-  void deleteSellerChat(String sellerId) {
-    _adminSellerChats.remove(sellerId);
-    notifyListeners();
-  }
-
-  /// Clear all chats (useful for testing)
-  void clearAllChats() {
-    _orderChats.clear();
-    _adminSellerChats.clear();
-    notifyListeners();
   }
 }

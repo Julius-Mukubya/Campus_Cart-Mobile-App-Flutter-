@@ -24,7 +24,7 @@ void main() async {
     {
       'name': 'Electronics',
       'description': 'Electronic devices and accessories',
-      'icon': 'Electronics',
+      'icon': 'devices',
       'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop',
       'order': 1,
       'displayOrder': 1,
@@ -36,7 +36,7 @@ void main() async {
     {
       'name': 'Fashion',
       'description': 'Clothing, shoes, and accessories',
-      'icon': 'Fashion',
+      'icon': 'checkroom',
       'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=400&fit=crop',
       'order': 2,
       'displayOrder': 2,
@@ -48,7 +48,7 @@ void main() async {
     {
       'name': 'Books',
       'description': 'Textbooks, novels, and study materials',
-      'icon': 'Books',
+      'icon': 'menu_book',
       'image': 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=400&fit=crop',
       'order': 3,
       'displayOrder': 3,
@@ -60,7 +60,7 @@ void main() async {
     {
       'name': 'Food & Beverages',
       'description': 'Snacks, drinks, and meals',
-      'icon': 'Food',
+      'icon': 'restaurant',
       'image': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop',
       'order': 4,
       'displayOrder': 4,
@@ -72,7 +72,7 @@ void main() async {
     {
       'name': 'Stationery',
       'description': 'Pens, notebooks, and office supplies',
-      'icon': 'Stationery',
+      'icon': 'edit',
       'image': 'https://images.unsplash.com/photo-1452860606245-08a8d7e3a1a7?w=400&h=400&fit=crop',
       'order': 5,
       'displayOrder': 5,
@@ -84,7 +84,7 @@ void main() async {
     {
       'name': 'Sports',
       'description': 'Sports equipment and activewear',
-      'icon': 'Sports',
+      'icon': 'sports_soccer',
       'image': 'https://images.unsplash.com/photo-1461896836934-bd45ba8fcf9b?w=400&h=400&fit=crop',
       'order': 6,
       'displayOrder': 6,
@@ -96,7 +96,7 @@ void main() async {
     {
       'name': 'Home & Garden',
       'description': 'Home decor and gardening supplies',
-      'icon': 'Home',
+      'icon': 'home',
       'image': 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=400&fit=crop',
       'order': 7,
       'displayOrder': 7,

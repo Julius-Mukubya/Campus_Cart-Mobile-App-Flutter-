@@ -1,13 +1,14 @@
-import 'package:madpractical/pages/customer/order_chat_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/order_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/widgets/common/notification_icon.dart';
 
+/// Seller order details for the simplified order flow.
+/// Statuses: pending → accepted/rejected → completed
 class OrderDetailsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> order;
-  
+
   const OrderDetailsScreen({super.key, required this.order});
 
   @override
@@ -16,43 +17,41 @@ class OrderDetailsScreen extends ConsumerStatefulWidget {
 
 class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Pending':
+    switch (status.toLowerCase()) {
+      case 'pending':
         return Colors.orange;
-      case 'Processing':
+      case 'accepted':
         return AppColors.primary;
-      case 'Shipped':
-        return Colors.blue;
-      case 'Delivered':
-        return AppColors.success;
-      case 'Cancelled':
+      case 'rejected':
         return AppColors.error;
+      case 'cancelled':
+        return Colors.grey;
+      case 'completed':
+        return AppColors.success;
       default:
         return AppColors.grey;
     }
   }
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'Pending':
-        return Icons.schedule;
-      case 'Processing':
-        return Icons.sync;
-      case 'Shipped':
-        return Icons.local_shipping;
-      case 'Delivered':
-        return Icons.check_circle;
-      case 'Cancelled':
-        return Icons.cancel;
-      default:
-        return Icons.help_outline;
+  String _formatDate(dynamic timestamp) {
+    if (timestamp == null) return '';
+    try {
+      final dt = timestamp.toDate();
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return timestamp.toString();
     }
+  }
+
+  String _formatPrice(dynamic price) {
+    if (price is double || price is int) return price.toStringAsFixed(0);
+    if (price is String) {
+      if (price.contains('UGX')) return price.replaceAll('UGX ', '').trim();
+      final numericString = price.replaceAll(RegExp(r'[^0-9]'), '');
+      return (double.tryParse(numericString) ?? 0).toStringAsFixed(0);
+    }
+    return '0';
   }
 
   Widget _buildInfoCard(String title, List<Widget> children) {
@@ -60,7 +59,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -75,49 +74,14 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const SizedBox(height: 16),
           ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppColors.grey),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.secondaryText,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -128,7 +92,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.getBackground(context),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -138,17 +102,17 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product['name'],
-                  style: const TextStyle(
+                  product['name'] ?? 'Product',
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.text,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Quantity: ${product['quantity']}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.secondaryText,
                   ),
@@ -157,7 +121,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
             ),
           ),
           Text(
-            product['price'],
+            'UGX ${_formatPrice(product['price'])}',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -172,19 +136,28 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final isUrgent = order['priority'] == 'high';
-    
+    final status = (order['status'] ?? 'pending').toString();
+    final orderId = (order['orderId'] ?? order['id'] ?? '').toString();
+    final products = (order['products'] as List?) ?? (order['items'] as List?) ?? [];
+    final customerName = (order['customerName'] ?? order['customer'] ?? 'Customer').toString();
+    final customerPhone = order['customerPhone'] as String? ?? '';
+    final total = order['totalAmount'] ?? order['total'] ?? 0;
+    final showContact = order['showContactToSeller'] == true;
+    final sellerConfirmed = order['sellerConfirmed'] == true;
+    final customerConfirmed = order['customerConfirmed'] == true;
+    final rejectionReason = order['rejectionReason'] as String?;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.getBackground(context),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -194,33 +167,29 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.text,
-              size: 16,
-            ),
+            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
           ),
         ),
         title: Text(
-          'Order ${order['id']}',
-          style: const TextStyle(
-            color: AppColors.text,
+          'Order #${orderId.length > 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase()}',
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        actions: const [NotificationIcon()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status Card
+            // ── Status Card ─────────────────────────────────────────
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -235,59 +204,27 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            order['id'],
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.text,
-                            ),
-                          ),
-                          if (isUrgent) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'URGENT',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.error,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                      Text(
+                        '#${orderId.length > 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase()}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(order['status']).withValues(alpha: 0.1),
+                          color: _getStatusColor(status).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _getStatusIcon(order['status']),
-                              size: 16,
-                              color: _getStatusColor(order['status']),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              order['status'],
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: _getStatusColor(order['status']),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusColor(status),
+                          ),
                         ),
                       ),
                     ],
@@ -298,83 +235,59 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                       Expanded(
                         child: Column(
                           children: [
-                            Icon(Icons.calendar_today, color: AppColors.primary, size: 24),
+                            const Icon(Icons.calendar_today, color: AppColors.primary, size: 24),
                             const SizedBox(height: 4),
                             Text(
                               'Order Date',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.secondaryText,
-                              ),
+                              style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              order['date'],
-                              style: const TextStyle(
+                              _formatDate(order['createdAt']),
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.text,
-                              ),
-                            ),
-                            Text(
-                              order['time'],
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.secondaryText,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 1,
-                        height: 60,
-                        color: AppColors.lightGrey,
-                      ),
+                      Container(width: 1, height: 60, color: AppColors.lightGrey),
                       Expanded(
                         child: Column(
                           children: [
-                            Icon(Icons.shopping_bag_outlined, color: AppColors.primary, size: 24),
+                            const Icon(Icons.shopping_bag_outlined, color: AppColors.primary, size: 24),
                             const SizedBox(height: 4),
                             Text(
                               'Total Items',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.secondaryText,
-                              ),
+                              style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${order['items']}',
-                              style: const TextStyle(
+                              '${products.length}',
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.text,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 1,
-                        height: 60,
-                        color: AppColors.lightGrey,
-                      ),
+                      Container(width: 1, height: 60, color: AppColors.lightGrey),
                       Expanded(
                         child: Column(
                           children: [
-                            Icon(Icons.payments_outlined, color: AppColors.primary, size: 24),
+                            const Icon(Icons.payments_outlined, color: AppColors.primary, size: 24),
                             const SizedBox(height: 4),
                             Text(
                               'Total',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.secondaryText,
-                              ),
+                              style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              order['total'],
+                              'UGX ${_formatPrice(total)}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
@@ -389,19 +302,39 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Customer Information
+
+            // ── Rejection Reason (if rejected) ─────────────────────
+            if (status == 'rejected' && rejectionReason != null)
+              _buildInfoCard('Rejection Reason', [
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        rejectionReason,
+                        style: const TextStyle(fontSize: 14, color: AppColors.text),
+                      ),
+                    ),
+                  ],
+                ),
+              ]),
+
+            // ── Customer Information ───────────────────────────────
             _buildInfoCard(
               'Customer Information',
               [
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: NetworkImage(order['customerAvatar']),
-                      backgroundColor: AppColors.lightGrey,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.person, color: AppColors.primary, size: 24),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -409,29 +342,41 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            order['customer'],
-                            style: const TextStyle(
+                            customerName,
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.text,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on, size: 14, color: AppColors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  order['address'],
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.secondaryText,
-                                  ),
+                          if (showContact && customerPhone.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, size: 14, color: AppColors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  customerPhone,
+                                  style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (!showContact)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'Contact hidden by customer',
+                                  style: TextStyle(fontSize: 11, color: Colors.orange),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
                         ],
                       ),
                     ),
@@ -439,68 +384,111 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 ),
               ],
             ),
-            
-            // Order Items
+
+            // ── Order Items ────────────────────────────────────────
             _buildInfoCard(
               'Order Items',
-              [
-                ...List.generate(
-                  order['products'].length,
-                  (index) => _buildProductItem(order['products'][index]),
-                ),
-              ],
+              products.map((p) => _buildProductItem(p)).toList(),
             ),
-            
-            // Additional Information
-            if (order['status'] == 'Shipped' && order['trackingNumber'] != null)
-              _buildInfoCard(
-                'Shipping Information',
-                [
-                  _buildInfoRow(
-                    Icons.local_shipping,
-                    'Tracking Number',
-                    order['trackingNumber'],
-                  ),
-                ],
-              ),
-            
-            if (order['status'] == 'Delivered' && order['deliveredDate'] != null)
-              _buildInfoCard(
-                'Delivery Information',
-                [
-                  _buildInfoRow(
-                    Icons.check_circle,
-                    'Delivered On',
-                    order['deliveredDate'],
-                  ),
-                ],
-              ),
-            
-            if (order['status'] == 'Cancelled' && order['cancelReason'] != null)
-              _buildInfoCard(
-                'Cancellation Information',
-                [
-                  _buildInfoRow(
-                    Icons.info_outline,
-                    'Reason',
-                    order['cancelReason'],
-                  ),
-                ],
-              ),
-            
+
             const SizedBox(height: 16),
-            
-            // Action Buttons
-            if (order['status'] == 'Pending') ...[
+
+            // ── Dual Confirmation Status ───────────────────────────
+            if (status == 'accepted' || status == 'completed')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.getSurface(context),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Completion Status',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildConfirmationBadge(
+                          label: 'Seller confirmed',
+                          confirmed: sellerConfirmed,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildConfirmationBadge(
+                          label: 'Customer confirmed',
+                          confirmed: customerConfirmed,
+                        ),
+                      ],
+                    ),
+                    if (status == 'accepted' && !sellerConfirmed) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _markComplete,
+                          icon: const Icon(Icons.check_circle_outline, size: 18),
+                          label: const Text('Mark as Complete'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            foregroundColor: AppColors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (status == 'completed')
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Order completed by both parties',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.success,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // ── Action Buttons (only when pending) ─────────────────
+            if (status == 'pending') ...[
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        _showApprovalDialog();
-                      },
+                      onPressed: _showAcceptDialog,
                       icon: const Icon(Icons.check_circle_outline, size: 18),
-                      label: const Text('Approve Order'),
+                      label: const Text('Accept'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.success,
                         foregroundColor: AppColors.white,
@@ -514,9 +502,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        _showRejectionDialog();
-                      },
+                      onPressed: _showRejectDialog,
                       icon: const Icon(Icons.cancel_outlined, size: 18),
                       label: const Text('Decline'),
                       style: OutlinedButton.styleFrom(
@@ -532,50 +518,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 ],
               ),
             ],
-            
-            if (order['status'] == 'Processing') ...[
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Mark as shipped logic
-                  },
-                  icon: const Icon(Icons.local_shipping_outlined, size: 18),
-                  label: const Text('Mark as Shipped'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            
-            const SizedBox(height: 12),
-            
-            // Contact Customer Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  _openOrderChat();
-                },
-                icon: const Icon(Icons.message_outlined, size: 18),
-                label: const Text('Chat with Customer'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            
+
             const SizedBox(height: 24),
           ],
         ),
@@ -583,37 +526,48 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     );
   }
 
-  void _showApprovalDialog() {
-    final messageController = TextEditingController(
-      text: 'Your order has been approved! I will contact you shortly to arrange delivery.',
-    );
-    final navigatorContext = context;
-
-    showDialog(
-      context: navigatorContext,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Approve Order'),
-        content: Column(
+  Widget _buildConfirmationBadge({required String label, required bool confirmed}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: confirmed
+              ? AppColors.success.withValues(alpha: 0.1)
+              : AppColors.grey.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Send a message to the customer:',
-              style: TextStyle(fontSize: 14),
+            Icon(
+              confirmed ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 14,
+              color: confirmed ? AppColors.success : AppColors.grey,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: messageController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: confirmed ? AppColors.success : AppColors.grey,
                 ),
-                hintText: 'Approval message...',
               ),
-              maxLines: 3,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAcceptDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Accept Order'),
+        content: const Text('Accept this order? The customer will be notified.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -621,36 +575,33 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final uid = ref.read(userProvider).userId ?? '';
               await ref.read(orderProvider.notifier).approveOrder(
-                orderId: widget.order['id'],
-                sellerId: 'sample_seller_1',
-                approvalMessage: messageController.text.isNotEmpty
-                    ? messageController.text
-                    : 'Your order has been approved!',
+                orderId: widget.order['orderId'] ?? widget.order['id'],
+                sellerId: uid,
               );
               if (mounted) {
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(navigatorContext).showSnackBar(
-                  const SnackBar(content: Text('Order approved successfully!')),
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order accepted!')),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
             ),
-            child: const Text('Approve'),
+            child: const Text('Accept'),
           ),
         ],
       ),
     );
   }
 
-  void _showRejectionDialog() {
+  void _showRejectDialog() {
     final reasonController = TextEditingController();
-    final navigatorContext = context;
 
     showDialog(
-      context: navigatorContext,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Decline Order'),
         content: Column(
@@ -668,7 +619,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                hintText: 'Reason...',
+                hintText: 'Reason is required...',
               ),
               maxLines: 3,
             ),
@@ -681,20 +632,21 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (reasonController.text.isEmpty) {
+              if (reasonController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(content: Text('Please provide a reason')),
                 );
                 return;
               }
+              final uid = ref.read(userProvider).userId ?? '';
               await ref.read(orderProvider.notifier).rejectOrder(
-                orderId: widget.order['id'],
-                sellerId: 'sample_seller_1',
-                rejectionReason: reasonController.text,
+                orderId: widget.order['orderId'] ?? widget.order['id'],
+                sellerId: uid,
+                rejectionReason: reasonController.text.trim(),
               );
               if (mounted) {
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(navigatorContext).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Order declined')),
                 );
               }
@@ -709,17 +661,15 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     );
   }
 
-  void _openOrderChat() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OrderChatScreen(
-          orderId: widget.order['id'] ?? '',
-          sellerId: widget.order['sellerId'] ?? '',
-        ),
+  void _markComplete() {
+    final orderId = widget.order['orderId'] ?? widget.order['id'];
+    ref.read(orderProvider.notifier).markSellerComplete(orderId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Marked as complete! Waiting for customer confirmation.'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 }
-
-

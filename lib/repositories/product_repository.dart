@@ -143,13 +143,13 @@ class ProductRepository {
   // For now, they return empty lists as placeholders.
 
   /// Retrieve cached products from the local SQLite database.
+  /// Placeholder for future offline caching implementation.
   Future<List<Map<String, dynamic>>> getCachedProducts() async {
-    // TODO: Reimplement in TASK 9
     return [];
   }
 
   /// Store a list of products in the local SQLite cache.
+  /// Placeholder for future offline caching implementation.
   Future<void> cacheProducts(List<Map<String, dynamic>> products) async {
-    // TODO: Reimplement in TASK 9
   }
 }

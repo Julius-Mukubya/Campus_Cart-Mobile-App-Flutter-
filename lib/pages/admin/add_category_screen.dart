@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/category_service.dart';
+import 'package:madpractical/utils/icon_utils.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   final Map<String, dynamic>? category; // null = add mode, non-null = edit mode
@@ -20,28 +21,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   late TextEditingController _descController;
   late TextEditingController _orderController;
   late TextEditingController _imageController;
-  String _selectedIcon = 'General';
+  String _selectedIcon = 'category';
   bool _isSaving = false;
 
   bool get _isEditing => widget.category != null;
-
-  // Available Material icons for category selection
-  static const List<Map<String, dynamic>> _availableIcons = [
-    {'name': 'Electronics', 'icon': Icons.devices},
-    {'name': 'Fashion', 'icon': Icons.checkroom},
-    {'name': 'Books', 'icon': Icons.menu_book},
-    {'name': 'Food', 'icon': Icons.restaurant},
-    {'name': 'Stationery', 'icon': Icons.edit},
-    {'name': 'Sports', 'icon': Icons.sports_soccer},
-    {'name': 'Home', 'icon': Icons.home},
-    {'name': 'Beauty', 'icon': Icons.face},
-    {'name': 'Music', 'icon': Icons.music_note},
-    {'name': 'Pets', 'icon': Icons.pets},
-    {'name': 'Toys', 'icon': Icons.toys},
-    {'name': 'Health', 'icon': Icons.local_hospital},
-    {'name': 'Accessories', 'icon': Icons.watch},
-    {'name': 'General', 'icon': Icons.category},
-  ];
 
   @override
   void initState() {
@@ -53,7 +36,30 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       text: cat != null ? '${cat['order'] ?? cat['displayOrder'] ?? 0}' : '',
     );
     _imageController = TextEditingController(text: cat?['image'] ?? '');
-    _selectedIcon = cat?['icon'] ?? 'General';
+    // Determine the initial icon: try new identifier format first, fallback to legacy name
+    final rawIcon = cat?['icon']?.toString() ?? 'category';
+    _selectedIcon = AppIcons.all.containsKey(rawIcon) ? rawIcon : _legacyToNew(rawIcon);
+  }
+
+  /// Map old category title names to new icon identifiers
+  String _legacyToNew(String legacyName) {
+    const legacyMap = {
+      'Electronics': 'devices',
+      'Fashion': 'checkroom',
+      'Books': 'menu_book',
+      'Food': 'restaurant',
+      'Stationery': 'edit',
+      'Sports': 'sports_soccer',
+      'Home': 'home',
+      'Beauty': 'face',
+      'Music': 'music_note',
+      'Pets': 'pets',
+      'Toys': 'toys',
+      'Health': 'local_hospital',
+      'Accessories': 'watch',
+      'General': 'category',
+    };
+    return legacyMap[legacyName] ?? 'category';
   }
 
   @override
@@ -326,20 +332,20 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                   filled: true,
                   fillColor: AppColors.getSurface(context),
                 ),
-                items: _availableIcons.map((entry) {
+                items: AppIcons.pickerItems.map((entry) {
                   return DropdownMenuItem(
                     value: entry['name'] as String,
                     child: Row(
                       children: [
                         Icon(entry['icon'] as IconData, size: 20, color: AppColors.primary),
                         const SizedBox(width: 12),
-                        Text(entry['name'] as String),
+                        Text('${entry['label']} (${entry['name']})'),
                       ],
                     ),
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedIcon = value ?? 'General');
+                  setState(() => _selectedIcon = value ?? 'category');
                 },
               ),
 

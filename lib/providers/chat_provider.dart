@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/repositories/chat_repository.dart';
 
@@ -31,20 +32,10 @@ class ChatMessage {
       senderName: map['senderName'] ?? '',
       senderRole: map['senderRole'] ?? '',
       message: map['message'] ?? '',
-      timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now(),
+      timestamp: (map['timestamp'] as dynamic)?.toDate() ?? DateTime.now(),
       isRead: map['isRead'] ?? false,
     );
   }
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'senderId': senderId,
-        'senderName': senderName,
-        'senderRole': senderRole,
-        'message': message,
-        'timestamp': timestamp.toIso8601String(),
-        'isRead': isRead,
-      };
 }
 
 /// Chat list item (for chat list screen)
@@ -73,6 +64,8 @@ class ChatState {
   final List<ChatListItem> chatList;
   final bool isLoading;
   final String? error;
+  final bool streamingOrder;
+  final bool streamingDirect;
 
   const ChatState({
     this.orderMessages = const [],
@@ -80,6 +73,8 @@ class ChatState {
     this.chatList = const [],
     this.isLoading = false,
     this.error,
+    this.streamingOrder = false,
+    this.streamingDirect = false,
   });
 
   ChatState copyWith({
@@ -88,6 +83,8 @@ class ChatState {
     List<ChatListItem>? chatList,
     bool? isLoading,
     String? error,
+    bool? streamingOrder,
+    bool? streamingDirect,
   }) {
     return ChatState(
       orderMessages: orderMessages ?? this.orderMessages,
@@ -95,34 +92,102 @@ class ChatState {
       chatList: chatList ?? this.chatList,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      streamingOrder: streamingOrder ?? this.streamingOrder,
+      streamingDirect: streamingDirect ?? this.streamingDirect,
     );
   }
 }
 
-/// ChatNotifier - handles chat state
+/// ChatNotifier - handles chat state with real-time Firestore streams
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRepository _chatRepository = ChatRepository();
+  StreamSubscription? _orderMessagesSub;
+  StreamSubscription? _directMessagesSub;
+  StreamSubscription? _chatListSub;
 
   ChatNotifier() : super(const ChatState());
 
-  /// Load messages for an order chat
-  void loadOrderMessages(String orderId) {
-    _chatRepository.initializeOrderChat(orderId);
-    final rawMessages = _chatRepository.getOrderMessages(orderId);
-    final messages = rawMessages
-        .map((m) => ChatMessage.fromMap(m, orderId))
-        .toList();
-    state = state.copyWith(orderMessages: messages);
+  @override
+  void dispose() {
+    _orderMessagesSub?.cancel();
+    _directMessagesSub?.cancel();
+    _chatListSub?.cancel();
+    super.dispose();
   }
 
-  /// Load messages for a direct chat
-  void loadDirectMessages(String chatId) {
-    _chatRepository.initializeDirectChat(chatId);
-    final rawMessages = _chatRepository.getDirectMessages(chatId);
-    final messages = rawMessages
-        .map((m) => ChatMessage.fromMap(m, chatId))
-        .toList();
-    state = state.copyWith(directMessages: messages);
+  /// Start streaming messages for an order chat
+  void startOrderMessagesStream(String orderId) {
+    _orderMessagesSub?.cancel();
+    state = state.copyWith(streamingOrder: true);
+    _orderMessagesSub = _chatRepository.orderMessagesStream(orderId).listen(
+      (rawMessages) {
+        final messages = rawMessages
+            .map((m) => ChatMessage.fromMap(m, orderId))
+            .toList();
+        if (mounted) {
+          state = state.copyWith(orderMessages: messages, streamingOrder: false);
+        }
+      },
+      onError: (e) {
+        state = state.copyWith(error: 'Failed to load messages: $e', streamingOrder: false);
+      },
+    );
+  }
+
+  /// Start streaming messages for a direct chat
+  void startDirectMessagesStream(String chatId) {
+    _directMessagesSub?.cancel();
+    state = state.copyWith(streamingDirect: true);
+    _directMessagesSub = _chatRepository.directMessagesStream(chatId).listen(
+      (rawMessages) {
+        final messages = rawMessages
+            .map((m) => ChatMessage.fromMap(m, chatId))
+            .toList();
+        if (mounted) {
+          state = state.copyWith(directMessages: messages, streamingDirect: false);
+        }
+      },
+      onError: (e) {
+        state = state.copyWith(error: 'Failed to load messages: $e', streamingDirect: false);
+      },
+    );
+  }
+
+  /// Start streaming the chat list for a user
+  void startChatListStream(String userId) {
+    _chatListSub?.cancel();
+    state = state.copyWith(isLoading: true);
+    _chatListSub = _chatRepository.userChatsStream(userId).listen(
+      (chats) {
+        final chatList = chats.map((chat) {
+          final data = chat;
+          final isOrder = data['type'] == 'order';
+          final name = isOrder
+              ? 'Order ${data['orderId'] ?? ''}'
+              : data['lastSenderName'] ?? 'User';
+          return ChatListItem(
+            id: data['id'] ?? '',
+            otherParticipantName: name,
+            lastMessage: data['lastMessage'],
+            lastMessageTime: (data['lastMessageAt'] as dynamic)?.toDate(),
+            isOrderChat: isOrder,
+          );
+        }).toList();
+        if (mounted) {
+          state = state.copyWith(chatList: chatList, isLoading: false);
+        }
+      },
+      onError: (e) {
+        state = state.copyWith(error: 'Failed to load chats: $e', isLoading: false);
+      },
+    );
+  }
+
+  /// Stop all streams
+  void stopAllStreams() {
+    _orderMessagesSub?.cancel();
+    _directMessagesSub?.cancel();
+    _chatListSub?.cancel();
   }
 
   /// Send a message in an order chat
@@ -134,7 +199,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String message,
   }) async {
     if (message.trim().isEmpty) return;
-    state = state.copyWith(isLoading: true);
     try {
       await _chatRepository.sendOrderMessage(
         orderId: orderId,
@@ -143,9 +207,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         senderRole: senderRole,
         message: message.trim(),
       );
-      loadOrderMessages(orderId);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to send message');
+      state = state.copyWith(error: 'Failed to send message');
     }
   }
 
@@ -156,9 +219,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String senderName,
     required String senderRole,
     required String message,
+    required List<String> participants,
   }) async {
     if (message.trim().isEmpty) return;
-    state = state.copyWith(isLoading: true);
     try {
       await _chatRepository.sendDirectMessage(
         chatId: chatId,
@@ -166,18 +229,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
         senderName: senderName,
         senderRole: senderRole,
         message: message.trim(),
+        participants: participants,
       );
-      loadDirectMessages(chatId);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to send message');
+      state = state.copyWith(error: 'Failed to send message');
     }
-  }
-
-  /// Load the chat list for the current user
-  void loadChatList() {
-    // This is a stub. In production, this would fetch from Firestore.
-    // For now, we return an empty list.
-    state = state.copyWith(chatList: []);
   }
 }
 

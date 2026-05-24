@@ -1,16 +1,30 @@
+import 'dart:async';
 import 'package:madpractical/services/chat_service.dart';
 import 'package:madpractical/utils/app_logger.dart';
 
 /// Repository for chat operations.
-/// Currently wraps ChatService (in-memory).
-/// Will be wired to Firestore in a future phase.
+/// Wraps Firestore-backed ChatService.
 class ChatRepository {
   final ChatService _chatService = ChatService();
 
-  /// Get all messages for an order chat
-  List<Map<String, dynamic>> getOrderMessages(String orderId) {
-    return _chatService.getOrderMessages(orderId);
+  // ── Streams ─────────────────────────────────────────────────────────
+
+  /// Stream messages for an order chat
+  Stream<List<Map<String, dynamic>>> orderMessagesStream(String orderId) {
+    return _chatService.orderMessagesStream(orderId);
   }
+
+  /// Stream messages for a direct chat
+  Stream<List<Map<String, dynamic>>> directMessagesStream(String chatId) {
+    return _chatService.directMessagesStream(chatId);
+  }
+
+  /// Stream all chats for a user
+  Stream<List<Map<String, dynamic>>> userChatsStream(String userId) {
+    return _chatService.userChatsStream(userId);
+  }
+
+  // ── Send Messages ───────────────────────────────────────────────────
 
   /// Send a message in an order chat
   Future<void> sendOrderMessage({
@@ -30,12 +44,8 @@ class ChatRepository {
       );
     } catch (e) {
       AppLogger.error('Error sending order message', error: e);
+      rethrow;
     }
-  }
-
-  /// Get all messages for an admin-seller or direct chat
-  List<Map<String, dynamic>> getDirectMessages(String chatId) {
-    return _chatService.getAdminSellerMessages(chatId);
   }
 
   /// Send a message in a direct chat
@@ -45,48 +55,40 @@ class ChatRepository {
     required String senderName,
     required String senderRole,
     required String message,
+    required List<String> participants,
   }) async {
     try {
-      await _chatService.sendAdminSellerMessage(
-        sellerId: chatId,
+      await _chatService.sendDirectMessage(
+        chatId: chatId,
         senderId: senderId,
         senderName: senderName,
         senderRole: senderRole,
         message: message,
+        participants: participants,
       );
     } catch (e) {
       AppLogger.error('Error sending direct message', error: e);
+      rethrow;
     }
   }
 
-  /// Get the last message in an order chat
-  Map<String, dynamic>? getLastOrderMessage(String orderId) {
-    return _chatService.getLastOrderMessage(orderId);
+  // ── Mark as Read ────────────────────────────────────────────────────
+
+  /// Mark all messages as read
+  Future<void> markAllAsRead({
+    required String chatId,
+    required String userId,
+    bool isOrderChat = false,
+  }) async {
+    await _chatService.markAllAsRead(
+      chatId: chatId,
+      userId: userId,
+      isOrderChat: isOrderChat,
+    );
   }
 
-  /// Get the last message in a direct chat
-  Map<String, dynamic>? getLastDirectMessage(String chatId) {
-    return _chatService.getLastAdminSellerMessage(chatId);
-  }
-
-  /// Initialize a new order chat
-  void initializeOrderChat(String orderId) {
-    _chatService.initializeOrderChat(orderId);
-  }
-
-  /// Initialize a new direct chat
-  void initializeDirectChat(String chatId) {
-    _chatService.initializeSellerChat(chatId);
-  }
-
-  /// Get all active chat IDs (from order chats + direct chats)
-  List<String> getActiveOrderChats() {
-    // This is a simplification - in production, this would come from Firestore
-    return [];
-  }
-
-  /// Get all active direct chat IDs
-  List<String> getActiveDirectChats() {
-    return _chatService.getActiveSellers();
+  /// Get unread count
+  Future<int> getUnreadCount(String chatId, String userId, {bool isOrderChat = false}) async {
+    return _chatService.getUnreadCount(chatId, userId, isOrderChat: isOrderChat);
   }
 }

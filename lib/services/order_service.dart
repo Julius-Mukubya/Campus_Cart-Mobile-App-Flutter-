@@ -1,33 +1,52 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../repositories/order_repository.dart';
 import '../utils/app_logger.dart';
 
 class OrderService {
   final FirebaseFirestore _firestore;
+  final OrderRepository? _orderRepository;
 
-  OrderService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  OrderService({FirebaseFirestore? firestore, OrderRepository? orderRepository})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _orderRepository = orderRepository;
 
-  /// Create a new order
+  /// ── New Order ──────────────────────────────────────────────────────
+
+  /// Create a new order (simplified — no delivery address, no payment)
   Future<String> createOrder({
     required List<Map<String, dynamic>> items,
-    required Map<String, dynamic> deliveryAddress,
-    required String paymentMethod,
     required double total,
-    String? customerId,
-    String? sellerId,
+    required String customerId,
+    required String customerName,
+    required String customerPhone,
+    required String sellerId,
+    required bool showContactToSeller,
   }) async {
     try {
-      final docRef = await _firestore.collection('orders').add({
+      final orderData = {
         'items': items,
-        'deliveryAddress': deliveryAddress,
-        'paymentMethod': paymentMethod,
         'total': total,
         'customerId': customerId,
+        'customerName': customerName,
+        'customerPhone': customerPhone,
         'sellerId': sellerId,
+        'showContactToSeller': showContactToSeller,
         'status': 'pending',
+        'sellerConfirmed': false,
+        'customerConfirmed': false,
+        'rejectionReason': null,
+      };
+
+      if (_orderRepository != null) {
+        return await _orderRepository.createOrder(orderData);
+      }
+
+      final docRef = await _firestore.collection('orders').add({
+        ...orderData,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      AppLogger.info('Order created: ${docRef.id}');
       return docRef.id;
     } catch (e) {
       AppLogger.error('Error creating order', error: e);
@@ -35,21 +54,131 @@ class OrderService {
     }
   }
 
-  /// Confirm an order after payment
-  Future<void> confirmOrder(String orderId) async {
+  /// ── Accept / Reject ────────────────────────────────────────────────
+
+  /// Seller accepts an order
+  Future<void> acceptOrder(String orderId) async {
     try {
       await _firestore.collection('orders').doc(orderId).update({
-        'confirmed': true,
-        'confirmedAt': FieldValue.serverTimestamp(),
+        'status': 'accepted',
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      AppLogger.info('Order accepted: $orderId');
     } catch (e) {
-      AppLogger.error('Error confirming order', error: e);
+      AppLogger.error('Error accepting order', error: e);
       rethrow;
     }
   }
 
-  /// Get orders for a user
+  /// Seller rejects an order (reason is required)
+  Future<void> rejectOrder(String orderId, String reason) async {
+    try {
+      if (reason.trim().isEmpty) {
+        throw Exception('Rejection reason is required');
+      }
+      await _firestore.collection('orders').doc(orderId).update({
+        'status': 'rejected',
+        'rejectionReason': reason,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.info('Order rejected: $orderId');
+    } catch (e) {
+      AppLogger.error('Error rejecting order', error: e);
+      rethrow;
+    }
+  }
+
+  /// ── Dual Confirmation Completion ───────────────────────────────────
+
+  /// Mark seller's confirmation for completion
+  Future<void> markSellerComplete(String orderId) async {
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'sellerConfirmed': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      await _checkAndComplete(orderId);
+    } catch (e) {
+      AppLogger.error('Error marking seller complete', error: e);
+      rethrow;
+    }
+  }
+
+  /// Mark customer's confirmation for completion
+  Future<void> markCustomerComplete(String orderId) async {
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'customerConfirmed': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      await _checkAndComplete(orderId);
+    } catch (e) {
+      AppLogger.error('Error marking customer complete', error: e);
+      rethrow;
+    }
+  }
+
+  /// Check if both confirmed and mark as completed
+  Future<void> _checkAndComplete(String orderId) async {
+    try {
+      final doc = await _firestore.collection('orders').doc(orderId).get();
+      if (!doc.exists) return;
+      final data = doc.data()!;
+      if (data['sellerConfirmed'] == true && data['customerConfirmed'] == true) {
+        await _firestore.collection('orders').doc(orderId).update({
+          'status': 'completed',
+          'completedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        AppLogger.info('Order completed: $orderId');
+      }
+    } catch (e) {
+      AppLogger.error('Error checking completion', error: e);
+    }
+  }
+
+  /// ── Customer Cancel ────────────────────────────────────────────────
+
+  /// Customer cancels an order (only when status is 'pending')
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      final doc = await _firestore.collection('orders').doc(orderId).get();
+      if (!doc.exists) throw Exception('Order not found');
+      final status = doc.data()!['status'] as String? ?? '';
+      if (status != 'pending') {
+        throw Exception('Can only cancel pending orders');
+      }
+      await _firestore.collection('orders').doc(orderId).update({
+        'status': 'cancelled',
+        'cancelledAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.info('Order cancelled: $orderId');
+    } catch (e) {
+      AppLogger.error('Error cancelling order', error: e);
+      rethrow;
+    }
+  }
+
+  /// ── Follow-up ──────────────────────────────────────────────────────
+
+  /// Customer follow-up — re-enables chat on a completed order
+  Future<void> enableFollowUp(String orderId) async {
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'followUp': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.info('Follow-up enabled for order: $orderId');
+    } catch (e) {
+      AppLogger.error('Error enabling follow-up', error: e);
+      rethrow;
+    }
+  }
+
+  /// ── Fetch Orders ───────────────────────────────────────────────────
+
+  /// Get orders for a customer
   Future<List<Map<String, dynamic>>> getUserOrders(String userId) async {
     try {
       final snapshot = await _firestore
@@ -89,7 +218,7 @@ class OrderService {
     }
   }
 
-  /// Update order status
+  /// Update order status (generic)
   Future<void> updateOrderStatus(String orderId, String status, {String? reason}) async {
     try {
       final updates = <String, dynamic>{
@@ -98,14 +227,10 @@ class OrderService {
       };
       if (reason != null) updates['rejectionReason'] = reason;
       await _firestore.collection('orders').doc(orderId).update(updates);
+      AppLogger.info('Order status updated: $orderId -> $status');
     } catch (e) {
       AppLogger.error('Error updating order status', error: e);
       rethrow;
     }
-  }
-
-  /// Cancel an order
-  Future<void> cancelOrder(String orderId) async {
-    await updateOrderStatus(orderId, 'cancelled');
   }
 }

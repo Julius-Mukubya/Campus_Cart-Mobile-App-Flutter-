@@ -101,11 +101,11 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   void logout() {
-    state = UserState(
+    state = const UserState(
       userId: null,
       name: 'Guest User',
       email: 'guest@example.com',
-      phone: '+256 700 000 000',
+      phone: '',
       role: 'customer',
       storeId: null,
     );

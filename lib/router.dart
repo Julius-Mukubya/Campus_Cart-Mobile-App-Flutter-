@@ -41,6 +41,7 @@ import 'package:madpractical/pages/admin/add_category_screen.dart';
 import 'package:madpractical/pages/profile/profile_screen.dart';
 import 'package:madpractical/pages/profile/edit_profile_screen.dart';
 import 'package:madpractical/pages/profile/privacy_security_screen.dart';
+import 'package:madpractical/pages/profile/change_password_screen.dart';
 import 'package:madpractical/pages/profile/become_seller_screen.dart';
 import 'package:madpractical/pages/profile/faq_screen.dart';
 import 'package:madpractical/pages/profile/contact_us_screen.dart';
@@ -257,6 +258,10 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/privacy-security',
         builder: (context, state) => const PrivacySecurityScreen(),
+      ),
+      GoRoute(
+        path: '/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: '/become-seller',
