@@ -14,7 +14,16 @@ import 'package:madpractical/providers/auth_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:madpractical/router.dart';
+import 'package:madpractical/services/fcm_service.dart';
+
+/// Top-level background message handler — must be outside main().
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FcmService.backgroundHandler(message);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +49,12 @@ void main() async {
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
+
+  // Register FCM background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Initialize FCM service
+  await FcmService().init();
 
   // Initialize router auth state
   routerAuthNotifier.update(RouterUserState(
@@ -81,14 +96,19 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     // Restore user session from SharedPreferences into user provider
     if (PreferencesService.isLoggedIn) {
-      ref.read(userProvider.notifier).updateProfile(
-        userId: PreferencesService.userId,
-        name: PreferencesService.userName,
-        email: PreferencesService.userEmail,
-        phone: PreferencesService.userPhone,
-        role: PreferencesService.userRole,
-        storeId: PreferencesService.storeId,
-      );
+      final userId = PreferencesService.userId;
+      if (userId != null && userId.isNotEmpty) {
+        ref.read(userProvider.notifier).updateProfile(
+          userId: userId,
+          name: PreferencesService.userName,
+          email: PreferencesService.userEmail,
+          phone: PreferencesService.userPhone,
+          role: PreferencesService.userRole,
+          storeId: PreferencesService.storeId,
+        );
+        // Register FCM token for restored session
+        FcmService().setUserId(userId);
+      }
     }
   }
 
@@ -251,12 +271,16 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Sync user provider changes to router auth notifier
+    // Sync user provider changes to router auth notifier + FCM
     ref.listen(userProvider, (prev, next) {
       routerAuthNotifier.update(RouterUserState(
         isLoggedIn: next.userId != null && next.userId!.isNotEmpty,
         role: next.role,
       ));
+      // Register FCM token for the current user
+      if (next.userId != null && next.userId!.isNotEmpty) {
+        FcmService().setUserId(next.userId!);
+      }
     });
 
     // Sync auth provider changes to user provider (fix guest user after login)
@@ -272,6 +296,10 @@ class _MyAppState extends ConsumerState<MyApp> {
           storeId: PreferencesService.storeId,
           profileImage: PreferencesService.profileImage,
         );
+        // Register FCM token for newly logged in user
+        if (next.userId != null && next.userId!.isNotEmpty) {
+          FcmService().setUserId(next.userId!);
+        }
       }
     });
 

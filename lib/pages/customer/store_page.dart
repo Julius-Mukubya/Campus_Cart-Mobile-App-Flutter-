@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/services/product_service.dart';
@@ -8,9 +9,9 @@ import 'package:madpractical/services/auth_service.dart';
 
 /// Store page showing a seller's products and info with a "Message" button.
 class StorePage extends ConsumerStatefulWidget {
-  final String? sellerId;
+  final String sellerId;
 
-  const StorePage({super.key, this.sellerId});
+  const StorePage({super.key, this.sellerId = ''});
 
   @override
   ConsumerState<StorePage> createState() => _StorePageState();
@@ -34,16 +35,28 @@ class _StorePageState extends ConsumerState<StorePage> {
     setState(() => _isLoading = true);
     try {
       // Load seller info from Firestore
-      if (widget.sellerId != null && widget.sellerId!.isNotEmpty) {
-        final sellerData = await _authService.getUserData(widget.sellerId!);
+      if (widget.sellerId.isNotEmpty) {
+        final sellerData = await _authService.getUserData(widget.sellerId);
         if (sellerData != null) {
+          final joined = sellerData['createdAt'];
+          String joinedStr = '';
+          if (joined is Timestamp) {
+            final dt = joined.toDate();
+            final months = [
+              'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            ];
+            joinedStr = '${months[dt.month - 1]} ${dt.year}';
+          } else if (joined is String && joined.isNotEmpty) {
+            joinedStr = joined;
+          }
           _storeInfo = {
             'name': sellerData['name'] ?? 'Store',
             'email': sellerData['email'] ?? '',
-            'phone': sellerData['phone'] ?? '',
+            'phone': sellerData['phone'] ?? '', // Ensure non-null
             'rating': 4.0, // Will be replaced with real rating in Phase F
             'totalProducts': 0,
-            'joined': sellerData['createdAt']?.toString() ?? '',
+            'joined': joinedStr,
             'description': sellerData['description'] ?? 'Campus store offering quality products.',
           };
         }
@@ -66,7 +79,7 @@ class _StorePageState extends ConsumerState<StorePage> {
         'rating': 4.0,
         'totalProducts': 0,
         'joined': '',
-        'description': 'Campus store.',
+        'description': 'Campus store offering quality products.',
       };
     }
     if (mounted) setState(() => _isLoading = false);
@@ -75,10 +88,10 @@ class _StorePageState extends ConsumerState<StorePage> {
   void _openChat() {
     final userState = ref.read(userProvider);
     if (userState.userId == null || userState.userId!.isEmpty) return;
-    if (widget.sellerId == null || widget.sellerId!.isEmpty) return;
+    if (widget.sellerId.isEmpty) return;
 
     // Sort participant IDs for consistency
-    final participants = [userState.userId!, widget.sellerId!]..sort();
+    final participants = [userState.userId!, widget.sellerId]..sort();
     final sortedChatId = 'direct_${participants[0]}_${participants[1]}';
 
     // Navigate to chat screen
@@ -141,7 +154,7 @@ class _StorePageState extends ConsumerState<StorePage> {
         ),
         centerTitle: false,
         actions: [
-          if (userState.role == 'customer' && widget.sellerId != null)
+          if (userState.role == 'customer' && widget.sellerId.isNotEmpty)
             GestureDetector(
               onTap: _openChat,
               child: Container(
@@ -255,9 +268,12 @@ class _StorePageState extends ConsumerState<StorePage> {
                           children: [
                             const Icon(Icons.calendar_today, size: 14, color: AppColors.grey),
                             const SizedBox(width: 6),
-                            Text(
-                              'Joined ${_storeInfo['joined']}',
-                              style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
+                            Flexible(
+                              child: Text(
+                                'Joined ${_storeInfo['joined']}',
+                                style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -386,9 +402,9 @@ class _StorePageState extends ConsumerState<StorePage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: product['imageUrl'] != null && product['imageUrl'].toString().isNotEmpty
+                child: product['image'] != null && product['image'].toString().isNotEmpty
                     ? Image.network(
-                        product['imageUrl'],
+                        product['image'],
                         width: 80, height: 80, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Center(
                           child: Icon(Icons.image_outlined, color: AppColors.grey),
@@ -437,7 +453,9 @@ class _StorePageState extends ConsumerState<StorePage> {
                 ],
               ),
             ),
-            if (product['discount'] != null && (product['discount'] as num).toDouble() > 0)
+            if (product['discount'] != null &&
+                product['discount'].toString().isNotEmpty &&
+                product['discount'].toString().replaceAll(RegExp(r'[^0-9.]'), '').isNotEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -445,7 +463,7 @@ class _StorePageState extends ConsumerState<StorePage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '-${product['discount']}%',
+                  product['discount'].toString(),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -462,7 +480,7 @@ class _StorePageState extends ConsumerState<StorePage> {
   String _formatPrice(dynamic price) {
     if (price is double || price is int) return price.toStringAsFixed(0);
     if (price is String) {
-      final numericString = price.replaceAll(RegExp(r'[^0-9]'), '');
+      final numericString = price.replaceAll(RegExp(r'[^0-9.]'), '');
       return (double.tryParse(numericString) ?? 0).toStringAsFixed(0);
     }
     return '0';

@@ -3,6 +3,7 @@ import 'package:madpractical/providers/order_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/widgets/common/order_chat_section.dart';
 
 /// Seller order details for the simplified order flow.
 /// Statuses: pending → accepted/rejected → completed
@@ -479,6 +480,16 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
               ),
 
             const SizedBox(height: 16),
+
+            // ── Order Chat Section ─────────────────────────────────
+            if (status != 'rejected' && status != 'cancelled')
+              OrderChatSection(
+                orderId: orderId,
+                otherParticipantName: customerName,
+                order: widget.order,
+              ),
+
+            const SizedBox(height: 24),
 
             // ── Action Buttons (only when pending) ─────────────────
             if (status == 'pending') ...[

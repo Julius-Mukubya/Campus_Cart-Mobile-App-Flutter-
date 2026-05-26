@@ -27,6 +27,7 @@ import 'package:madpractical/pages/seller/seller_orders_screen.dart';
 import 'package:madpractical/pages/seller/add_product_screen.dart';
 import 'package:madpractical/pages/seller/edit_product_screen.dart';
 import 'package:madpractical/pages/seller/seller_order_details_screen.dart' as seller_order;
+import 'package:madpractical/pages/seller/seller_store_settings_screen.dart';
 
 // Admin screens
 import 'package:madpractical/pages/admin/admin_dashboard_screen.dart';
@@ -249,6 +250,10 @@ GoRouter buildRouter() {
         builder: (context, state) => const AddProductScreen(),
       ),
       GoRoute(
+        path: '/seller/store-settings',
+        builder: (context, state) => const SellerStoreSettingsScreen(),
+      ),
+      GoRoute(
         path: '/seller/order-details',
         builder: (context, state) {
           final order = state.extra as Map<String, dynamic>;
@@ -338,7 +343,7 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/store/:sellerId',
         builder: (context, state) {
-          final sellerId = state.pathParameters['sellerId'];
+          final sellerId = state.pathParameters['sellerId'] ?? '';
           return StorePage(sellerId: sellerId);
         },
       ),

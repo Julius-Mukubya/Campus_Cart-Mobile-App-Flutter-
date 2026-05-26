@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/review_service.dart';
 import 'package:madpractical/services/product_service.dart';
+import 'package:madpractical/services/auth_service.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -42,6 +43,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   final ReviewService _reviewService = ReviewService();
   final ProductService _productService = ProductService();
+  final AuthService _authService = AuthService();
+
+  // Seller / Store state
+  Map<String, dynamic>? _sellerData;
+  bool _loadingSeller = false;
 
   // Review state
   List<Map<String, dynamic>> _reviews = [];
@@ -58,6 +64,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     super.initState();
     _loadReviews();
     _loadRelatedProducts();
+    _loadSellerData();
+  }
+
+  Future<void> _loadSellerData() async {
+    final sellerId = widget.product['sellerId'] as String? ?? '';
+    if (sellerId.isEmpty) return;
+    setState(() => _loadingSeller = true);
+    try {
+      final data = await _authService.getUserData(sellerId);
+      if (data != null && mounted) {
+        setState(() {
+          _sellerData = data;
+          _loadingSeller = false;
+        });
+      } else if (mounted) {
+        setState(() => _loadingSeller = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingSeller = false);
+    }
   }
 
   @override
@@ -132,7 +158,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   double _extractPrice(String priceString) {
-    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(numericString) ?? 0.0;
   }
 
@@ -140,7 +166,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final originalPrice = _extractPrice(product['price']);
     
     if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
-      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
       final discountPercent = double.tryParse(discountStr) ?? 0.0;
       
       if (discountPercent > 0) {
@@ -327,7 +353,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       },
                     ),
                   ),
-                  if (widget.product['discount'] != null)
+                  if (widget.product['discount'] != null && widget.product['discount'].toString().isNotEmpty)
                     Positioned(
                       top: 12,
                       left: 12,
@@ -469,7 +495,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+
+                  // ── Store / Seller Info ────────────────────────────────
+                  _buildStoreInfoCard(),
+                  const SizedBox(height: 16),
 
                   // Add to Cart Button
                   Container(
@@ -1059,6 +1089,132 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Store Info Card ──────────────────────────────────────────────────────
+  Widget _buildStoreInfoCard() {
+    final sellerId = widget.product['sellerId'] as String? ?? '';
+    if (sellerId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final storeName = _sellerData?['name'] as String? ?? _sellerData?['storeName'] as String? ?? 'Seller';
+    final storePhone = _sellerData?['phone'] as String? ?? '';
+    final storeEmail = _sellerData?['email'] as String? ?? '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.getSurface(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _loadingSeller
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                      )
+                    : const Icon(Icons.store, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sold by',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _loadingSeller ? 'Loading...' : storeName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!_loadingSeller && sellerId.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    context.push('/store/$sellerId');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.arrow_forward, color: AppColors.white, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Visit',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (storePhone.isNotEmpty || storeEmail.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            if (storePhone.isNotEmpty)
+              Row(
+                children: [
+                  const Icon(Icons.phone_outlined, size: 14, color: AppColors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    storePhone,
+                    style: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+                  ),
+                ],
+              ),
+            if (storeEmail.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.email_outlined, size: 14, color: AppColors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    storeEmail,
+                    style: const TextStyle(fontSize: 13, color: AppColors.secondaryText),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ],
       ),
     );
   }

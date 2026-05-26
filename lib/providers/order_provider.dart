@@ -204,6 +204,22 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
+  /// Enable follow-up on a completed order (re-enables chat)
+  Future<void> enableFollowUp(String orderId) async {
+    try {
+      await _orderService.enableFollowUp(orderId);
+      final orderIndex = state.orders.indexWhere((order) => (order['orderId'] ?? order['id']) == orderId);
+      if (orderIndex != -1) {
+        final updatedOrders = List<Map<String, dynamic>>.from(state.orders);
+        updatedOrders[orderIndex]['followUp'] = true;
+        state = state.copyWith(orders: updatedOrders);
+      }
+      AppLogger.info('Follow-up enabled for order: $orderId');
+    } catch (e) {
+      AppLogger.error('Error enabling follow-up', error: e);
+    }
+  }
+
   /// Get approval status of an order
   String getApprovalStatus(String orderId) {
     return state.orderApprovals[orderId]?['status'] ?? 'pending';

@@ -207,6 +207,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                     child: TextField(
                       controller: _messageController,
+                      maxLines: null,
                       decoration: const InputDecoration(
                         hintText: 'Type a message...',
                         hintStyle: TextStyle(color: AppColors.grey),

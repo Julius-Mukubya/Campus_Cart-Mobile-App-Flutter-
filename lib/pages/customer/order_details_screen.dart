@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/widgets/common/order_chat_section.dart';
 
 /// Simplified order details screen for the new order flow.
 /// Statuses: pending → accepted/rejected/cancelled → completed
@@ -66,6 +67,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     final sellerConfirmed = order['sellerConfirmed'] == true;
     final customerConfirmed = order['customerConfirmed'] == true;
     final rejectionReason = order['rejectionReason'] as String?;
+    final sellerName = order['sellerName'] as String? ?? 'Seller';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -302,6 +304,23 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _enableFollowUp,
+                            icon: const Icon(Icons.replay, size: 18),
+                            label: const Text('Follow-up'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(color: AppColors.primary),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -418,6 +437,16 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
+
+              // ── Order Chat Section ─────────────────────────────────
+              if (status != 'rejected')
+                OrderChatSection(
+                  orderId: orderId,
+                  otherParticipantName: sellerName,
+                  order: widget.order,
+                ),
+
               const SizedBox(height: 24),
 
               // ── Cancel Button (only when pending) ──────────────────
@@ -561,6 +590,18 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Marked as complete! Waiting for seller confirmation.'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _enableFollowUp() {
+    final orderId = widget.order['orderId'] ?? widget.order['id'];
+    ref.read(orderProvider.notifier).enableFollowUp(orderId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Follow-up enabled! You can now chat with the seller.'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),

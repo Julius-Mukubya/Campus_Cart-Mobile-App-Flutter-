@@ -1,84 +1,102 @@
 import 'cart_item_model.dart';
 
+/// Simplified OrderModel matching the actual order lifecycle.
+/// Statuses: pending → accepted/rejected/cancelled → completed
+/// No delivery, no payment, no address — just ordering + chat + reviews.
 class OrderModel {
   final String id;
   final String userId;
+  final String customerName;
+  final String? customerPhone;
+  final String sellerId;
+  final String? sellerName;
   final List<CartItemModel> items;
-  final double subtotal;
-  final double deliveryFee;
   final double total;
-  final String status; // 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'
-  final String paymentMethod; // 'card', 'mobile_money', 'cash_on_delivery'
-  final bool paymentStatus; // true if paid
-  final String deliveryAddress;
-  final String? phone;
+  final String status; // 'pending', 'accepted', 'rejected', 'cancelled', 'completed'
+  final bool showContactToSeller;
+  final bool sellerConfirmed;
+  final bool customerConfirmed;
+  final String? rejectionReason;
+  final bool followUp;
   final String? notes;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final DateTime? deliveredAt;
+  final DateTime? completedAt;
 
   const OrderModel({
     required this.id,
     required this.userId,
+    required this.customerName,
+    this.customerPhone,
+    required this.sellerId,
+    this.sellerName,
     required this.items,
-    required this.subtotal,
-    required this.deliveryFee,
     required this.total,
     required this.status,
-    required this.paymentMethod,
-    this.paymentStatus = false,
-    required this.deliveryAddress,
-    this.phone,
+    this.showContactToSeller = true,
+    this.sellerConfirmed = false,
+    this.customerConfirmed = false,
+    this.rejectionReason,
+    this.followUp = false,
     this.notes,
     required this.createdAt,
     this.updatedAt,
-    this.deliveredAt,
+    this.completedAt,
   });
 
-  /// Check if order can be cancelled
-  bool get canBeCancelled => !['delivered', 'cancelled'].contains(status);
+  /// Check if order can be cancelled (only pending)
+  bool get canBeCancelled => status == 'pending';
 
   /// Check if order is complete
-  bool get isCompleted => status == 'delivered';
+  bool get isCompleted => status == 'completed';
 
   /// Create OrderModel from Firestore document
   factory OrderModel.fromFirestore(Map<String, dynamic> data, String docId) {
     return OrderModel(
       id: docId,
-      userId: data['userId'] ?? '',
-      items: (data['items'] as List?)?.map((item) => CartItemModel.fromMap(item as Map<String, dynamic>)).toList() ?? [],
-      subtotal: (data['subtotal'] as num?)?.toDouble() ?? 0.0,
-      deliveryFee: (data['deliveryFee'] as num?)?.toDouble() ?? 0.0,
+      userId: data['customerId'] ?? data['userId'] ?? '',
+      customerName: data['customerName'] ?? 'Customer',
+      customerPhone: data['customerPhone'] as String?,
+      sellerId: data['sellerId'] ?? '',
+      sellerName: data['sellerName'] as String?,
+      items: (data['items'] as List?)
+              ?.map((item) => CartItemModel.fromMap(item as Map<String, dynamic>))
+              .toList() ??
+          [],
       total: (data['total'] as num?)?.toDouble() ?? 0.0,
       status: data['status'] ?? 'pending',
-      paymentMethod: data['paymentMethod'] ?? 'cash_on_delivery',
-      paymentStatus: data['paymentStatus'] ?? false,
-      deliveryAddress: data['deliveryAddress'] ?? '',
-      phone: data['phone'],
-      notes: data['notes'],
+      showContactToSeller: data['showContactToSeller'] ?? true,
+      sellerConfirmed: data['sellerConfirmed'] ?? false,
+      customerConfirmed: data['customerConfirmed'] ?? false,
+      rejectionReason: data['rejectionReason'] as String?,
+      followUp: data['followUp'] ?? false,
+      notes: data['notes'] as String?,
       createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as dynamic)?.toDate(),
-      deliveredAt: (data['deliveredAt'] as dynamic)?.toDate(),
+      completedAt: (data['completedAt'] as dynamic)?.toDate(),
     );
   }
 
   /// Convert OrderModel to Firestore document
   Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId,
+      'customerId': userId,
+      'customerName': customerName,
+      'customerPhone': customerPhone,
+      'sellerId': sellerId,
+      'sellerName': sellerName,
       'items': items.map((item) => item.toMap()).toList(),
-      'subtotal': subtotal,
-      'deliveryFee': deliveryFee,
       'total': total,
       'status': status,
-      'paymentMethod': paymentMethod,
-      'paymentStatus': paymentStatus,
-      'deliveryAddress': deliveryAddress,
-      'phone': phone,
+      'showContactToSeller': showContactToSeller,
+      'sellerConfirmed': sellerConfirmed,
+      'customerConfirmed': customerConfirmed,
+      'rejectionReason': rejectionReason,
+      'followUp': followUp,
       'notes': notes,
       'createdAt': createdAt,
       'updatedAt': updatedAt ?? DateTime.now(),
-      'deliveredAt': deliveredAt,
+      'completedAt': completedAt,
     };
   }
 
@@ -86,39 +104,46 @@ class OrderModel {
   OrderModel copyWith({
     String? id,
     String? userId,
+    String? customerName,
+    String? customerPhone,
+    String? sellerId,
+    String? sellerName,
     List<CartItemModel>? items,
-    double? subtotal,
-    double? deliveryFee,
     double? total,
     String? status,
-    String? paymentMethod,
-    bool? paymentStatus,
-    String? deliveryAddress,
-    String? phone,
+    bool? showContactToSeller,
+    bool? sellerConfirmed,
+    bool? customerConfirmed,
+    String? rejectionReason,
+    bool? followUp,
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
-    DateTime? deliveredAt,
+    DateTime? completedAt,
   }) {
     return OrderModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      sellerId: sellerId ?? this.sellerId,
+      sellerName: sellerName ?? this.sellerName,
       items: items ?? this.items,
-      subtotal: subtotal ?? this.subtotal,
-      deliveryFee: deliveryFee ?? this.deliveryFee,
       total: total ?? this.total,
       status: status ?? this.status,
-      paymentMethod: paymentMethod ?? this.paymentMethod,
-      paymentStatus: paymentStatus ?? this.paymentStatus,
-      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
-      phone: phone ?? this.phone,
+      showContactToSeller: showContactToSeller ?? this.showContactToSeller,
+      sellerConfirmed: sellerConfirmed ?? this.sellerConfirmed,
+      customerConfirmed: customerConfirmed ?? this.customerConfirmed,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      followUp: followUp ?? this.followUp,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      deliveredAt: deliveredAt ?? this.deliveredAt,
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 
   @override
-  String toString() => 'OrderModel(id: $id, userId: $userId, total: $total, status: $status)';
+  String toString() =>
+      'OrderModel(id: $id, customer: $customerName, total: $total, status: $status)';
 }

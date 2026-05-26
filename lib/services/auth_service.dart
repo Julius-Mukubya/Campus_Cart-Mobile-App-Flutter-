@@ -30,6 +30,9 @@ class AuthService {
   // Sign in with Google — call this from both sign-in and sign-up screens
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
+      // Force sign out first to always show the account picker (don't use cached account)
+      await _googleSignIn.signOut();
+
       // Always show account picker (no silent sign-in)
       GoogleSignInAccount? googleAccount = await _googleSignIn.signIn();
 

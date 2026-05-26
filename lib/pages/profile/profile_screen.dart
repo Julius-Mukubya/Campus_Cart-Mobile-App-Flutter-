@@ -21,6 +21,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final accountItems = [
       {
+        'icon': Icons.shopping_cart_outlined,
+        'title': 'My Cart',
+        'subtitle': 'View your cart items',
+        'color': AppColors.primary,
+        'onTap': () => context.push('/cart'),
+      },
+      {
+        'icon': Icons.favorite_outline,
+        'title': 'My Wishlist',
+        'subtitle': 'Your saved items',
+        'color': AppColors.primary,
+        'onTap': () => context.push('/wishlist'),
+      },
+      {
         'icon': Icons.receipt_long_outlined,
         'title': 'My Orders',
         'subtitle': 'Track your orders',
@@ -261,7 +275,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildAppearanceSection() {
     final settings = AppSettings();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.getSurface(context),
@@ -296,79 +309,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              height: 0.5,
-              color: isDark
-                  ? AppColors.darkSecondaryText.withValues(alpha: 0.12)
-                  : AppColors.grey.withValues(alpha: 0.12),
-            ),
-          ),
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.teal.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.language, color: Colors.teal, size: 20),
-            ),
-            title: Text('Language', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.getText(context))),
-            subtitle: Text(
-              AppSettings.supportedLanguages
-                  .firstWhere((l) => l['code'] == settings.locale.languageCode,
-                      orElse: () => {'name': 'English'})['name']!,
-              style: TextStyle(fontSize: 12, color: AppColors.getSecondaryText(context)),
-            ),
-            trailing: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: isDark ? AppColors.darkSurface : AppColors.secondary, borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.getText(context)),
-            ),
-            onTap: () => _showLanguagePicker(settings),
-          ),
         ],
-      ),
-    );
-  }
-
-  void _showLanguagePicker(AppSettings settings) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 4,
-                decoration: BoxDecoration(color: AppColors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 20),
-            Text('Select Language', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
-            const SizedBox(height: 16),
-            ...AppSettings.supportedLanguages.map((lang) {
-              final isSelected = settings.locale.languageCode == lang['code'];
-              return ListTile(
-                leading: Icon(Icons.language, color: isSelected ? AppColors.primary : AppColors.grey),
-                title: Text(lang['name']!, style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : Theme.of(context).textTheme.bodyLarge?.color,
-                )),
-                trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
-                onTap: () async {
-                  await settings.setLanguage(lang['code']!);
-                  setState(() {});
-                  if (mounted) Navigator.pop(context);
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
       ),
     );
   }

@@ -19,6 +19,7 @@ class PreferencesService {
   static const _keyWishlistItems = 'wishlist_items';
   static const _keySearchHistory = 'search_history';
   static const _keyRecentlyViewed = 'recently_viewed';
+  static const _keyFcmToken = 'fcm_token';
   static const int _maxSearchHistory = 10;
   static const int _maxRecentlyViewed = 20;
 
@@ -220,4 +221,11 @@ class PreferencesService {
 
   static Future<void> clearRecentlyViewed() async =>
       _instance.remove(_keyRecentlyViewed);
+
+  // ── FCM Token ────────────────────────────────────────────────────────────────
+
+  static String get fcmToken =>
+      _instance.getString(_keyFcmToken) ?? '';
+  static Future<void> setFcmToken(String token) async =>
+      await _instance.setString(_keyFcmToken, token);
 }

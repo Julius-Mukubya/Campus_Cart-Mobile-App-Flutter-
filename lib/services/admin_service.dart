@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/notification_service.dart';
 import '../utils/app_logger.dart';
 
 /// AdminSettings model class
@@ -595,6 +596,14 @@ class AdminService {
       });
 
       AppLogger.info('Seller request approved: $requestId for user: $userId');
+
+      // Notify user they're now a seller
+      NotificationService().sendNotification(
+        userId: userId,
+        title: 'Welcome, Seller!',
+        message: 'Your seller application has been approved. You can now start selling on Campus Cart!',
+        type: 'success',
+      );
       return true;
     } catch (e) {
       AppLogger.error('Error approving seller request', error: e);
@@ -632,6 +641,15 @@ class AdminService {
       // User role stays as customer
 
       AppLogger.info('Seller request rejected: $requestId for user: $userId');
+
+      // Notify user about rejection
+      NotificationService().sendNotification(
+        userId: userId,
+        title: 'Seller Request Rejected',
+        message: reason,
+        type: 'error',
+        data: {'reason': reason},
+      );
       return true;
     } catch (e) {
       AppLogger.error('Error rejecting seller request', error: e);

@@ -34,7 +34,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredItems = ref.watch(wishlistProvider).items;
+    _filteredItems = ref.read(wishlistProvider).items;
   }
 
   @override

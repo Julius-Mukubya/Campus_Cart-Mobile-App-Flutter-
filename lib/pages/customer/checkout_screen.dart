@@ -36,6 +36,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cart = ref.read(cartProvider);
     final checkoutNotifier = ref.read(checkoutProvider.notifier);
 
+    // Validation checks
     if (user.userId == null || user.userId!.isEmpty) {
       _showMessage('You must be logged in', isError: true);
       return;
@@ -46,33 +47,67 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
-    // Determine sellerId from cart items (all items should be from same seller)
-    final sellerId = cart.items.isNotEmpty ? (cart.items.first['sellerId'] as String? ?? '') : '';
-    if (sellerId.isEmpty) {
+    // Ensure all items have required fields
+    for (int i = 0; i < cart.items.length; i++) {
+      final item = cart.items[i];
+      if (item['id'] == null || (item['id'] as String).isEmpty) {
+        _showMessage('Invalid product in cart', isError: true);
+        return;
+      }
+      if (item['sellerId'] == null || (item['sellerId'] as String).isEmpty) {
+        _showMessage('Product missing seller information', isError: true);
+        return;
+      }
+    }
+
+    // Verify all items are from same seller
+    final firstSellerId = (cart.items.first['sellerId'] as String? ?? '').trim();
+    final allSameSeller = cart.items.every(
+      (item) => (item['sellerId'] as String? ?? '').trim() == firstSellerId,
+    );
+    if (!allSameSeller) {
+      _showMessage('All items must be from the same seller', isError: true);
+      return;
+    }
+
+    if (firstSellerId.isEmpty) {
       _showMessage('Could not determine seller', isError: true);
       return;
     }
 
-    final orderId = await checkoutNotifier.createOrder(
-      customerId: user.userId!,
-      customerName: user.name,
-      customerPhone: user.phone,
-      sellerId: sellerId,
-      showContactToSeller: _showContact,
-    );
+    try {
+      // Create order with status 'pending' (respects order lifecycle)
+      final orderId = await checkoutNotifier.createOrder(
+        customerId: user.userId!,
+        customerName: user.name,
+        customerPhone: user.phone,
+        sellerId: firstSellerId,
+        showContactToSeller: _showContact,
+      );
 
-    if (orderId != null && mounted) {
-      // Clear cart
+      if (orderId == null || orderId.isEmpty) {
+        // Check if error exists in provider state
+        final checkoutState = ref.read(checkoutProvider);
+        final errorMsg = checkoutState.error ?? 'Failed to create order. Please try again.';
+        _showMessage(errorMsg, isError: true);
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Clear cart after successful order creation
       ref.read(cartProvider.notifier).clearCart();
 
-      // Show success
-      _showMessage('Order placed successfully!');
+      // Show success message
+      _showMessage('Order placed successfully! Status: Pending');
 
-      // Navigate to order details
+      // Navigate to my orders after brief delay
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
         context.go('/my-orders');
       }
+    } catch (e) {
+      _showMessage('Error placing order: $e', isError: true);
     }
   }
 

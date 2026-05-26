@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -211,7 +210,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             GestureDetector(
                               onTap: () => decreaseQuantity(item['name']),
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: item['quantity'] > 1
                                       ? AppColors.primary.withValues(alpha: 0.1)
@@ -220,18 +219,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 ),
                                 child: Icon(
                                   Icons.remove,
-                                  size: 16,
+                                  size: 14,
                                   color: item['quantity'] > 1 ? AppColors.primary : AppColors.grey,
                                 ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 '${item['quantity']}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
@@ -239,14 +238,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             GestureDetector(
                               onTap: () => increaseQuantity(item['name']),
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: const Icon(
                                   Icons.add,
-                                  size: 16,
+                                  size: 14,
                                   color: AppColors.primary,
                                 ),
                               ),

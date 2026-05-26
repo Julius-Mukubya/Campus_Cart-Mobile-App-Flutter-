@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/seller_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
+import 'package:madpractical/utils/app_logger.dart';
 
 class SellerDashboardScreen extends ConsumerStatefulWidget {
   const SellerDashboardScreen({super.key});
@@ -25,6 +27,56 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
     final uid = ref.read(userProvider).userId;
     if (uid == null || uid.isEmpty) return;
     ref.read(sellerProvider.notifier).loadDashboard(uid);
+  }
+
+  void _contactAdmin() async {
+    try {
+      // Query for an admin user
+      final adminSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'admin')
+          .limit(1)
+          .get();
+
+      if (adminSnapshot.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('No admin available. Please try again later.'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+        return;
+      }
+
+      final adminUser = adminSnapshot.docs.first;
+      final adminId = adminUser.id;
+      final adminName = adminUser.data()['name'] ?? 'Admin';
+      final uid = ref.read(userProvider).userId;
+      if (uid == null || uid.isEmpty) return;
+
+      final participants = [uid, adminId]..sort();
+      final chatId = 'direct_${participants[0]}_${participants[1]}';
+
+      context.push('/chat/$chatId', extra: {
+        'name': adminName,
+        'isOrderChat': false,
+      });
+    } catch (e) {
+      AppLogger.error('Error finding admin', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
@@ -293,10 +345,10 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.3,
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.0,
                       children: [
                         _buildQuickAction('My Products', Icons.inventory_2, AppColors.primary, () {
                           context.push('/seller/products');
@@ -309,6 +361,9 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
                         }),
                         _buildQuickAction('Chats', Icons.chat, AppColors.secondary, () {
                           context.push('/chat-list');
+                        }),
+                        _buildQuickAction('Contact Admin', Icons.support_agent, AppColors.primary, () {
+                          _contactAdmin();
                         }),
                       ],
                     ),

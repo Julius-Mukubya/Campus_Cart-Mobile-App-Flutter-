@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/notification_service.dart';
 import '../utils/app_logger.dart';
 
 /// Firestore-backed chat service.
@@ -129,6 +130,20 @@ class ChatService {
       });
 
       AppLogger.info('Direct message sent: $chatId');
+
+      // Notify other participants
+      final notificationService = NotificationService();
+      for (final participantId in participants) {
+        if (participantId != senderId) {
+          notificationService.sendNotification(
+            userId: participantId,
+            title: 'New Message',
+            message: '$senderName sent you a message.',
+            type: 'primary',
+            data: {'chatId': chatId},
+          );
+        }
+      }
     } catch (e) {
       AppLogger.error('Error sending direct message', error: e);
       rethrow;

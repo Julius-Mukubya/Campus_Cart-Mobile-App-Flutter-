@@ -124,15 +124,17 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: Theme.of(context).brightness == Brightness.dark
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: AppColors.black.withValues(alpha: 0.1),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: const Icon(
               Icons.arrow_back_ios,
@@ -153,26 +155,28 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
         actions: [
           if (_notifications.isNotEmpty)
             PopupMenuButton(
-              icon: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                icon: Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.getSurface(context),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: Theme.of(context).brightness == Brightness.dark
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: AppColors.black.withValues(alpha: 0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.text,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.more_vert,
-                  color: AppColors.text,
-                  size: 20,
-                ),
-              ),
               itemBuilder: (context) => [
                 if (unreadCount > 0)
                   PopupMenuItem(
@@ -323,7 +327,7 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: notification.isRead 
-                              ? AppColors.white 
+                              ? AppColors.getSurface(context)
                               : AppColors.primary.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: notification.isRead
@@ -332,13 +336,15 @@ class _NotificationsListScreenState extends ConsumerState<NotificationsListScree
                                   color: AppColors.primary.withValues(alpha: 0.2),
                                   width: 1,
                                 ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
+                          boxShadow: Theme.of(context).brightness == Brightness.dark
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(alpha: 0.08),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),

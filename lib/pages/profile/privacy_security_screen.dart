@@ -22,15 +22,17 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.getSurface(context),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: Theme.of(context).brightness == Brightness.dark
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: AppColors.black.withValues(alpha: 0.1),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: const Icon(
               Icons.arrow_back_ios,
@@ -57,15 +59,17 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               // Security Settings
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.getSurface(context),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  boxShadow: Theme.of(context).brightness == Brightness.dark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,15 +100,17 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               // Privacy Settings
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.getSurface(context),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  boxShadow: Theme.of(context).brightness == Brightness.dark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,16 +170,18 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
               // Danger Zone
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.getSurface(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.error.withValues(alpha: 0.08),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  boxShadow: Theme.of(context).brightness == Brightness.dark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.error.withValues(alpha: 0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

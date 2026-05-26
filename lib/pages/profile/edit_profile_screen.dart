@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/user_provider.dart';
@@ -20,6 +21,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _phoneController;
   bool _isUploading = false;
   bool _isSaving = false;
+  bool _showContactInfo = true;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _nameController.text = userState.name;
       _emailController.text = userState.email;
       _phoneController.text = userState.phone;
+      _showContactInfo = userState.showContactInfo;
     });
   }
 
@@ -192,6 +195,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
+        showContactInfo: _showContactInfo,
       );
 
       setState(() => _isSaving = false);
@@ -422,6 +426,72 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               
+              // ── Contact Privacy Toggle ─────────────────────────────
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Contact Privacy',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show my contact info to sellers',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.text,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'When enabled, sellers can see your name and phone number after you place an order',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: _showContactInfo,
+                            onChanged: (v) => setState(() => _showContactInfo = v),
+                            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+                            activeThumbColor: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 24),
               
               // Save Button
@@ -473,7 +543,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
                 child: InkWell(
-                  onTap: () => Navigator.pushNamed(context, '/change-password'),
+                  onTap: () => context.push('/change-password'),
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

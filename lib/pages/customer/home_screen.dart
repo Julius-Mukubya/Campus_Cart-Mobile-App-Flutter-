@@ -264,6 +264,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'category': 'Electronics',
         'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
         'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
+        'productId': 'fallback_1',
+        'sellerId': '',
+        'storeId': '',
       },
       {
         'name': 'Smart Watch',
@@ -273,6 +276,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'category': 'Electronics',
         'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
         'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
+        'productId': 'fallback_2',
+        'sellerId': '',
+        'storeId': '',
       },
       {
         'name': 'Designer T-Shirt',
@@ -282,6 +288,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'category': 'Fashion',
         'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
         'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
+        'productId': 'fallback_3',
+        'sellerId': '',
+        'storeId': '',
+      },
+      {
+        'name': 'Coffee Maker',
+        'price': 'UGX 95,000',
+        'rating': 4.7,
+        'discount': '-18%',
+        'category': 'Home',
+        'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
+        'productId': 'fallback_4',
+        'sellerId': '',
+        'storeId': '',
+      },
+      {
+        'name': 'Running Shoes',
+        'price': 'UGX 75,000',
+        'rating': 4.5,
+        'discount': '-30%',
+        'category': 'Sports',
+        'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+        'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
+        'productId': 'fallback_5',
+        'sellerId': '',
+        'storeId': '',
+      },
+      {
+        'name': 'Bluetooth Speaker',
+        'price': 'UGX 42,000',
+        'rating': 4.8,
+        'discount': '-22%',
+        'category': 'Electronics',
+        'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
+        'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
+        'productId': 'fallback_6',
+        'sellerId': '',
+        'storeId': '',
       },
     ];
 
@@ -371,7 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   double _extractPrice(String priceString) {
-    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(numericString) ?? 0.0;
   }
 
@@ -379,7 +424,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final originalPrice = _extractPrice(product['price']);
     
     if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
-      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
       final discountPercent = double.tryParse(discountStr) ?? 0.0;
       
       if (discountPercent > 0) {
@@ -858,9 +903,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.9),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(
                       _wishlistIsInWishlist(product['name'])

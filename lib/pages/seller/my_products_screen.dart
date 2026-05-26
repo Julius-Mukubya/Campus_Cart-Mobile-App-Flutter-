@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/services/product_service.dart';
 
 class MyProductsScreen extends StatefulWidget {
   const MyProductsScreen({super.key});
@@ -10,6 +11,10 @@ class MyProductsScreen extends StatefulWidget {
 }
 
 class _MyProductsScreenState extends State<MyProductsScreen> {
+  final ProductService _productService = ProductService();
+  List<Map<String, dynamic>> _allProducts = [];
+  bool _isLoading = true;
+  
   String _searchQuery = '';
   String _sortBy = 'Default';
   String _filterByCategory = 'All';
@@ -34,69 +39,26 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     'Stock: High to Low',
     'Stock: Low to High',
   ];
-  
-  final List<Map<String, dynamic>> _products = [
-    {
-      'id': '1',
-      'name': 'Wireless Headphones',
-      'price': 'UGX 85,000',
-      'stock': 15,
-      'image': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-      'status': 'Active',
-      'description': 'Premium wireless headphones with noise cancellation and superior sound quality.',
-      'category': 'Electronics',
-    },
-    {
-      'id': '2',
-      'name': 'Smart Watch',
-      'price': 'UGX 120,000',
-      'stock': 8,
-      'image': 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-      'status': 'Active',
-      'description': 'Advanced smartwatch with fitness tracking and health monitoring features.',
-      'category': 'Electronics',
-    },
-    {
-      'id': '3',
-      'name': 'Bluetooth Speaker',
-      'price': 'UGX 42,000',
-      'stock': 0,
-      'image': 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-      'status': 'Out of Stock',
-      'description': 'Portable Bluetooth speaker with rich bass and long battery life.',
-      'category': 'Electronics',
-    },
-    {
-      'id': '4',
-      'name': 'Designer T-Shirt',
-      'price': 'UGX 45,000',
-      'stock': 3,
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-      'status': 'Active',
-      'description': 'Premium cotton t-shirt with modern design and comfortable fit.',
-      'category': 'Fashion',
-    },
-    {
-      'id': '5',
-      'name': 'Coffee Maker',
-      'price': 'UGX 95,000',
-      'stock': 12,
-      'image': 'https://images.unsplash.com/photo-1608354580875-30bd4168b351?w=400&h=400&fit=crop',
-      'status': 'Active',
-      'description': 'Automatic coffee maker with programmable settings and thermal carafe.',
-      'category': 'Home',
-    },
-    {
-      'id': '6',
-      'name': 'Running Shoes',
-      'price': 'UGX 75,000',
-      'stock': 2,
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-      'status': 'Active',
-      'description': 'Lightweight running shoes with excellent cushioning and breathable material.',
-      'category': 'Sports',
-    },
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final products = await _productService.getAllProducts();
+      setState(() {
+        _allProducts = products;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   double _extractPrice(String priceString) {
     final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
@@ -104,7 +66,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   List<Map<String, dynamic>> get filteredProducts {
-    var products = _products;
+    var products = _allProducts;
     
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
@@ -629,95 +591,109 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.getBackground(context),
-      appBar: AppBar(
-        title: const Text('My Products'),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.text,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
-          onPressed: () => context.pop(),
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('My Products'),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.text,
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lightGrey),
-                ),
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Icon(Icons.search, color: AppColors.grey),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'Search products...',
-                          hintStyle: TextStyle(color: AppColors.grey),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _showFilterDialog,
-                      child: Container(
-                        margin: const EdgeInsets.all(8),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.tune,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Scaffold(
+          backgroundColor: AppColors.getBackground(context),
+          appBar: AppBar(
+            title: const Text('My Products'),
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.text,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
+              onPressed: () => context.pop(),
             ),
-            
-            // Products List
-            Expanded(
-              child: filteredProducts.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.lightGrey),
+                    ),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 64,
-                          color: AppColors.secondaryText,
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Icon(Icons.search, color: AppColors.grey),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty ? 'No products yet' : 'No products found',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.secondaryText,
+                        Expanded(
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              hintText: 'Search products...',
+                              hintStyle: TextStyle(color: AppColors.grey),
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
+                        GestureDetector(
+                          onTap: _showFilterDialog,
+                          child: Container(
+                            margin: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.tune,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Products List
+                Expanded(
+                  child: filteredProducts.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: AppColors.secondaryText,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isEmpty ? 'No products yet' : 'No products found',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.secondaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
                           _searchQuery.isEmpty 
                             ? 'Add your first product to get started'
                             : 'Try a different search term',

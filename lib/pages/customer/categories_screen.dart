@@ -792,7 +792,7 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
   }
 
   double _extractPrice(String priceString) {
-    final numericString = priceString.replaceAll(RegExp(r'[^0-9]'), '');
+    final numericString = priceString.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(numericString) ?? 0.0;
   }
 
@@ -800,7 +800,7 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
     final originalPrice = _extractPrice(product['price']);
     
     if (product['discount'] != null && product['discount'].toString().isNotEmpty) {
-      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountStr = product['discount'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
       final discountPercent = double.tryParse(discountStr) ?? 0.0;
       
       if (discountPercent > 0) {

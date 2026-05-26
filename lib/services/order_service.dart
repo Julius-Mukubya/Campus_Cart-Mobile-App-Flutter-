@@ -1,14 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../repositories/order_repository.dart';
+import '../services/notification_service.dart';
 import '../utils/app_logger.dart';
 
 class OrderService {
   final FirebaseFirestore _firestore;
   final OrderRepository? _orderRepository;
+  final NotificationService _notificationService;
 
-  OrderService({FirebaseFirestore? firestore, OrderRepository? orderRepository})
+  OrderService({FirebaseFirestore? firestore, OrderRepository? orderRepository, NotificationService? notificationService})
       : _firestore = firestore ?? FirebaseFirestore.instance,
-        _orderRepository = orderRepository;
+        _orderRepository = orderRepository,
+        _notificationService = notificationService ?? NotificationService();
 
   /// ── New Order ──────────────────────────────────────────────────────
 
@@ -47,6 +50,23 @@ class OrderService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       AppLogger.info('Order created: ${docRef.id}');
+
+      // Notify customer
+      _notificationService.sendNotification(
+        userId: customerId,
+        title: 'Order Placed',
+        message: 'Your order #${docRef.id} has been placed successfully.',
+        type: 'success',
+        data: {'orderId': docRef.id},
+      );
+      // Notify seller
+      _notificationService.sendNotification(
+        userId: sellerId,
+        title: 'New Order',
+        message: 'New order from $customerName.',
+        type: 'primary',
+        data: {'orderId': docRef.id},
+      );
       return docRef.id;
     } catch (e) {
       AppLogger.error('Error creating order', error: e);
@@ -59,11 +79,48 @@ class OrderService {
   /// Seller accepts an order
   Future<void> acceptOrder(String orderId) async {
     try {
+      final doc = await _firestore.collection('orders').doc(orderId).get();
+      if (!doc.exists) throw Exception('Order not found');
+      final orderData = doc.data()!;
+      final sellerId = orderData['sellerId'] as String? ?? '';
+
       await _firestore.collection('orders').doc(orderId).update({
         'status': 'accepted',
         'updatedAt': FieldValue.serverTimestamp(),
       });
       AppLogger.info('Order accepted: $orderId');
+
+      // Fetch seller details for the notification
+      String sellerName = 'the seller';
+      String sellerPhone = '';
+      if (sellerId.isNotEmpty) {
+        try {
+          final sellerDoc = await _firestore.collection('users').doc(sellerId).get();
+          if (sellerDoc.exists) {
+            final sellerData = sellerDoc.data()!;
+            sellerName = sellerData['name'] ?? sellerData['displayName'] ?? 'the seller';
+            sellerPhone = sellerData['phone'] ?? '';
+          }
+        } catch (_) {
+          // Fallback to generic name
+        }
+      }
+
+      // Notify customer with seller details
+      final customerId = orderData['customerId'] as String? ?? '';
+      if (customerId.isNotEmpty) {
+        String message = 'Order accepted by $sellerName';
+        if (sellerPhone.isNotEmpty && orderData['showContactToSeller'] == true) {
+          message += ' — Contact: $sellerPhone';
+        }
+        _notificationService.sendNotification(
+          userId: customerId,
+          title: 'Order Accepted',
+          message: message,
+          type: 'success',
+          data: {'orderId': orderId},
+        );
+      }
     } catch (e) {
       AppLogger.error('Error accepting order', error: e);
       rethrow;
@@ -82,6 +139,22 @@ class OrderService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       AppLogger.info('Order rejected: $orderId');
+
+      // Notify customer
+      final doc = await _firestore.collection('orders').doc(orderId).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        final customerId = data['customerId'] as String? ?? '';
+        if (customerId.isNotEmpty) {
+          _notificationService.sendNotification(
+            userId: customerId,
+            title: 'Order Rejected',
+            message: 'Your order #$orderId has been rejected. Reason: $reason',
+            type: 'error',
+            data: {'orderId': orderId},
+          );
+        }
+      }
     } catch (e) {
       AppLogger.error('Error rejecting order', error: e);
       rethrow;
@@ -131,6 +204,28 @@ class OrderService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
         AppLogger.info('Order completed: $orderId');
+
+        // Notify both parties
+        final customerId = data['customerId'] as String? ?? '';
+        final sellerId = data['sellerId'] as String? ?? '';
+        if (customerId.isNotEmpty) {
+          _notificationService.sendNotification(
+            userId: customerId,
+            title: 'Order Complete!',
+            message: 'Your order #$orderId is complete. Leave a review!',
+            type: 'success',
+            data: {'orderId': orderId},
+          );
+        }
+        if (sellerId.isNotEmpty) {
+          _notificationService.sendNotification(
+            userId: sellerId,
+            title: 'Order Completed',
+            message: 'Order #$orderId has been completed.',
+            type: 'success',
+            data: {'orderId': orderId},
+          );
+        }
       }
     } catch (e) {
       AppLogger.error('Error checking completion', error: e);
