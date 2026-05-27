@@ -4,6 +4,9 @@ import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
+import 'package:madpractical/providers/order_provider.dart';
+import 'package:madpractical/providers/seller_provider.dart';
+import 'package:madpractical/providers/chat_provider.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/app_settings.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +22,9 @@ class AppDrawer extends ConsumerWidget {
     final cartCount = ref.watch(cartProvider).itemCount;
     final wishlistCount = ref.watch(wishlistProvider).itemCount;
     final unreadCount = notificationState.unreadCount;
+    final orderCount = ref.watch(orderProvider).orderCount;
+    final sellerState = ref.watch(sellerProvider);
+    final chatState = ref.watch(chatProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.darkText : AppColors.text;
     final role = userState.role;
@@ -31,13 +37,15 @@ class AppDrawer extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Header: Avatar + Name + Email + Role Badge + Stats ─────
-            _buildDrawerHeader(context, userState, role, isDark, cartCount, wishlistCount, unreadCount, ref),
+            _buildDrawerHeader(context, userState, role, isDark, cartCount, wishlistCount, unreadCount, ref,
+                orderCount, sellerState, chatState),
 
             // ── Menu Items (sectioned) ──────────────────────────────────
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
-                children: _buildMenuItems(context, ref, userState, textColor, isDark, role),
+                children: _buildMenuItems(context, ref, userState, textColor, isDark, role,
+                    cartCount, wishlistCount, unreadCount, sellerState),
               ),
             ),
 
@@ -64,6 +72,9 @@ class AppDrawer extends ConsumerWidget {
     int wishlistCount,
     int unreadCount,
     WidgetRef ref,
+    int orderCount,
+    SellerState sellerState,
+    ChatState chatState,
   ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
@@ -172,14 +183,16 @@ class AppDrawer extends ConsumerWidget {
           const SizedBox(height: 14),
 
           // ── Quick Stats Cards ──────────────────────────────────────
-          _buildQuickStats(context, role, cartCount, wishlistCount, unreadCount, ref),
+          _buildQuickStats(context, role, cartCount, wishlistCount, unreadCount, ref,
+              orderCount, sellerState, chatState),
         ],
       ),
     );
   }
 
   /// Role-specific quick stat cards in the header
-  Widget _buildQuickStats(BuildContext context, String role, int cartCount, int wishlistCount, int unreadCount, WidgetRef ref) {
+  Widget _buildQuickStats(BuildContext context, String role, int cartCount, int wishlistCount, int unreadCount, WidgetRef ref,
+      int orderCount, SellerState sellerState, ChatState chatState) {
     List<Widget> stats = [];
 
     switch (role) {
@@ -187,24 +200,27 @@ class AppDrawer extends ConsumerWidget {
         stats = [
           _buildStatCard(Icons.shopping_cart_outlined, cartCount.toString(), 'Cart', AppColors.white, () => context.push('/cart')),
           _buildStatCard(Icons.favorite_outline, wishlistCount.toString(), 'Wishlist', AppColors.white, () => context.push('/wishlist')),
-          _buildStatCard(Icons.receipt_long_outlined, '0', 'Orders', AppColors.white, () => context.push('/my-orders')),
+          _buildStatCard(Icons.receipt_long_outlined, orderCount.toString(), 'Orders', AppColors.white, () => context.push('/my-orders')),
           _buildStatCard(Icons.notifications_outlined, unreadCount.toString(), 'Alerts', AppColors.white, () => context.push('/notifications')),
         ];
         break;
       case 'seller':
+        final productCount = sellerState.products.length;
+        final orderCountSeller = sellerState.orders.length;
+        final rating = sellerState.rating.toStringAsFixed(1);
         stats = [
-          _buildStatCard(Icons.inventory_2_outlined, '0', 'Products', Colors.amber, () => context.push('/seller/products')),
-          _buildStatCard(Icons.receipt_long_outlined, '0', 'Orders', AppColors.white, () => context.push('/seller/orders')),
-          _buildStatCard(Icons.star_outline, '0.0', 'Rating', Colors.amber, () => context.push('/seller/dashboard')),
-          _buildStatCard(Icons.chat_outlined, '0', 'Chats', AppColors.white, () => context.push('/chat-list')),
+          _buildStatCard(Icons.inventory_2_outlined, productCount.toString(), 'Products', Colors.amber, () => context.push('/seller/products')),
+          _buildStatCard(Icons.receipt_long_outlined, orderCountSeller.toString(), 'Orders', AppColors.white, () => context.push('/seller/orders')),
+          _buildStatCard(Icons.star_outline, rating, 'Rating', Colors.amber, () => context.push('/seller/dashboard')),
+          _buildStatCard(Icons.chat_outlined, chatState.chatList.length.toString(), 'Chats', AppColors.white, () => context.push('/chat-list')),
         ];
         break;
       case 'admin':
         stats = [
           _buildStatCard(Icons.group_outlined, '0', 'Users', AppColors.white, () => context.push('/admin/users')),
-          _buildStatCard(Icons.receipt_long_outlined, '0', 'Orders', AppColors.white, () => context.push('/admin/orders')),
+          _buildStatCard(Icons.receipt_long_outlined, orderCount.toString(), 'Orders', AppColors.white, () => context.push('/admin/orders')),
           _buildStatCard(Icons.store_outlined, '0', 'Sellers', AppColors.white, () => context.push('/admin/sellers')),
-          _buildStatCard(Icons.notifications_outlined, '0', 'Alerts', AppColors.white, () => context.push('/notifications')),
+          _buildStatCard(Icons.notifications_outlined, unreadCount.toString(), 'Alerts', AppColors.white, () => context.push('/notifications')),
         ];
         break;
     }
@@ -310,6 +326,10 @@ class AppDrawer extends ConsumerWidget {
     Color textColor,
     bool isDark,
     String role,
+    int cartCount,
+    int wishlistCount,
+    int unreadCount,
+    SellerState sellerState,
   ) {
     final items = <Widget>[];
     items.add(const SizedBox(height: 8));
@@ -317,10 +337,29 @@ class AppDrawer extends ConsumerWidget {
     switch (role) {
       case 'customer':
         items.add(_buildSectionHeader('SHOPPING'));
-        items.add(_buildMenuItem(context, icon: Icons.favorite_outline, title: 'Wishlist', route: '/wishlist', textColor: textColor));
-        items.add(_buildMenuItem(context, icon: Icons.receipt_long_outlined, title: 'My Orders', route: '/my-orders', textColor: textColor));
-        items.add(_buildMenuItem(context, icon: Icons.shopping_cart_outlined, title: 'My Cart', route: '/cart', textColor: textColor));
-        items.add(_buildMenuItem(context, icon: Icons.notifications_outlined, title: 'Notifications', route: '/notifications', textColor: textColor));
+        items.add(_buildMenuItem(context,
+            icon: Icons.favorite_outline,
+            title: 'Wishlist',
+            route: '/wishlist',
+            badge: wishlistCount > 0 ? '$wishlistCount' : null,
+            textColor: textColor));
+        items.add(_buildMenuItem(context,
+            icon: Icons.receipt_long_outlined,
+            title: 'My Orders',
+            route: '/my-orders',
+            textColor: textColor));
+        items.add(_buildMenuItem(context,
+            icon: Icons.shopping_cart_outlined,
+            title: 'My Cart',
+            route: '/cart',
+            badge: cartCount > 0 ? '$cartCount' : null,
+            textColor: textColor));
+        items.add(_buildMenuItem(context,
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            route: '/notifications',
+            badge: unreadCount > 0 ? '$unreadCount' : null,
+            textColor: textColor));
         items.add(_buildDivider(isDark));
         items.add(_buildSectionHeader('OPPORTUNITIES'));
         items.add(_buildMenuItem(context, icon: Icons.rocket_launch_outlined, title: 'Become a Seller', route: '/become-seller', textColor: textColor));
@@ -338,7 +377,12 @@ class AppDrawer extends ConsumerWidget {
         items.add(_buildMenuItem(context, icon: Icons.chat_outlined, title: 'Chats', route: '/chat-list', textColor: textColor));
         items.add(_buildDivider(isDark));
         items.add(_buildSectionHeader('PRODUCTS'));
-        items.add(_buildMenuItem(context, icon: Icons.inventory_2_outlined, title: 'My Products', route: '/seller/products', textColor: textColor));
+        items.add(_buildMenuItem(context,
+            icon: Icons.inventory_2_outlined,
+            title: 'My Products',
+            route: '/seller/products',
+            badge: sellerState.products.isNotEmpty ? '${sellerState.products.length}' : null,
+            textColor: textColor));
         items.add(_buildMenuItem(context, icon: Icons.add_box_outlined, title: 'Add Product', route: '/seller/add-product', textColor: textColor));
         items.add(_buildMenuItem(context, icon: Icons.settings_outlined, title: 'Store Settings', route: '/seller/store-settings', textColor: textColor));
         final storeId = userState.storeId;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/providers/cart_provider.dart';
+import 'package:madpractical/providers/chat_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/widgets/navigation/app_header.dart';
 import 'package:madpractical/widgets/navigation/app_drawer.dart';
@@ -19,6 +20,7 @@ class MainShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartCount = ref.watch(cartProvider).itemCount;
+    final chatCount = ref.watch(chatProvider).chatList.length;
     final role = ref.watch(userProvider).role;
 
     return Scaffold(
@@ -70,8 +72,14 @@ class MainShell extends ConsumerWidget {
                   : const Icon(Icons.shopping_cart),
               label: 'Cart',
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
+            BottomNavigationBarItem(
+              icon: chatCount > 0
+                  ? Badge(
+                      label: Text('$chatCount'),
+                      backgroundColor: AppColors.accent,
+                      child: const Icon(Icons.chat_bubble_outline),
+                    )
+                  : const Icon(Icons.chat_bubble_outline),
               label: 'Chats',
             ),
             const BottomNavigationBarItem(

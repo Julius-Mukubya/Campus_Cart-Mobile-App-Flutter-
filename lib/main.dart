@@ -10,13 +10,14 @@ import 'package:madpractical/constants/app_colors.dart';
 import 'package:madpractical/services/app_settings.dart';
 import 'package:madpractical/services/preferences_service.dart';
 import 'package:madpractical/providers/user_provider.dart';
-import 'package:madpractical/providers/auth_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
+import 'package:madpractical/providers/notification_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:madpractical/router.dart';
 import 'package:madpractical/services/fcm_service.dart';
+import 'package:madpractical/utils/app_logger.dart';
 
 /// Top-level background message handler — must be outside main().
 @pragma('vm:entry-point')
@@ -31,32 +32,22 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize SharedPreferences
   await PreferencesService.init();
-
-  // Load saved theme and language
   AppSettings().loadFromPrefs();
 
-  // Initialize App Check — uses debug provider in debug builds
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
   );
 
-  // Enable Firestore offline persistence — serves from local cache,
-  // only fetches from network when data is stale or missing
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Register FCM background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // Initialize FCM service
   await FcmService().init();
 
-  // Initialize router auth state
   routerAuthNotifier.update(RouterUserState(
     isLoggedIn: false,
     role: 'customer',
@@ -81,33 +72,50 @@ class _MyAppState extends ConsumerState<MyApp> {
     super.initState();
     _router = buildRouter();
     _settings.addListener(_onSettingsChanged);
-    // Defer provider initialization to after the first frame is built,
-    // preventing the ProviderScope element from being rebuilt mid-mount.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeProviders();
+      if (mounted) {
+        _initializeProviders();
+      }
     });
   }
 
   void _initializeProviders() {
-    // Initialize cart from preferences
-    ref.read(cartProvider.notifier).loadFromPrefs();
-    // Initialize wishlist from preferences
-    ref.read(wishlistProvider.notifier).loadFromPrefs();
+    try {
+      ref.read(cartProvider.notifier).loadFromPrefs();
+    } catch (e) {
+      AppLogger.error('Failed to load cart', error: e);
+    }
 
-    // Restore user session from SharedPreferences into user provider
+    try {
+      ref.read(wishlistProvider.notifier).loadFromPrefs();
+    } catch (e) {
+      AppLogger.error('Failed to load wishlist', error: e);
+    }
+
+    // Start notification listener if user is already logged in
+    final savedUserId = PreferencesService.userId;
+    if (savedUserId != null && savedUserId.isNotEmpty) {
+      ref.read(notificationProvider.notifier).startListening(savedUserId);
+    }
+
+    // Restore user session
     if (PreferencesService.isLoggedIn) {
       final userId = PreferencesService.userId;
       if (userId != null && userId.isNotEmpty) {
-        ref.read(userProvider.notifier).updateProfile(
-          userId: userId,
-          name: PreferencesService.userName,
-          email: PreferencesService.userEmail,
-          phone: PreferencesService.userPhone,
-          role: PreferencesService.userRole,
-          storeId: PreferencesService.storeId,
-        );
-        // Register FCM token for restored session
-        FcmService().setUserId(userId);
+        try {
+          ref.read(userProvider.notifier).updateUser(
+            userId: userId,
+            name: PreferencesService.userName,
+            email: PreferencesService.userEmail,
+            phone: PreferencesService.userPhone,
+            profileImage: PreferencesService.profileImage,
+            role: PreferencesService.userRole,
+            storeId: PreferencesService.storeId,
+          );
+          FcmService().setUserId(userId);
+        } catch (e) {
+          AppLogger.error('Failed to restore user session', error: e);
+        }
       }
     }
   }
@@ -266,40 +274,20 @@ class _MyAppState extends ConsumerState<MyApp> {
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
-        ), dialogTheme: DialogThemeData(backgroundColor: AppColors.darkCards),
+        ),
+        dialogTheme: DialogThemeData(backgroundColor: AppColors.darkCards),
       );
 
   @override
   Widget build(BuildContext context) {
-    // Sync user provider changes to router auth notifier + FCM
     ref.listen(userProvider, (prev, next) {
       routerAuthNotifier.update(RouterUserState(
         isLoggedIn: next.userId != null && next.userId!.isNotEmpty,
         role: next.role,
       ));
-      // Register FCM token for the current user
       if (next.userId != null && next.userId!.isNotEmpty) {
         FcmService().setUserId(next.userId!);
-      }
-    });
-
-    // Sync auth provider changes to user provider (fix guest user after login)
-    ref.listen<AuthState>(authProvider, (AuthState? prev, AuthState next) {
-      final justLoggedIn = next.isLoggedIn && !(prev?.isLoggedIn ?? false);
-      if (justLoggedIn) {
-        ref.read(userProvider.notifier).updateProfile(
-          userId: next.userId,
-          email: next.email ?? PreferencesService.userEmail,
-          name: PreferencesService.userName,
-          phone: PreferencesService.userPhone,
-          role: next.userRole ?? PreferencesService.userRole,
-          storeId: PreferencesService.storeId,
-          profileImage: PreferencesService.profileImage,
-        );
-        // Register FCM token for newly logged in user
-        if (next.userId != null && next.userId!.isNotEmpty) {
-          FcmService().setUserId(next.userId!);
-        }
+        ref.read(notificationProvider.notifier).startListening(next.userId!);
       }
     });
 
@@ -320,7 +308,6 @@ class _MyAppState extends ConsumerState<MyApp> {
       ],
       routerConfig: _router,
       builder: (context, child) {
-        // Wrap entire app so all Text widgets inherit the correct color for the theme
         final isDark = _settings.isDark;
         final textColor = isDark ? AppColors.darkText : const Color(0xFF212121);
         return DefaultTextStyle(
