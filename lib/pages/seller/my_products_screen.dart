@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/seller_provider.dart';
+import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/services/product_service.dart';
 
-class MyProductsScreen extends StatefulWidget {
+class MyProductsScreen extends ConsumerStatefulWidget {
   const MyProductsScreen({super.key});
 
   @override
-  State<MyProductsScreen> createState() => _MyProductsScreenState();
+  ConsumerState<MyProductsScreen> createState() => _MyProductsScreenState();
 }
 
-class _MyProductsScreenState extends State<MyProductsScreen> {
+class _MyProductsScreenState extends ConsumerState<MyProductsScreen> {
   final ProductService _productService = ProductService();
   List<Map<String, dynamic>> _allProducts = [];
   bool _isLoading = true;
@@ -49,14 +52,23 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   Future<void> _loadProducts() async {
     try {
       final products = await _productService.getAllProducts();
-      setState(() {
-        _allProducts = products;
-        _isLoading = false;
-      });
+      // Filter only this seller's products
+      final userId = ref.read(userProvider).userId;
+      final sellerProducts = userId != null
+          ? products.where((p) => p['sellerId'] == userId || p['userId'] == userId).toList()
+          : products;
+      if (mounted) {
+        setState(() {
+          _allProducts = sellerProducts;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -469,7 +481,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    final isOutOfStock = product['stock'] == 0;
+    final stockValue = product['stock'] ?? product['stockQuantity'] ?? 0;
+    final isOutOfStock = stockValue == 0;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -552,7 +565,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isOutOfStock ? 'Out of Stock' : 'Stock: ${product['stock']}',
+                          isOutOfStock ? 'Out of Stock' : 'Stock: $stockValue',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -566,23 +579,45 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
               ),
             ),
             
-            // Edit Button
-            GestureDetector(
-              onTap: () {
-                context.push('/seller/edit-product', extra: product);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+            // Action Buttons
+            Column(
+              children: [
+                // Edit Button
+                GestureDetector(
+                  onTap: () {
+                    context.push('/seller/edit-product', extra: product);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.edit,
-                  color: AppColors.primary,
-                  size: 20,
+                const SizedBox(height: 8),
+                // Delete Button
+                GestureDetector(
+                  onTap: () => _confirmDelete(product),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -590,7 +625,49 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     );
   }
 
-  @override
+  void _confirmDelete(Map<String, dynamic> product) {
+    final productId = product['productId'] as String? ?? '';
+    final storeId = product['storeId'] as String? ?? '';
+    if (productId.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Product', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
+        content: Text('Delete "${product['name']}"? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.secondaryText)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(sellerProvider.notifier).deleteProduct(productId, storeId);
+              setState(() {
+                _allProducts.removeWhere((p) => p['productId'] == productId);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Product deleted'),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -613,9 +690,9 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             backgroundColor: AppColors.background,
             foregroundColor: AppColors.text,
             elevation: 0,
-            leading: IconButton(
+          leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
-              onPressed: () => context.pop(),
+              onPressed: () => context.go('/profile'),
             ),
           ),
           body: SafeArea(

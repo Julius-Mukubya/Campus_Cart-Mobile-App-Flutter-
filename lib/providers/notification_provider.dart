@@ -48,9 +48,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     state = state.copyWith(isLoading: true);
     _notificationsSub = _notificationService.notificationsStream(userId).listen(
       (notifications) {
-        if (mounted) {
-          state = state.copyWith(notifications: notifications, isLoading: false);
-        }
+        state = state.copyWith(notifications: notifications, isLoading: false);
       },
       onError: (e) {
         state = state.copyWith(isLoading: false);

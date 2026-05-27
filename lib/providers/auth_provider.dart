@@ -3,6 +3,8 @@ import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 import '../router.dart';
 import '../utils/app_logger.dart';
+import './user_provider.dart';
+import './notification_provider.dart';
 
 /// Authentication state model
 class AuthState {
@@ -48,9 +50,11 @@ class AuthState {
 /// Auth notifier for managing authentication state
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
+  final Ref _ref;
 
-  AuthNotifier({AuthService? authService})
+  AuthNotifier({AuthService? authService, required Ref ref})
       : _authService = authService ?? AuthService(),
+        _ref = ref,
         super(const AuthState());
 
   /// Persist user data and update router auth state
@@ -72,7 +76,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       profileImage: userData['profileImage'] ?? '',
     );
 
-    // Update state
+    // Update user provider immediately
+    _ref.read(userProvider.notifier).updateUser(
+      userId: userId,
+      name: userData['name'] ?? 'User',
+      email: userData['email'] ?? email,
+      phone: userData['phone'] ?? '',
+      profileImage: userData['profileImage'] ?? '',
+      role: role,
+      storeId: userData['storeId'],
+    );
+
+    // Update auth state
     state = state.copyWith(
       isLoading: false,
       isLoggedIn: true,
@@ -135,10 +150,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (result['success'] == true) {
         if (role == 'seller') {
-          // Seller signs up but doesn't log in yet — needs approval
-          state = state.copyWith(
-            isLoading: false,
-            error: 'Account created. Your seller application is pending approval.',
+          // Seller signs up as a customer initially — will be upgraded on approval
+          final userData = await _authService.getUserData(result['user'].uid);
+          await _handleAuthSuccess(
+            userId: result['user'].uid,
+            email: email,
+            userData: userData ?? {'role': 'customer', 'name': name, 'email': email, 'phone': phone ?? ''},
           );
         } else {
           // Customer — auto-login
@@ -195,6 +212,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.signOut();
       await PreferencesService.clearUser();
+      
+      // Clear user provider
+      _ref.read(userProvider.notifier).logout();
+      
+      // Stop notification listener and clear notifications
+      _ref.read(notificationProvider.notifier).stopListening();
+      
       state = const AuthState();
       routerAuthNotifier.update(const RouterUserState());
       AppLogger.info('Sign out successful');
@@ -256,5 +280,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 /// Auth provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(),
+  (ref) => AuthNotifier(ref: ref),
 );

@@ -104,16 +104,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           }
         });
       } else if (next.error != null && next.error!.isNotEmpty && !next.isLoggedIn) {
-        if (next.error == 'Account created. Your seller application is pending approval.') {
-          _showSuccessMessage(next.error!);
-          Future.microtask(() {
-            if (mounted) {
-              context.go('/signin');
-            }
-          });
-        } else {
-          _showErrorMessage(next.error!);
-        }
+        _showErrorMessage(next.error!);
       }
     });
 

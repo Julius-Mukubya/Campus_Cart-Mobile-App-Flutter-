@@ -138,20 +138,23 @@ class AuthService {
       await userCredential.user?.updateDisplayName(name);
 
       // Create user document in Firestore via repository
+      // All users start as active customers.
+      // If the user selected 'seller', a seller request is created separately.
+      // Admin will change role from 'customer' to 'seller' upon approval.
       await _userRepository.createUser(userCredential.user!.uid, {
         'userId': userCredential.user!.uid,
         'email': email,
         'name': name,
         'phone': phone ?? '',
-        'role': role,
+        'role': 'customer', // Always start as customer — seller granted on approval
         'profileImage': '',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'isActive': role == 'customer', // Customers are active immediately, sellers need approval
+        'isActive': true, // All users are active immediately
         'isEmailVerified': false,
         
-        // Seller-specific fields
-        'sellerStatus': role == 'seller' ? 'pending' : null, // pending, approved, rejected
+        // Seller request tracking (only set if they signed up as seller)
+        'sellerStatus': role == 'seller' ? 'pending' : null,
         'approvedAt': null,
         'approvedBy': null,
         'rejectionReason': null,
@@ -231,17 +234,11 @@ class AuthService {
         };
       }
 
-      // Check if user is active — treat null/missing as active
+      // Prevent login for deactivated accounts only
       if (userData['isActive'] == false) {
         await signOut();
-        
-        // Check if it's a seller with pending approval
-        if (userData['role'] == 'seller' && userData['sellerStatus'] == 'pending') {
-          return {
-            'success': false,
-            'message': 'Your seller application is still pending admin approval. Please wait for approval.',
-          };
-        } else if (userData['role'] == 'seller' && userData['sellerStatus'] == 'rejected') {
+        // Check for an old seller who was deactivated during migration
+        if (userData['role'] == 'seller' && userData['sellerStatus'] == 'rejected') {
           return {
             'success': false,
             'message': 'Your seller application was rejected. Reason: ${userData['rejectionReason'] ?? 'No reason provided'}',

@@ -34,12 +34,20 @@ class _StorePageState extends ConsumerState<StorePage> {
   Future<void> _loadStoreData() async {
     setState(() => _isLoading = true);
     try {
-      // Load seller info from Firestore
       if (widget.sellerId.isNotEmpty) {
+        // 1. Load seller info from user doc
         final sellerData = await _authService.getUserData(widget.sellerId);
+
+        String name = 'Store';
+        String email = '';
+        String phone = '';
+        String description = 'Campus store offering quality products.';
+        String joinedStr = '';
+        bool showContact = true;
+
         if (sellerData != null) {
+          // Parse join date
           final joined = sellerData['createdAt'];
-          String joinedStr = '';
           if (joined is Timestamp) {
             final dt = joined.toDate();
             final months = [
@@ -50,18 +58,53 @@ class _StorePageState extends ConsumerState<StorePage> {
           } else if (joined is String && joined.isNotEmpty) {
             joinedStr = joined;
           }
-          _storeInfo = {
-            'name': sellerData['name'] ?? 'Store',
-            'email': sellerData['email'] ?? '',
-            'phone': sellerData['phone'] ?? '', // Ensure non-null
-            'rating': 4.0, // Will be replaced with real rating in Phase F
-            'totalProducts': 0,
-            'joined': joinedStr,
-            'description': sellerData['description'] ?? 'Campus store offering quality products.',
-          };
+
+          // Use user doc values as defaults
+          name = sellerData['name'] ?? 'Store';
+          email = sellerData['email'] ?? '';
+          phone = sellerData['phone'] ?? '';
+          description = sellerData['description'] ?? 'Campus store offering quality products.';
+
+          // 2. Load store doc if it exists (overrides user doc fields with store-specific data)
+          String? storeId = sellerData['storeId'] as String?;
+          
+          // If no storeId on user doc, try finding store by sellerId (fallback for existing sellers)
+          if (storeId == null || storeId.isEmpty) {
+            final storeSnapshot = await FirebaseFirestore.instance
+                .collection('stores')
+                .where('sellerId', isEqualTo: widget.sellerId)
+                .limit(1)
+                .get();
+            if (storeSnapshot.docs.isNotEmpty) {
+              storeId = storeSnapshot.docs.first.id;
+            }
+          }
+          
+          if (storeId != null && storeId.isNotEmpty) {
+            final storeDoc = await FirebaseFirestore.instance.collection('stores').doc(storeId).get();
+            if (storeDoc.exists) {
+              final storeData = storeDoc.data()!;
+              name = storeData['storeName'] as String? ?? name;
+              description = storeData['storeDescription'] as String? ?? description;
+              phone = storeData['storePhone'] as String? ?? phone;
+              email = storeData['storeEmail'] as String? ?? email;
+              showContact = storeData['showContact'] as bool? ?? true;
+            }
+          }
         }
 
-        // Load seller's products (filter all products by seller's store)
+        _storeInfo = {
+          'name': name,
+          'email': email,
+          'phone': phone,
+          'rating': 4.0,
+          'totalProducts': 0,
+          'joined': joinedStr,
+          'description': description,
+          'showContact': showContact,
+        };
+
+        // 3. Load seller's products
         final allProducts = await _productService.getAllProducts();
         final products = allProducts.where((p) {
           final pSellerId = p['sellerId'] as String? ?? p['userId'] as String? ?? '';
@@ -69,9 +112,21 @@ class _StorePageState extends ConsumerState<StorePage> {
         }).toList();
         _products = products;
         _storeInfo['totalProducts'] = products.length;
+      } else {
+        // No seller ID provided
+        _storeInfo = {
+          'name': 'Store',
+          'email': '',
+          'phone': '',
+          'rating': 4.0,
+          'totalProducts': 0,
+          'joined': '',
+          'description': 'Store information not available.',
+          'showContact': true,
+        };
       }
     } catch (e) {
-      // Fallback to sample data on error
+      // Fallback to defaults on error
       _storeInfo = {
         'name': 'Store',
         'email': '',
@@ -79,34 +134,15 @@ class _StorePageState extends ConsumerState<StorePage> {
         'rating': 4.0,
         'totalProducts': 0,
         'joined': '',
-        'description': 'Campus store offering quality products.',
+        'description': 'Unable to load store information.',
+        'showContact': true,
       };
     }
     if (mounted) setState(() => _isLoading = false);
   }
 
-  void _openChat() {
-    final userState = ref.read(userProvider);
-    if (userState.userId == null || userState.userId!.isEmpty) return;
-    if (widget.sellerId.isEmpty) return;
-
-    // Sort participant IDs for consistency
-    final participants = [userState.userId!, widget.sellerId]..sort();
-    final sortedChatId = 'direct_${participants[0]}_${participants[1]}';
-
-    // Navigate to chat screen
-    context.push(
-      '/chat/$sortedChatId',
-      extra: {
-        'name': _storeInfo['name'] ?? 'Store',
-        'isOrderChat': false,
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (_isLoading) {
@@ -154,23 +190,8 @@ class _StorePageState extends ConsumerState<StorePage> {
         ),
         centerTitle: false,
         actions: [
-          if (userState.role == 'customer' && widget.sellerId.isNotEmpty)
-            GestureDetector(
-              onTap: _openChat,
-              child: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.message_outlined,
-                  color: AppColors.white,
-                  size: 20,
-                ),
-              ),
-            ),
+          if (widget.sellerId.isNotEmpty)
+            _MessageButton(sellerId: widget.sellerId),
         ],
       ),
       body: RefreshIndicator(
@@ -283,7 +304,7 @@ class _StorePageState extends ConsumerState<StorePage> {
               ),
 
               // ── Contact Info ───────────────────────────────────────
-              if (_storeInfo['email'].toString().isNotEmpty || _storeInfo['phone'].toString().isNotEmpty)
+              if (true == _storeInfo['showContact'] && ((_storeInfo['email']?.toString() ?? '').isNotEmpty || (_storeInfo['phone']?.toString() ?? '').isNotEmpty))
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   padding: const EdgeInsets.all(16),
@@ -310,11 +331,11 @@ class _StorePageState extends ConsumerState<StorePage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (_storeInfo['email'].toString().isNotEmpty)
-                        _buildContactRow(Icons.email_outlined, _storeInfo['email']),
-                      if (_storeInfo['phone'].toString().isNotEmpty) ...[
+                      if ((_storeInfo['email']?.toString() ?? '').isNotEmpty)
+                        _buildContactRow(Icons.email_outlined, _storeInfo['email'] ?? ''),
+                      if ((_storeInfo['phone']?.toString() ?? '').isNotEmpty) ...[
                         const SizedBox(height: 8),
-                        _buildContactRow(Icons.phone_outlined, _storeInfo['phone']),
+                        _buildContactRow(Icons.phone_outlined, _storeInfo['phone'] ?? ''),
                       ],
                     ],
                   ),
@@ -358,16 +379,20 @@ class _StorePageState extends ConsumerState<StorePage> {
     );
   }
 
-  Widget _buildContactRow(IconData icon, String text) {
+  Widget _buildContactRow(IconData icon, dynamic text) {
+    final displayText = text is String ? text : text?.toString() ?? '';
     return Row(
       children: [
         Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.secondaryText,
+        Expanded(
+          child: Text(
+            displayText,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.secondaryText,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -484,5 +509,56 @@ class _StorePageState extends ConsumerState<StorePage> {
       return (double.tryParse(numericString) ?? 0).toStringAsFixed(0);
     }
     return '0';
+  }
+}
+
+/// Message button widget that safely reads user provider
+class _MessageButton extends ConsumerWidget {
+  final String sellerId;
+
+  const _MessageButton({required this.sellerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(userProvider);
+
+    // Only show message button for customers viewing a different seller's store
+    if (userState.role != 'customer' || sellerId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return GestureDetector(
+      onTap: () => _openChat(context, ref, userState),
+      child: Container(
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.message_outlined,
+          color: AppColors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  void _openChat(BuildContext context, WidgetRef ref, UserState userState) {
+    if (userState.userId == null || userState.userId!.isEmpty) return;
+
+    // Sort participant IDs for consistency
+    final participants = [userState.userId!, sellerId]..sort();
+    final sortedChatId = 'direct_${participants[0]}_${participants[1]}';
+
+    // Navigate to chat screen
+    context.push(
+      '/chat/$sortedChatId',
+      extra: {
+        'name': 'Store Chat',
+        'isOrderChat': false,
+      },
+    );
   }
 }

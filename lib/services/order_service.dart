@@ -243,12 +243,27 @@ class OrderService {
       if (status != 'pending') {
         throw Exception('Can only cancel pending orders');
       }
+      final orderData = doc.data()!;
+      final sellerId = orderData['sellerId'] as String? ?? '';
+      final customerName = orderData['customerName'] as String? ?? 'A customer';
+
       await _firestore.collection('orders').doc(orderId).update({
         'status': 'cancelled',
         'cancelledAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
       AppLogger.info('Order cancelled: $orderId');
+
+      // Notify seller
+      if (sellerId.isNotEmpty) {
+        _notificationService.sendNotification(
+          userId: sellerId,
+          title: 'Order Cancelled',
+          message: '$customerName cancelled their order #$orderId.',
+          type: 'error',
+          data: {'orderId': orderId},
+        );
+      }
     } catch (e) {
       AppLogger.error('Error cancelling order', error: e);
       rethrow;

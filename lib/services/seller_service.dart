@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/app_logger.dart';
 import 'admin_service.dart';
+import 'notification_service.dart';
 import 'package:madpractical/repositories/seller_repository.dart';
 
 /// SellerStore model class
@@ -71,14 +72,17 @@ class SellerService {
   final SellerRepository? _sellerRepository;
   final FirebaseFirestore _firestore;
   final AdminService _adminService;
+  final NotificationService _notificationService;
 
   SellerService({
     SellerRepository? sellerRepository,
     FirebaseFirestore? firestore,
     AdminService? adminService,
+    NotificationService? notificationService,
   })  : _sellerRepository = sellerRepository,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _adminService = adminService ?? AdminService();
+        _adminService = adminService ?? AdminService(),
+        _notificationService = notificationService ?? NotificationService();
 
   final List<Map<String, dynamic>> _sellerRequests = [];
 
@@ -433,6 +437,23 @@ class SellerService {
         'totalProducts': FieldValue.increment(1),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Notify admins about new product
+      try {
+        final adminSnapshot = await _firestore
+            .collection('users')
+            .where('role', isEqualTo: 'admin')
+            .get();
+        for (final admin in adminSnapshot.docs) {
+          _notificationService.sendNotification(
+            userId: admin.id,
+            title: 'New Product Added',
+            message: '$productName has been added to the store.',
+            type: 'local_offer',
+            data: {'productId': productRef.id, 'storeId': storeId},
+          );
+        }
+      } catch (_) {}
 
       return {
         'success': true,

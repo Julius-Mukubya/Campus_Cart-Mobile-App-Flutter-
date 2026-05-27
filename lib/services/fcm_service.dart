@@ -41,36 +41,60 @@ class FcmService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
-    // Request permissions (iOS)
-    final messagingSettings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    AppLogger.info('FCM permission granted: ${messagingSettings.authorizationStatus}');
-
-    // Get initial token
-    _currentToken = await _messaging.getToken();
-    if (_currentToken != null) {
-      AppLogger.info('FCM token obtained');
-      await _saveTokenToPrefs();
+    // Request permissions (iOS) - wrap in try-catch to handle permission errors
+    try {
+      final messagingSettings = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      AppLogger.info('FCM permission granted: ${messagingSettings.authorizationStatus}');
+    } catch (e) {
+      AppLogger.warning('FCM permission request failed: $e');
     }
 
-    // Listen for token refresh
-    _messaging.onTokenRefresh.listen((newToken) {
-      AppLogger.info('FCM token refreshed');
-      _currentToken = newToken;
-      _saveTokenToPrefs();
-      _uploadTokenToFirestore();
-    });
+    // Get initial token - wrap in try-catch to handle Google Play Services issues
+    try {
+      _currentToken = await _messaging.getToken();
+      if (_currentToken != null) {
+        AppLogger.info('FCM token obtained successfully');
+        AppLogger.info('FCM Token: $_currentToken');
+        await _saveTokenToPrefs();
+      } else {
+        AppLogger.warning('FCM token is null - device may not have Google Play Services');
+      }
+    } catch (e) {
+      AppLogger.warning('Failed to get FCM token: $e. Notifications will use local-only mode.');
+    }
+
+    // Listen for token refresh - wrap in try-catch
+    try {
+      _messaging.onTokenRefresh.listen((newToken) {
+        AppLogger.info('FCM token refreshed');
+        AppLogger.info('New FCM Token: $newToken');
+        _currentToken = newToken;
+        _saveTokenToPrefs();
+        _uploadTokenToFirestore();
+      });
+    } catch (e) {
+      AppLogger.warning('FCM token refresh listener failed: $e');
+    }
 
     // Handle foreground messages via local notifications
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    try {
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    } catch (e) {
+      AppLogger.warning('FCM foreground message handler failed: $e');
+    }
 
     // Handle background message tap (app opened from terminated state)
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      _handleMessageTap(initialMessage.data);
+    try {
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleMessageTap(initialMessage.data);
+      }
+    } catch (e) {
+      AppLogger.warning('FCM initial message handler failed: $e');
     }
   }
 
@@ -94,7 +118,7 @@ class FcmService {
     _currentUserId = null;
   }
 
-  /// Handle foreground FCM message — show local notification
+  /// Handle foreground FCM message — show local notification and save to Firestore
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     AppLogger.info('FCM foreground message: ${message.messageId}');
     final data = message.data;
@@ -103,6 +127,28 @@ class FcmService {
     final title = notification?.title ?? data['title'] ?? 'Campus Cart';
     final body = notification?.body ?? data['message'] ?? data['body'] ?? '';
 
+    // Save to Firestore notifications collection for the current user
+    if (_currentUserId != null && _currentUserId!.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUserId)
+            .collection('notifications')
+            .add({
+          'title': title,
+          'message': body,
+          'type': data['type'] ?? 'notification',
+          'data': data,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        AppLogger.info('Push notification saved to Firestore');
+      } catch (e) {
+        AppLogger.warning('Failed to save push notification to Firestore: $e');
+      }
+    }
+
+    // Show local notification
     await _showLocalNotification(
       id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
       title: title,
@@ -198,14 +244,24 @@ class FcmService {
 
   /// Upload FCM token to Firestore user document
   Future<void> _uploadTokenToFirestore() async {
-    if (_currentUserId == null || _currentUserId!.isEmpty) return;
-    if (_currentToken == null) return;
+    if (_currentUserId == null || _currentUserId!.isEmpty) {
+      AppLogger.warning('Cannot upload FCM token: userId is empty');
+      return;
+    }
+    if (_currentToken == null) {
+      AppLogger.warning('Cannot upload FCM token: token is null');
+      return;
+    }
 
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUserId)
-          .update({'fcmToken': _currentToken, 'fcmTokenUpdatedAt': FieldValue.serverTimestamp()});
+          .update({
+            'fcmToken': _currentToken,
+            'fcmTokenUpdatedAt': FieldValue.serverTimestamp()
+          });
+      AppLogger.info('FCM token uploaded to Firestore for user: $_currentUserId');
     } catch (e) {
       AppLogger.error('Error uploading FCM token to Firestore', error: e);
     }

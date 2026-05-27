@@ -289,7 +289,7 @@ class _ManageSellersScreenState extends ConsumerState<ManageSellersScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/profile'),
         ),
       ),
       body: SafeArea(

@@ -1,10 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/app_logger.dart';
+import 'notification_service.dart';
 
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final NotificationService _notificationService;
+
+  ReviewService({NotificationService? notificationService})
+      : _notificationService = notificationService ?? NotificationService();
 
   String? get currentUserId => _auth.currentUser?.uid;
   String get currentUserName => _auth.currentUser?.displayName ?? 'Anonymous';
@@ -108,6 +113,26 @@ class ReviewService {
 
       // Recalculate and update the product's aggregate rating
       await _updateProductRating(productId);
+
+      // Notify the seller about the new review
+      try {
+        final productDoc = await _firestore.collection('products').doc(productId).get();
+        if (productDoc.exists) {
+          final productData = productDoc.data()!;
+          final sellerId = productData['sellerId'] as String? ?? '';
+          if (sellerId.isNotEmpty) {
+            _notificationService.sendNotification(
+              userId: sellerId,
+              title: 'New Review',
+              message: '${currentUserName} gave ${rating}★ for ${productData['productName'] ?? productData['name'] ?? 'your product'}',
+              type: 'new_releases',
+              data: {'productId': productId, 'rating': rating},
+            );
+          }
+        }
+      } catch (_) {
+        // Notification failure is non-critical
+      }
 
       return {'success': true, 'message': 'Review submitted successfully!'};
     } catch (e) {

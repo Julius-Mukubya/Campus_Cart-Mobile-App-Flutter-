@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:madpractical/providers/seller_provider.dart';
 import 'package:madpractical/widgets/common/notification_icon.dart';
 
-class EditProductScreen extends StatefulWidget {
+class EditProductScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
-  
+
   const EditProductScreen({super.key, required this.product});
 
   @override
-  State<EditProductScreen> createState() => _EditProductScreenState();
+  ConsumerState<EditProductScreen> createState() => _EditProductScreenState();
 }
 
-class _EditProductScreenState extends State<EditProductScreen> {
+class _EditProductScreenState extends ConsumerState<EditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _discountController;
   late TextEditingController _stockController;
   late TextEditingController _descriptionController;
-  
+
   String _selectedCategory = 'Electronics';
   final List<String> _categories = [
     'Electronics',
@@ -32,14 +34,21 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing product data
-    _nameController = TextEditingController(text: widget.product['name']);
-    _priceController = TextEditingController(
-      text: widget.product['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')
+    _nameController = TextEditingController(
+      text: widget.product['productName'] ?? widget.product['name'] ?? '',
     );
-    _discountController = TextEditingController(text: '0');
-    _stockController = TextEditingController(text: widget.product['stock']?.toString() ?? '0');
-    _descriptionController = TextEditingController(text: widget.product['description'] ?? '');
+    _priceController = TextEditingController(
+      text: _extractNumeric(widget.product['originalPrice'] ?? widget.product['price']),
+    );
+    _discountController = TextEditingController(
+      text: widget.product['discount']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ?? '0',
+    );
+    _stockController = TextEditingController(
+      text: (widget.product['stockQuantity'] ?? widget.product['stock'] ?? 0).toString(),
+    );
+    _descriptionController = TextEditingController(
+      text: widget.product['productDescription'] ?? widget.product['description'] ?? '',
+    );
     _selectedCategory = widget.product['category'] ?? 'Electronics';
   }
 
@@ -51,6 +60,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _stockController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  String _extractNumeric(dynamic value) {
+    if (value == null) return '';
+    final str = value.toString().replaceAll(RegExp(r'[^0-9.]'), '');
+    return str;
   }
 
   Widget _buildTextField({
@@ -151,6 +166,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   }
 
   Widget _buildProductImage() {
+    final imageUrl = widget.product['productImage'] as String? ?? widget.product['image'] as String? ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -172,77 +188,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: widget.product['image'] != null
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        widget.product['image'],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.image_outlined,
-                              size: 64,
-                              color: AppColors.grey,
-                            ),
-                          );
-                        },
-                      ),
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // Handle image change
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Image upload feature coming soon'),
-                                backgroundColor: AppColors.primary,
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.camera_alt, size: 16),
-                          label: const Text('Change'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(Icons.image_outlined, size: 64, color: AppColors.grey),
+                      );
+                    },
                   )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.cloud_upload,
-                            color: AppColors.primary,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Tap to upload image',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                      ],
-                    ),
+                : const Center(
+                    child: Icon(Icons.image_outlined, size: 64, color: AppColors.grey),
                   ),
           ),
         ),
@@ -250,9 +207,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 
-  void _saveProduct() {
-    if (_formKey.currentState!.validate()) {
-      // Show success message
+  Future<void> _saveProduct() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final productId = widget.product['productId'] as String? ?? '';
+    if (productId.isEmpty) return;
+
+    ref.read(sellerProvider.notifier).updateProduct(
+      productId,
+      {
+        'productName': _nameController.text.trim(),
+        'productDescription': _descriptionController.text.trim(),
+        'category': _selectedCategory,
+        'price': double.tryParse(_priceController.text) ?? 0,
+        'stockQuantity': int.tryParse(_stockController.text) ?? 0,
+        'discount': double.tryParse(_discountController.text) ?? 0,
+      },
+    );
+
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Product updated successfully!'),
@@ -260,56 +233,50 @@ class _EditProductScreenState extends State<EditProductScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      
-      // Navigate back
       Navigator.pop(context);
     }
   }
 
-  void _deleteProduct() {
+  Future<void> _deleteProduct() async {
+    final productId = widget.product['productId'] as String? ?? '';
+    final storeId = widget.product['storeId'] as String? ?? '';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Delete Product',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.error,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error),
         ),
         content: Text(
-          'Are you sure you want to delete "${widget.product['name']}"? This action cannot be undone.',
-          style: TextStyle(color: AppColors.text),
+          'Are you sure you want to delete "${_nameController.text}"? This action cannot be undone.',
+          style: const TextStyle(color: AppColors.text),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.secondaryText),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.secondaryText)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to products list
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Product deleted successfully'),
-                  backgroundColor: AppColors.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              ref.read(sellerProvider.notifier).deleteProduct(productId, storeId);
+              if (mounted) {
+                Navigator.pop(context); // Go back to products list
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Product deleted successfully'),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 2,
             ),
             child: const Text('Delete'),
@@ -341,28 +308,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.text,
-              size: 16,
-            ),
+            child: const Icon(Icons.arrow_back_ios, color: AppColors.text, size: 16),
           ),
         ),
         title: const Text(
           'Edit Product',
-          style: TextStyle(
-            color: AppColors.text,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         actions: [
           IconButton(
             onPressed: _deleteProduct,
-            icon: const Icon(
-              Icons.delete_outline,
-              color: AppColors.error,
-            ),
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
           ),
           const NotificationIcon(),
         ],
@@ -375,32 +331,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Product Image
                 _buildProductImage(),
-                
                 const SizedBox(height: 20),
-                
-                // Product Name
                 _buildTextField(
                   controller: _nameController,
                   label: 'Product Name',
                   hint: 'Enter product name',
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product name';
-                    }
+                    if (value == null || value.isEmpty) return 'Please enter product name';
                     return null;
                   },
                 ),
-                
                 const SizedBox(height: 20),
-                
-                // Category
                 _buildCategoryDropdown(),
-                
                 const SizedBox(height: 20),
-                
-                // Price and Discount Row
                 Row(
                   children: [
                     Expanded(
@@ -410,9 +354,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         hint: '0',
                         keyboardType: TextInputType.number,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter price';
-                          }
+                          if (value == null || value.isEmpty) return 'Please enter price';
                           return null;
                         },
                       ),
@@ -428,42 +370,29 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     ),
                   ],
                 ),
-                
                 const SizedBox(height: 20),
-                
-                // Stock Quantity
                 _buildTextField(
                   controller: _stockController,
                   label: 'Stock Quantity',
                   hint: '0',
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter stock quantity';
-                    }
+                    if (value == null || value.isEmpty) return 'Please enter stock quantity';
                     return null;
                   },
                 ),
-                
                 const SizedBox(height: 20),
-                
-                // Description
                 _buildTextField(
                   controller: _descriptionController,
                   label: 'Description',
                   hint: 'Enter product description',
                   maxLines: 4,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product description';
-                    }
+                    if (value == null || value.isEmpty) return 'Please enter product description';
                     return null;
                   },
                 ),
-                
                 const SizedBox(height: 32),
-                
-                // Save Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -472,21 +401,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 2,
                     ),
                     child: const Text(
                       'Save Changes',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
-                
                 const SizedBox(height: 20),
               ],
             ),
@@ -496,4 +419,3 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 }
-

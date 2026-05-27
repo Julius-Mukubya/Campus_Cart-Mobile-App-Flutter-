@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/models/seller_request_model.dart';
 import 'package:madpractical/utils/app_logger.dart';
+import 'package:madpractical/services/notification_service.dart';
 
 class SellerRequestRepository {
   final FirebaseFirestore _firestore;
+  final NotificationService _notificationService;
 
-  SellerRequestRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  SellerRequestRepository({FirebaseFirestore? firestore, NotificationService? notificationService})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _notificationService = notificationService ?? NotificationService();
 
   /// Submit a new seller request
   Future<bool> submitSellerRequest({
@@ -136,6 +139,10 @@ class SellerRequestRepository {
         return false;
       }
 
+      // Create a new store document for the seller
+      final storeRef = _firestore.collection('stores').doc();
+      final storeId = storeRef.id;
+
       final batch = _firestore.batch();
 
       // Update seller request status
@@ -153,10 +160,39 @@ class SellerRequestRepository {
         'approvedAt': FieldValue.serverTimestamp(),
         'approvedBy': adminId,
         'isActive': true,
+        'storeId': storeId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create default store document
+      batch.set(storeRef, {
+        'storeId': storeId,
+        'sellerId': userId,
+        'storeName': '',
+        'storeDescription': '',
+        'storePhone': '',
+        'storeEmail': '',
+        'showContact': true,
+        'isActive': true,
+        'isVerified': false,
+        'rating': 0.0,
+        'totalProducts': 0,
+        'totalOrders': 0,
+        'totalSales': 0,
+        'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       await batch.commit();
+
+      // Notify the user they've been approved
+      _notificationService.sendNotification(
+        userId: userId,
+        title: 'Seller Request Approved!',
+        message: 'Congratulations! You are now a seller. Set up your store in Store Settings.',
+        type: 'success',
+        data: {'storeId': storeId},
+      );
 
       AppLogger.info('Seller request approved: $requestId for user: $userId');
       return true;
@@ -204,6 +240,15 @@ class SellerRequestRepository {
       });
 
       await batch.commit();
+
+      // Notify the user their request was rejected
+      _notificationService.sendNotification(
+        userId: userId,
+        title: 'Seller Request Rejected',
+        message: 'Your seller application was rejected. Reason: $reason',
+        type: 'error',
+        data: {'rejectionReason': reason},
+      );
 
       AppLogger.info('Seller request rejected: $requestId for user: $userId');
       return true;

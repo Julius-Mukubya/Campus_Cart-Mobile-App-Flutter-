@@ -101,13 +101,30 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   void logout() {
-    state = const UserState(
-      userId: null,
-      name: 'Guest User',
-      email: 'guest@example.com',
-      phone: '',
-      role: 'customer',
-      storeId: null,
+    // Reset to default guest user state
+    state = const UserState();
+  }
+
+  /// Update user with new login data
+  void updateUser({
+    required String userId,
+    required String name,
+    required String email,
+    required String phone,
+    required String profileImage,
+    required String role,
+    String? storeId,
+  }) {
+    state = UserState(
+      userId: userId,
+      name: name,
+      email: email,
+      phone: phone,
+      profileImage: profileImage,
+      role: role,
+      storeId: role == 'seller' ? storeId : null,
+      isPremium: false,
+      showContactInfo: true,
     );
   }
 }
