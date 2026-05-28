@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/providers/order_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/widgets/common/order_chat_section.dart';
 
 /// Seller order details for the simplified order flow.
 /// Statuses: pending → accepted/rejected → completed
@@ -136,9 +136,15 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.order;
+    final orderState = ref.watch(orderProvider);
+    final orderId = (widget.order['orderId'] ?? widget.order['id'] ?? '').toString();
+    // Derive status from provider state so accept/reject triggers rebuild
+    final providerOrder = orderState.orders.firstWhere(
+      (o) => (o['orderId'] ?? o['id']) == orderId,
+      orElse: () => widget.order,
+    );
+    final order = providerOrder;
     final status = (order['status'] ?? 'pending').toString();
-    final orderId = (order['orderId'] ?? order['id'] ?? '').toString();
     final products = (order['products'] as List?) ?? (order['items'] as List?) ?? [];
     final customerName = (order['customerName'] ?? order['customer'] ?? 'Customer').toString();
     final customerPhone = order['customerPhone'] as String? ?? '';
@@ -481,12 +487,29 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
             const SizedBox(height: 16),
 
-            // ── Order Chat Section ─────────────────────────────────
+            // ── Go to Chat Button ──────────────────────────────────
             if (status != 'rejected' && status != 'cancelled')
-              OrderChatSection(
-                orderId: orderId,
-                otherParticipantName: customerName,
-                order: widget.order,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push(
+                    '/chat/order_$orderId',
+                    extra: {
+                      'name': customerName,
+                      'isOrderChat': true,
+                    },
+                  ),
+                  icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                  label: const Text('Go to Chat'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
 
             const SizedBox(height: 24),

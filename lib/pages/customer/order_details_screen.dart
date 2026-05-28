@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:madpractical/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:madpractical/constants/app_colors.dart';
-import 'package:madpractical/widgets/common/order_chat_section.dart';
 
 /// Simplified order details screen for the new order flow.
 /// Statuses: pending → accepted/rejected/cancelled → completed
@@ -440,11 +440,28 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
               const SizedBox(height: 24),
 
               // ── Order Chat Section ─────────────────────────────────
-              if (status != 'rejected')
-                OrderChatSection(
-                  orderId: orderId,
-                  otherParticipantName: sellerName,
-                  order: widget.order,
+              if (status != 'rejected' && status != 'cancelled')
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push(
+                      '/chat/order_$orderId',
+                      extra: {
+                        'name': sellerName,
+                        'isOrderChat': true,
+                      },
+                    ),
+                    icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                    label: const Text('Go to Chat'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
 
               const SizedBox(height: 24),

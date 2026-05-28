@@ -19,8 +19,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize checkout with cart data
-    _initCheckout();
+    // Initialize checkout after first frame to avoid modifying provider during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initCheckout();
+    });
   }
 
   void _initCheckout() {
@@ -50,7 +52,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     // Ensure all items have required fields
     for (int i = 0; i < cart.items.length; i++) {
       final item = cart.items[i];
-      if (item['id'] == null || (item['id'] as String).isEmpty) {
+      final productId = item['productId'] as String? ?? item['id'] as String? ?? '';
+      if (productId.isEmpty) {
         _showMessage('Invalid product in cart', isError: true);
         return;
       }
@@ -154,7 +157,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
         ),
         title: const Text(
-          'Checkout',
+          'Review Order',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -257,7 +260,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           ),
                         ),
                         Text(
-                          'UGX ${_formatPrice(item['price'])}',
+                          _formatItemPrice(item),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -485,12 +488,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  String _formatPrice(dynamic price) {
-    if (price is double || price is int) return price.toStringAsFixed(0);
-    if (price is String) {
-      final num = double.tryParse(price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-      return num.toStringAsFixed(0);
+  String _formatItemPrice(Map<String, dynamic> item) {
+    // Try discounted price first, then original
+    final rawPrice = item['discount'].toString().isNotEmpty
+        ? _getDiscountedPrice(item)
+        : _extractPrice(item['price']);
+    if (rawPrice <= 0) return 'UGX 0';
+    return 'UGX ${rawPrice.toStringAsFixed(0)}';
+  }
+
+  double _extractPrice(dynamic priceString) {
+    if (priceString is double) return priceString;
+    if (priceString is int) return priceString.toDouble();
+    final numericString = priceString.toString().replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
+  double _getDiscountedPrice(Map<String, dynamic> item) {
+    final originalPrice = _extractPrice(item['price']);
+    if (item['discount'] != null && item['discount'].toString().isNotEmpty) {
+      final discountStr = item['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final discountPercent = double.tryParse(discountStr) ?? 0.0;
+      if (discountPercent > 0) {
+        return originalPrice * (1 - discountPercent / 100);
+      }
     }
-    return '0';
+    return originalPrice;
   }
 }

@@ -27,13 +27,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  /// Extract the raw order ID from a chat doc ID like "order_abc123"
+  String get _orderId {
+    if (widget.isOrderChat && widget.chatId.startsWith('order_')) {
+      return widget.chatId.substring(6); // strip "order_" prefix
+    }
+    return widget.chatId;
+  }
+
   @override
   void initState() {
     super.initState();
     // Start streaming the appropriate chat
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.isOrderChat) {
-        ref.read(chatProvider.notifier).startOrderMessagesStream(widget.chatId);
+        ref.read(chatProvider.notifier).startOrderMessagesStream(_orderId);
       } else {
         ref.read(chatProvider.notifier).startDirectMessagesStream(widget.chatId);
       }
@@ -55,12 +63,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (user.userId == null || user.userId!.isEmpty) return;
 
     if (widget.isOrderChat) {
+      // Collect participants so order chat appears in chat list
+      final orderState = ref.read(orderProvider);
+      final order = orderState.orders.firstWhere(
+        (o) => (o['orderId'] ?? o['id']) == _orderId,
+        orElse: () => <String, dynamic>{},
+      );
+      final participants = <String>[
+        user.userId!,
+        if (order['customerId'] != null && order['customerId'].toString() != user.userId)
+          order['customerId'].toString(),
+        if (order['sellerId'] != null && order['sellerId'].toString() != user.userId)
+          order['sellerId'].toString(),
+      ];
+
       ref.read(chatProvider.notifier).sendOrderMessage(
-        orderId: widget.chatId,
+        orderId: _orderId,
         senderId: user.userId!,
         senderName: user.name,
         senderRole: user.role,
         message: text,
+        participants: participants,
       );
     } else {
       // Extract the other participant from the chatId format: direct_{id1}_{id2}
@@ -250,7 +273,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Find the order in the provider's state
     final orderState = ref.watch(orderProvider);
     final order = orderState.orders.firstWhere(
-      (o) => (o['orderId'] ?? o['id']) == widget.chatId,
+      (o) => (o['orderId'] ?? o['id']) == _orderId,
       orElse: () => <String, dynamic>{},
     );
     final status = (order['status'] ?? '').toString();
@@ -293,7 +316,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ref.read(orderProvider.notifier).markSellerComplete(widget.chatId);
+                  ref.read(orderProvider.notifier).markSellerComplete(_orderId);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Marked as complete. Waiting for customer.'),
@@ -316,7 +339,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ref.read(orderProvider.notifier).markCustomerComplete(widget.chatId);
+                  ref.read(orderProvider.notifier).markCustomerComplete(_orderId);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Marked as complete. Waiting for seller.'),

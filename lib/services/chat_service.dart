@@ -68,10 +68,11 @@ class ChatService {
     required String senderName,
     required String senderRole,
     required String message,
+    List<String> participants = const [],
   }) async {
     try {
-      // Ensure chat document exists
-      await _orderChatDoc(orderId).set({
+      // Ensure chat document exists with participants for chat list visibility
+      final chatData = <String, dynamic>{
         'type': 'order',
         'orderId': orderId,
         'lastMessage': message,
@@ -79,7 +80,11 @@ class ChatService {
         'lastSenderId': senderId,
         'lastSenderName': senderName,
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      if (participants.isNotEmpty) {
+        chatData['participants'] = participants;
+      }
+      await _orderChatDoc(orderId).set(chatData, SetOptions(merge: true));
 
       // Add message
       await _orderMessagesRef(orderId).add({

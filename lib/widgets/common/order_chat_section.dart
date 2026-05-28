@@ -54,12 +54,24 @@ class _OrderChatSectionState extends ConsumerState<OrderChatSection> {
     final user = ref.read(userProvider);
     if (user.userId == null || user.userId!.isEmpty) return;
 
+    // Collect participants so order chat appears in chat list
+    final participants = <String>[
+      user.userId!,
+      if (widget.order['customerId'] != null &&
+          widget.order['customerId'].toString() != user.userId)
+        widget.order['customerId'].toString(),
+      if (widget.order['sellerId'] != null &&
+          widget.order['sellerId'].toString() != user.userId)
+        widget.order['sellerId'].toString(),
+    ];
+
     ref.read(chatProvider.notifier).sendOrderMessage(
       orderId: widget.orderId,
       senderId: user.userId!,
       senderName: user.name,
       senderRole: user.role,
       message: text,
+      participants: participants,
     );
 
     _messageController.clear();

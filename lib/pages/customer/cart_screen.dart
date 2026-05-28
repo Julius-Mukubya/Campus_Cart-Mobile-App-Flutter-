@@ -11,10 +11,6 @@ class CartScreen extends ConsumerStatefulWidget {
 }
 
 class _CartScreenState extends ConsumerState<CartScreen> {
-  String selectedDeliveryMethod = 'Standard';
-  String selectedAddress = 'Home Address';
-  String selectedPaymentMethod = 'Mobile Money';
-
   void increaseQuantity(String productName) {
     final cartState = ref.read(cartProvider);
     final item = cartState.items.firstWhere((item) => item['name'] == productName);
@@ -43,7 +39,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   Widget _buildCartItem(Map<String, dynamic> item) {
-    final price = double.tryParse(item['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+    final price = _extractPrice(item['price']);
     final discount = item['discount'] != null
         ? double.tryParse(item['discount'].toString().replaceAll('%', '').replaceAll('-', '')) ?? 0
         : 0;
@@ -163,11 +159,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (discount > 0) ...[
+                          if (discount > 0 && price > 0) ...[
                             Text(
-                              item['price'].toString().contains('UGX')
-                                  ? item['price']
-                                  : 'UGX ${price.toStringAsFixed(0)}',
+                              'UGX ${price.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.secondaryText,
@@ -182,11 +176,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 color: AppColors.primary,
                               ),
                             ),
-                          ] else ...[
+                          ] else if (price > 0) ...[
                             Text(
-                              item['price'].toString().contains('UGX')
-                                  ? item['price']
-                                  : 'UGX ${price.toStringAsFixed(0)}',
+                              'UGX ${price.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -307,24 +299,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Delivery Fee',
-                style: TextStyle(fontSize: 13, color: AppColors.secondaryText),
-              ),
-              Text(
-                'UGX ${cart.deliveryFee.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-            ],
-          ),
           const Divider(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -338,7 +312,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
               Text(
-                'UGX ${cart.total.toStringAsFixed(0)}',
+                'UGX ${cart.subtotal.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -415,6 +389,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
+  double _extractPrice(dynamic priceString) {
+    if (priceString is double) return priceString;
+    if (priceString is int) return priceString.toDouble();
+    final numericString = priceString.toString().replaceAll(RegExp(r'[^0-9]'), '');
+    return double.tryParse(numericString) ?? 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
@@ -458,7 +439,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Review your items before checkout',
+                                  'Review your items before ordering',
                                   style: TextStyle(fontSize: 14, color: AppColors.secondaryText),
                                 ),
                               ],
@@ -507,10 +488,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.payment, size: 20),
+                            const Icon(Icons.shopping_bag_outlined, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'Proceed to Checkout • UGX ${cart.total.toStringAsFixed(0)}',
+                              'Continue to Order • UGX ${cart.subtotal.toStringAsFixed(0)}',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                           ],

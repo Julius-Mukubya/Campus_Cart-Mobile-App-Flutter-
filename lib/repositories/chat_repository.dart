@@ -33,6 +33,7 @@ class ChatRepository {
     required String senderName,
     required String senderRole,
     required String message,
+    List<String> participants = const [],
   }) async {
     try {
       await _chatService.sendOrderMessage(
@@ -41,6 +42,7 @@ class ChatRepository {
         senderName: senderName,
         senderRole: senderRole,
         message: message,
+        participants: participants,
       );
     } catch (e) {
       AppLogger.error('Error sending order message', error: e);

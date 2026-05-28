@@ -204,23 +204,6 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
 
             const SizedBox(height: 6),
 
-            // Address
-            if ((order['shippingAddress'] as String).isNotEmpty)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 15, color: AppColors.grey),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(order['shippingAddress'],
-                        style: TextStyle(
-                            fontSize: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
 
             const SizedBox(height: 10),
 
@@ -340,14 +323,10 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _detailRow('Status', order['status']),
-                    _detailRow('Date', order['date']),
-                    _detailRow('Payment', order['paymentMethod']),
-                    _detailRow('Address', order['shippingAddress']),
+                    _detailRow('Status', order['status'] ?? ''),
+                    _detailRow('Date', order['date'] ?? ''),
                     _detailRow('Subtotal',
                         'UGX ${(order['subtotal'] ?? 0).toStringAsFixed(0)}'),
-                    _detailRow('Delivery Fee',
-                        'UGX ${(order['deliveryFee'] ?? 0).toStringAsFixed(0)}'),
                     _detailRow('Total', order['total']),
                     if (products.isNotEmpty) ...[
                       const SizedBox(height: 16),
@@ -408,7 +387,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
     );
   }
 
-  Widget _detailRow(String label, String value) => Padding(
+  Widget _detailRow(String label, dynamic value) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

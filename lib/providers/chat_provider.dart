@@ -197,6 +197,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String senderName,
     required String senderRole,
     required String message,
+    List<String> participants = const [],
   }) async {
     if (message.trim().isEmpty) return;
     try {
@@ -206,6 +207,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         senderName: senderName,
         senderRole: senderRole,
         message: message.trim(),
+        participants: participants,
       );
     } catch (e) {
       state = state.copyWith(error: 'Failed to send message');
