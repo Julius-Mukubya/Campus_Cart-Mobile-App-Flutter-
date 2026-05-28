@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:madpractical/constants/app_colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:madpractical/providers/chat_provider.dart';
 import 'package:madpractical/providers/order_provider.dart';
 import 'package:madpractical/providers/user_provider.dart';
@@ -28,6 +29,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Map<String, dynamic> _orderData = {};
 
   /// Extract the raw order ID from a chat doc ID like "order_abc123"
   String get _orderId {
@@ -44,10 +46,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.isOrderChat) {
         ref.read(chatProvider.notifier).startOrderMessagesStream(_orderId);
+        // Fetch order data from Firestore for confirmation badges
+        _fetchOrderData();
       } else {
         ref.read(chatProvider.notifier).startDirectMessagesStream(widget.chatId);
       }
     });
+  }
+
+  Future<void> _fetchOrderData() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('orders').doc(_orderId).get();
+      if (doc.exists && mounted) {
+        final data = doc.data()!;
+        data['orderId'] = doc.id;
+        setState(() => _orderData = data);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -269,14 +284,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final isSeller = userState.role == 'seller';
     final isCustomer = userState.role == 'customer';
 
-    // Use provided order data (from caller) or fall back to provider
+    // Priority: 1) passed via extra, 2) fetched from Firestore, 3) from provider, 4) empty
     final orderState = ref.watch(orderProvider);
     final providerOrder = orderState.orders.firstWhere(
       (o) => (o['orderId'] ?? o['id']) == _orderId,
       orElse: () => <String, dynamic>{},
     );
     final hasProviderOrder = providerOrder.isNotEmpty;
-    final order = widget.order ?? (hasProviderOrder ? providerOrder : <String, dynamic>{});
+    final hasFetchedOrder = _orderData.isNotEmpty;
+    final order = widget.order ?? (hasFetchedOrder ? _orderData : (hasProviderOrder ? providerOrder : <String, dynamic>{}));
     final status = (order['status'] ?? '').toString();
     final sellerConfirmed = order['sellerConfirmed'] == true;
     final customerConfirmed = order['customerConfirmed'] == true;
