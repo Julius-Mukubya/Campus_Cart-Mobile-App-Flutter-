@@ -497,6 +497,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     extra: {
                       'name': customerName,
                       'isOrderChat': true,
+                      'order': order,
                     },
                   ),
                   icon: const Icon(Icons.chat_bubble_outline, size: 20),

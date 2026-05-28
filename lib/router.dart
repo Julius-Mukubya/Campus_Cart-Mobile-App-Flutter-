@@ -327,10 +327,12 @@ GoRouter buildRouter() {
         builder: (context, state) {
           final chatId = state.pathParameters['chatId']!;
           final extra = state.extra as Map<String, dynamic>?;
+          final orderData = extra?['order'] as Map<String, dynamic>?;
           return ChatScreen(
             chatId: chatId,
             otherParticipantName: extra?['name']?.toString() ?? 'User',
             isOrderChat: extra?['isOrderChat'] == true,
+            order: orderData,
           );
         },
       ),

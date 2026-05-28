@@ -11,12 +11,14 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String chatId;
   final String otherParticipantName;
   final bool isOrderChat;
+  final Map<String, dynamic>? order; // Pass order data for confirmation badges
 
   const ChatScreen({
     super.key,
     required this.chatId,
     this.otherParticipantName = 'User',
     this.isOrderChat = false,
+    this.order,
   });
 
   @override
@@ -263,19 +265,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildOrderChatControls() {
-    // For order chats, get the order's current completion status from the order provider
-    // This would be better handled by passing the order data, but since this is a general
-    // chat screen, we read from the existing order state
     final userState = ref.watch(userProvider);
     final isSeller = userState.role == 'seller';
     final isCustomer = userState.role == 'customer';
 
-    // Find the order in the provider's state
+    // Use provided order data (from caller) or fall back to provider
     final orderState = ref.watch(orderProvider);
-    final order = orderState.orders.firstWhere(
+    final providerOrder = orderState.orders.firstWhere(
       (o) => (o['orderId'] ?? o['id']) == _orderId,
       orElse: () => <String, dynamic>{},
     );
+    final hasProviderOrder = providerOrder.isNotEmpty;
+    final order = widget.order ?? (hasProviderOrder ? providerOrder : <String, dynamic>{});
     final status = (order['status'] ?? '').toString();
     final sellerConfirmed = order['sellerConfirmed'] == true;
     final customerConfirmed = order['customerConfirmed'] == true;
