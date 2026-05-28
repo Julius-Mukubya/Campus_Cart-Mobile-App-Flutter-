@@ -13,6 +13,7 @@ import 'package:madpractical/providers/user_provider.dart';
 import 'package:madpractical/providers/cart_provider.dart';
 import 'package:madpractical/providers/wishlist_provider.dart';
 import 'package:madpractical/providers/notification_provider.dart';
+import 'package:madpractical/providers/chat_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:madpractical/router.dart';
@@ -288,6 +289,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       if (next.userId != null && next.userId!.isNotEmpty) {
         FcmService().setUserId(next.userId!);
         ref.read(notificationProvider.notifier).startListening(next.userId!);
+        ref.read(chatProvider.notifier).startChatListStream(next.userId!);
       }
     });
 

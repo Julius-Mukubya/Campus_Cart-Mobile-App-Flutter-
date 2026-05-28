@@ -59,9 +59,15 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.order;
+    final orderState = ref.watch(orderProvider);
+    final orderId = (widget.order['orderId'] ?? widget.order['id'] ?? '').toString();
+    // Derive status from provider state so markComplete triggers rebuild
+    final providerOrder = orderState.orders.firstWhere(
+      (o) => (o['orderId'] ?? o['id']) == orderId,
+      orElse: () => widget.order,
+    );
+    final order = providerOrder;
     final status = (order['status'] ?? 'pending').toString();
-    final orderId = (order['orderId'] ?? order['id'] ?? '').toString();
     final products = (order['products'] as List?) ?? (order['items'] as List?) ?? [];
     final total = order['totalAmount'] ?? order['total'] ?? 0;
     final sellerConfirmed = order['sellerConfirmed'] == true;

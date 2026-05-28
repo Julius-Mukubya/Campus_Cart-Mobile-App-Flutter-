@@ -385,12 +385,12 @@ class AppDrawer extends ConsumerWidget {
             textColor: textColor));
         items.add(_buildMenuItem(context, icon: Icons.add_box_outlined, title: 'Add Product', route: '/seller/add-product', textColor: textColor));
         items.add(_buildMenuItem(context, icon: Icons.settings_outlined, title: 'Store Settings', route: '/seller/store-settings', textColor: textColor));
-        final storeId = userState.storeId;
+        final userId = userState.userId;
         items.add(_buildMenuItem(
           context,
           icon: Icons.visibility_outlined,
           title: 'View My Store',
-          route: storeId != null ? '/store/$storeId' : '/store',
+          route: userId != null && userId.isNotEmpty ? '/store/$userId' : '/store',
           textColor: textColor,
         ));
         items.add(_buildDivider(isDark));
